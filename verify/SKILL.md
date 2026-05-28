@@ -46,7 +46,18 @@ Before designing tests, figure out how users interact with this project. Check:
 
 Identify the real interfaces: HTTP APIs, CLIs, web UIs, desktop apps, etc. These are your test surface.
 
-### 3. Design Test Cases
+### 3. Gather Test Resources
+
+Some tests need real resources: a running database, API credentials, a service endpoint, a test account, etc. **Ask the user** — don't assume these are unavailable or off-limits.
+
+Present what you need clearly:
+- Which resources the test cases require
+- What each resource is used for
+- Any defaults you've detected (e.g., found a config file with an API key)
+
+If the user provides resources, use them. If they decline, say so in the report — don't silently downgrade to a hack.
+
+### 4. Design Test Cases
 
 For each risk area, design a test case that a normal user could perform. Think from the outside:
 
@@ -59,7 +70,7 @@ For each case, specify:
 - **Expected**: What correct behavior looks like (response structure, not exact content)
 - **Interface**: Which user-facing interface to use
 
-### 4. Execute
+### 5. Execute
 
 Run tests through user-facing interfaces only.
 
