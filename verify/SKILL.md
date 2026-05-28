@@ -142,6 +142,7 @@ PASS / FAIL — [one-line summary]
 ## Principles
 
 - **Real resources, real calls**: Use real credentials, real services, real data. That's the whole point — verify the actual system works end-to-end. Do not hesitate because it "costs tokens" or "hits a real server".
+- **Backup before destruction**: If any test case might modify or delete real data (database writes, file operations, account changes, destructive API calls), back up first. Ask the user which data is at risk and how to protect it. Isolated test data is preferred over production data.
 - **User-facing only**: If a normal user can't do it, it's not a valid test. No internal imports, no private APIs, no developer flags.
 - **Full stack by default**: Start the real service and test through it. Isolating components is for unit tests, not black-box verification.
 - **Be practical**: If the diff is very large, focus on the highest-risk areas. Better to deeply verify 3 critical paths than shallowly touch 20.
