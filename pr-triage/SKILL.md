@@ -32,7 +32,7 @@ PR body may be empty, misleading, or outdated. Cross-reference title, body, link
 gh pr checkout <N>
 ```
 
-This gives you the code on disk so you can read files directly with Read/Grep/Glob tools instead of parsing remote diffs.
+This gives you the code on disk so you can inspect files directly with the agent's available file-reading and search tools instead of parsing remote diffs.
 
 **Then, run metadata fetches in parallel:**
 

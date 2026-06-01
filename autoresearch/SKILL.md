@@ -1,7 +1,6 @@
 ---
 name: autoresearch
 description: Turn improvement ideas into formal, auditable experiment plans with isolated worktrees. Use when the user wants to improve, optimize, experiment with, compare, or validate a hypothesis about any codebase behavior. Generates a formal experiment spec and creates an isolated worktree. Does NOT execute experiments — user reviews the plan then runs it.
-tools: Read, Glob, Grep, Bash
 ---
 
 # Autoresearch
@@ -29,7 +28,7 @@ Extract from the user's initial prompt:
 | **Baseline** | No | Current metric value (infer from code/tests if not provided; ask only if inference fails) |
 | **Target value** | Yes | What value constitutes success |
 
-**If ANY required field is missing or ambiguous, use `AskUserQuestion` to collect it BEFORE proceeding.** You may batch up to 4 questions per call.
+**If ANY required field is missing or ambiguous, ask the user to collect it BEFORE proceeding.** You may batch related questions together.
 
 **Example batch:**
 
@@ -57,7 +56,7 @@ If baseline inference fails, ask the user for it. Do not guess.
 
 ### 2. Analyze Code
 
-Read the relevant source files to identify actionable intervention points. Use `Glob` and `Grep` to discover the codebase structure — do NOT assume a fixed directory layout.
+Read the relevant source files to identify actionable intervention points. Use repository search and file discovery tools to understand the codebase structure — do NOT assume a fixed directory layout.
 
 Discovery commands to run:
 
@@ -156,5 +155,5 @@ Tell the user:
 - Worktree isolation: all experiment artifacts live in the worktree, never in the main workspace
 - `exp/` is never committed to git
 - The plan must be idempotent — readable and actionable even after context compaction
-- Batch questions during Setup Gate (up to 4 per `AskUserQuestion` call) for efficiency, but confirm the full goal before proceeding
+- Batch questions during Setup Gate for efficiency, but confirm the full goal before proceeding
 - Do NOT assume nanobot-specific paths or structures; always discover the codebase layout

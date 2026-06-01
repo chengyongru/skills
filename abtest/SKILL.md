@@ -1,7 +1,6 @@
 ---
 name: abtest
 description: Design controlled experiments to compare two implementations or validate a hypothesis. Use when the user wants to A/B test, compare alternatives, run a benchmark shootout, or verify that a change causes a specific effect. Generates a formal experiment spec across two isolated worktrees. Does NOT execute experiments — user reviews the plan then runs it.
-tools: Read, Glob, Grep, Bash
 ---
 
 # A/B Test / Controlled Experiment
@@ -30,7 +29,7 @@ Extract from the user's description:
 | **Treatment** | Yes | Changed implementation — what to compare against the control |
 | **Judging dimensions** | No | Which dimensions to evaluate (default: Correctness, Readability, Performance, Maintainability) |
 
-**If ANY required field is missing or ambiguous, use `AskUserQuestion` to collect it BEFORE proceeding.** You may batch up to 4 questions per call.
+**If ANY required field is missing or ambiguous, ask the user to collect it BEFORE proceeding.** You may batch related questions together.
 
 **Example batch:**
 
@@ -174,6 +173,6 @@ Tell the user:
 - Worktree isolation: all experiment artifacts live in the worktrees, never in the main workspace
 - `exp/` is never committed to git
 - The plan must be idempotent — readable and actionable even after context compaction
-- Batch questions during Setup Gate (up to 4 per `AskUserQuestion` call) for efficiency, but confirm the full design before proceeding
+- Batch questions during Setup Gate for efficiency, but confirm the full design before proceeding
 - Always create exactly two worktrees for proper isolation
 - Do NOT assume a fixed directory layout; always discover the codebase structure
