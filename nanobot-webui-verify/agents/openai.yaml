@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nanobot WebUI Verify"
+  short_description: "Verify nanobot WebUI with gateway and Playwright"
+  default_prompt: "Use $nanobot-webui-verify to build nanobot WebUI, start the gateway, and verify a user-facing flow in headless Playwright."
