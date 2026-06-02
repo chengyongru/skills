@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify"
+  short_description: "Evidence-first black-box checks"
+  default_prompt: "Use $verify to validate the latest code changes through user-facing interfaces and report evidence-backed results."
