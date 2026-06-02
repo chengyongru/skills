@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Use when user wants to do a full code review of a PR, submit review comments to GitHub, or get actionable findings on a PR's code quality
+description: Use when user wants to do a full code review of a PR, submit review comments to GitHub, or get actionable findings on a PR's code quality; use pr-worktree for isolated local checkout before reading or testing PR code
 ---
 
 # PR Review
@@ -18,6 +18,10 @@ Structured code review for PRs. Read changed files in context, produce prioritiz
 - User wants to submit review comments on GitHub
 
 ## Workflow
+
+### Step 0: Use an Isolated PR Worktree
+
+Before reading changed files or running tests, use `pr-worktree` to ensure the PR is checked out in an isolated worktree. Do not run `gh pr checkout` in the user's current workspace.
 
 ### Step 1: Confirm Context
 
@@ -51,7 +55,7 @@ Focus areas by priority:
 If CI is failing or the PR touches test-sensitive areas:
 
 ```bash
-gh pr checkout <N>
+# Run inside the isolated PR worktree from pr-worktree
 # Run project-specific test command
 pytest tests/ -x -q --tb=short 2>&1 | tail -30
 ```
@@ -120,6 +124,7 @@ This lets the author apply the suggestion with one click.
 | Mistake | Fix |
 |---------|-----|
 | Reviewing without understanding purpose | Run `pr-triage` first |
+| Switching the user's current branch | Use `pr-worktree` and run review commands in the isolated worktree |
 | Only reading diff hunks | Read full files for context |
 | Posting comments individually | Use pending review to batch all comments |
 | Vague findings ("this could be better") | Every finding needs a concrete suggestion |

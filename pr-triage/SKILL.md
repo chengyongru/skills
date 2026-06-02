@@ -1,6 +1,6 @@
 ---
 name: pr-triage
-description: Use when user mentions a PR number or URL and wants to quickly understand what it does, why it exists, or what it changes before investing time in a full review
+description: Use when user mentions a PR number or URL and wants to quickly understand what it does, why it exists, or what it changes before investing time in a full review; use pr-worktree first for isolated local checkout
 ---
 
 # PR Triage
@@ -24,15 +24,11 @@ PR body may be empty, misleading, or outdated. Cross-reference title, body, link
 
 ## Workflow
 
-### Step 1: Checkout + Parallel Fetch
+### Step 1: Isolated Checkout + Parallel Fetch
 
-**First, checkout the PR locally:**
+**First, use `pr-worktree` to checkout the PR into an isolated worktree.**
 
-```bash
-gh pr checkout <N>
-```
-
-This gives you the code on disk so you can inspect files directly with the agent's available file-reading and search tools instead of parsing remote diffs.
+Do not run `gh pr checkout` in the user's current workspace. All local reads, diffs, and tests for this PR should use the PR worktree as `workdir`.
 
 **Then, run metadata fetches in parallel:**
 
@@ -57,9 +53,9 @@ git diff origin/<base-ref>...HEAD
 
 If `origin/<base-ref>` doesn't exist locally yet, run `git fetch origin <base-ref>` first.
 
-**If user gave a URL**, extract `owner/repo/number` first, then add `--repo <OWNER/REPO>` to the checkout command.
+**If user gave a URL**, extract `owner/repo/number` first, then add `--repo <OWNER/REPO>` to `gh` metadata commands when needed.
 
-**If no repo given**, `gh pr checkout` infers the repo from the local checkout automatically.
+**If no repo given**, infer the repo from the local checkout.
 
 ### Step 2: Infer Purpose
 
@@ -130,13 +126,13 @@ Start with a **structured summary**, then immediately follow with a **plain-lang
 - 要在 main 上复现这个 Bug → 按上面给的思路操作
 - 只是看看 → 用户自行决定是否切回
 
-**Do NOT** automatically switch back to the original branch after triage. Stay on the PR branch so the user can immediately follow up with `pr-review`, `pr-fix`, or further exploration.
+**Do NOT** automatically remove the PR worktree after triage. Keep it available so the user can immediately follow up with `pr-review`, `pr-fix`, or further exploration.
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Skipping checkout | Always `gh pr checkout` first — local code is easier to explore than remote diffs |
+| Polluting the current workspace | Always use `pr-worktree` for isolated checkout first |
 | Only reading PR body | Body may be empty or wrong — always cross-reference diff and issues |
 | Summarizing body verbatim | Infer purpose from the diff; body is the author's claim, not the truth |
 | Missing linked issues | Issues explain WHY; without them you only understand WHAT |

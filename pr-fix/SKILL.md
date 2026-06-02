@@ -1,13 +1,13 @@
 ---
 name: pr-fix
-description: Use when user wants to checkout someone else's PR, make changes directly as a maintainer, and push to the PR branch
+description: Use when user wants to checkout someone else's PR, make changes directly as a maintainer, and push to the PR branch; use pr-worktree for isolated checkout so fixes do not disturb the current workspace
 ---
 
 # PR Fix
 
 ## Overview
 
-Maintainer workflow for directly modifying someone else's PR. Checkout → fix → commit → push. No forks, no branches — push straight to the PR's head branch.
+Maintainer workflow for directly modifying someone else's PR. Isolated worktree checkout → fix → commit → push. No forks, no new feature branches — push straight to the PR's head branch.
 
 **Prerequisite**: Understand the PR first (`pr-triage`), and know what needs fixing (`pr-review` or user's own assessment).
 
@@ -19,18 +19,11 @@ Maintainer workflow for directly modifying someone else's PR. Checkout → fix �
 
 ## Workflow
 
-### Step 1: Checkout PR
+### Step 1: Checkout PR in an Isolated Worktree
 
-```bash
-# Handle dirty working tree first
-if ! git diff --quiet; then
-  echo "Working tree has uncommitted changes"
-  # Ask user: stash or abort?
-  git stash push -m "pre-pr-fix-<N>"
-fi
+Use `pr-worktree` for checkout. Do not stash or switch the user's current workspace just to work on a PR.
 
-gh pr checkout <N>
-```
+For maintainer fixes, ensure `gh pr checkout <N>` runs inside the isolated fix worktree so it checks out the PR head branch there, not in the original workspace.
 
 Verify you're on the right branch:
 
@@ -118,8 +111,9 @@ gh pr comment <N> --body "Pushed a fix for <issue>: <explanation>"
 | Mistake | Fix |
 |--------|-----|
 | Modifying without understanding the PR | Run `pr-triage` first |
+| Stashing/switching the user's current workspace | Use `pr-worktree` and make fixes in the isolated worktree |
 | Refactoring adjacent code while fixing | Only touch what needs fixing |
 | Force-pushing without asking | Always ask first — it rewrites author's history |
 | Pushing after each commit | Batch commits, push once |
-| Stashing and forgetting to pop | After done: `git stash pop` to restore your work |
+| Pushing from a detached review worktree | Checkout the PR head branch inside the isolated fix worktree before committing |
 | Missing commit context | Always explain WHY in the commit message |
