@@ -60,21 +60,15 @@ If CI is failing or the PR touches test-sensitive areas:
 pytest tests/ -x -q --tb=short 2>&1 | tail -30
 ```
 
-### Step 4: Confirm Review Scope
+### Step 4: Use Full Audit Scope
 
-**Before writing any findings**, ask the user what kind of review they want:
-
-- **Full audit**: Must Fix / Should Fix / Nitpick structure — for PRs about to merge
-- **Focused feedback**: Specific concern (e.g. "ask author to split the PR", "check security only") — lightweight, 1-2 key points
-- **Quick impression**: High-level observations only — for PRs you're still evaluating
-
-Default to **full audit** only if the user explicitly asked for a thorough review. If the user gives a specific concern (like "too broad, ask them to split"), use **focused feedback** instead of producing a full categorized list.
+Always perform a **full audit**. Do not ask the user to choose a review scope. Even if the user mentions a specific concern, review the PR fully and include that concern in the normal severity-ranked findings when relevant.
 
 **Language: Chat with the user in 中文 (Simplified Chinese). GitHub review body and inline comments must be in English.** Code identifiers, file paths, and technical terms stay in English in both contexts. When presenting findings locally in the conversation, use 中文. When submitting to GitHub, use English.
 
 ### Step 5: Present Findings
 
-**For full audit**, structure by severity. Every finding must include file:line and a concrete suggestion:
+Structure by severity. Every finding must include file:line and a concrete suggestion:
 
 ```
 ## Review: PR #<N>
@@ -91,8 +85,6 @@ Default to **full audit** only if the user explicitly asked for a thorough revie
 ### Positive Notes
 - <作者做得好的地方>
 ```
-
-**For focused feedback**, present 1-3 key points directly without the severity hierarchy.
 
 **Rules for findings:**
 - Never flag style issues unless they violate project conventions
@@ -131,4 +123,4 @@ This lets the author apply the suggestion with one click.
 | All negative, no positive | Include what the author did well |
 | Auto-publishing without user approval | ALWAYS create PENDING, wait for explicit "发布" |
 | Writing review body in Chinese when it goes to GitHub | Chat in 中文, GitHub reviews in English |
-| Producing full audit when user has a specific concern | Ask about review scope first (Step 4) — use focused feedback for targeted requests |
+| Asking what review scope the user wants | Always use full audit scope |
