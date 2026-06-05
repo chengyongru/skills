@@ -55,7 +55,8 @@ $config | Add-Member -Force -NotePropertyName gateway -NotePropertyValue ([pscus
   port = $gatewayPort
   heartbeat = [pscustomobject]@{ enabled = $false }
 })
-$config | ConvertTo-Json -Depth 8 | Set-Content -Path $configPath -Encoding UTF8
+$json = $config | ConvertTo-Json -Depth 8
+[System.IO.File]::WriteAllText($configPath, $json, [System.Text.UTF8Encoding]::new($false))
 
 $out = Join-Path $verifyDir 'gateway.out.log'
 $err = Join-Path $verifyDir 'gateway.err.log'
@@ -64,4 +65,29 @@ $p = Start-Process -FilePath python -ArgumentList @('-m','nanobot','gateway','--
 $p.Id | Set-Content (Join-Path $verifyDir 'gateway.pid')
 ```
 
-Wait until `$websocketPort` accepts TCP connections before launching Playwright. If the browser URL is needed in a later command, write `$websocketPort` to a file in `$verifyDir` or keep the same PowerShell session.
+Wait until the WebUI bootstrap route returns HTTP 200 before launching Playwright or WebSocket checks. Avoid raw TCP probes because the WebSocket server logs invalid HTTP request exceptions for them.
+
+```powershell
+$deadline = (Get-Date).AddSeconds(30)
+$bootstrapUrl = "http://127.0.0.1:$websocketPort/webui/bootstrap"
+while ((Get-Date) -lt $deadline) {
+  try {
+    $response = Invoke-WebRequest -UseBasicParsing -Uri $bootstrapUrl -TimeoutSec 2
+    if ($response.StatusCode -eq 200) { break }
+  } catch {}
+  Start-Sleep -Milliseconds 250
+}
+if ((Get-Date) -ge $deadline) {
+  Get-Content -Path $err -ErrorAction SilentlyContinue | Select-Object -Last 120
+  throw "gateway did not become ready at $bootstrapUrl"
+}
+```
+
+If a verification seeds session or transcript JSONL files directly, write them without a UTF-8 BOM:
+
+```powershell
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[System.IO.File]::WriteAllLines($jsonlPath, [string[]]$lines, $utf8NoBom)
+```
+
+If the browser URL is needed in a later command, write `$websocketPort` to a file in `$verifyDir` or keep the same PowerShell session.

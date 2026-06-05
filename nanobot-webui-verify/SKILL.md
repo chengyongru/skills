@@ -28,11 +28,13 @@ npm run build
 
 4. Start `nanobot gateway` from the repository root with a per-run temporary config copied from `~/.nanobot` when available. Assign fresh free ports for `channels.websocket.port` and `gateway.port`; access the browser through the websocket port.
 
-5. Run `playwright-cli` headless checks against `http://127.0.0.1:<websocket-port>/`. Use a unique session name per verification run.
+5. Wait for readiness with an HTTP request to `http://127.0.0.1:<websocket-port>/webui/bootstrap`; do not probe the WebSocket port with raw TCP, which logs noisy invalid HTTP request exceptions.
 
-6. Stop the gateway, close the `playwright-cli` session, and remove temporary specs, logs, test-results, and config directories.
+6. Run `playwright-cli` headless checks against `http://127.0.0.1:<websocket-port>/`. Use a unique session name per verification run.
 
-7. Report exact commands, pass/fail status, and any warnings that matter.
+7. Stop the gateway, close the `playwright-cli` session, and remove temporary specs, logs, test-results, and config directories. Preserve screenshot and snapshot evidence files; report their paths and ask the user whether to delete them.
+
+8. Report exact commands, pass/fail status, and any warnings that matter.
 
 ## Gateway Setup
 
@@ -42,6 +44,8 @@ For concrete PowerShell setup, read [references/gateway-setup.md](references/gat
 - Copy `~/.nanobot/config.json` into that directory when it exists, then mutate the copy only.
 - Assign fresh free `channels.websocket.port` and `gateway.port` values per gateway.
 - Use different websocket and gateway ports, and open the browser through the websocket port.
+- Write temporary `config.json` and any seeded session/transcript JSONL as UTF-8 without BOM. PowerShell `Set-Content -Encoding UTF8` can produce a BOM on Windows, which nanobot treats as invalid JSON.
+- Wait for `GET /webui/bootstrap` to return HTTP 200 before running WebSocket or browser checks.
 
 ## Proxy Rules
 
@@ -70,19 +74,32 @@ Use a session name tied to `$runId` so concurrent verifications do not share bro
 ```powershell
 $session = "nanobot-webui-$runId"
 $env:NANOBOT_WEBUI_URL = "http://127.0.0.1:$websocketPort"
+$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
+New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
 
 playwright-cli -s=$session open "$env:NANOBOT_WEBUI_URL/#/settings?section=models"
-playwright-cli -s=$session snapshot --filename=(Join-Path $verifyDir 'settings-models.yaml')
+$snapshotPath = Join-Path $evidenceDir 'settings-models.yaml'
+playwright-cli -s=$session snapshot --filename $snapshotPath
+if (-not (Test-Path $snapshotPath)) { throw "snapshot was not created: $snapshotPath" }
 playwright-cli -s=$session eval "() => ({ hash: window.location.hash, text: document.body.innerText })"
 playwright-cli -s=$session reload
 playwright-cli -s=$session eval "() => ({ hash: window.location.hash, text: document.body.innerText })"
-playwright-cli -s=$session screenshot --filename=(Join-Path $verifyDir 'after-reload.png')
+$screenshotPath = Join-Path $evidenceDir 'after-reload.png'
+playwright-cli -s=$session screenshot --filename $screenshotPath
+if (-not (Test-Path $screenshotPath)) { throw "screenshot was not created: $screenshotPath" }
 ```
 
 For route-persistence checks, verify both:
 
 - The expected UI text is visible in the snapshot or `document.body.innerText`.
 - `window.location.hash` still matches the expected route after `reload`.
+
+When verifying persisted chat refresh specifically:
+
+- Prefer a built-in command such as `/model` for a deterministic assistant response without external LLM calls.
+- Prove the replay through the public `GET /api/sessions/<encoded-key>/webui-thread` route using the bootstrap API token; do not call transcript helpers directly.
+- For legacy transcript backfill, seed isolated `workspace/sessions/*.jsonl` and `webui/*.jsonl` files as UTF-8 without BOM, then fetch the public route.
+- For transcript append failure behavior, make the target transcript JSONL path a directory to trigger an append `OSError` for that chat only. Do not replace the entire `webui` runtime directory with a file; that can break unrelated bootstrap/hydration paths and weakens the evidence.
 
 Close the named browser session during cleanup:
 
@@ -97,7 +114,7 @@ Use this only when `playwright-cli` is too awkward for the needed assertions, po
 
 ## Cleanup
 
-Always stop the gateway process before finishing:
+Always stop the gateway process before finishing. Do not delete screenshots or snapshots automatically. Keep them in `$evidenceDir`, report the path, then ask the user whether to delete the evidence directory.
 
 ```powershell
 if ($session) {
@@ -110,9 +127,20 @@ if (Test-Path (Join-Path $verifyDir 'gateway.pid')) {
     Stop-Process -Id ([int]$pidText) -Force -ErrorAction SilentlyContinue
   }
 }
+$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
+$evidenceFiles = Get-ChildItem -Path $verifyDir -Recurse -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Extension -in '.png', '.jpg', '.jpeg', '.webp', '.yml', '.yaml' }
+if ($evidenceFiles) {
+  New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+  foreach ($file in $evidenceFiles) {
+    Move-Item -LiteralPath $file.FullName -Destination (Join-Path $evidenceDir $file.Name) -Force
+  }
+}
 Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $root "webui\.verify-webui-$runId.spec.mjs")
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $root 'webui\test-results')
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $verifyDir
 ```
 
-Before committing, check `git status --short` and restore accidental generated files such as `webui/bun.lock` if they were only touched by verification tooling.
+After reporting verification results, ask: "要不要删除保留的验证截图/快照目录 `$evidenceDir`？" Delete it only after explicit confirmation. If the user wants to attach screenshots to a PR, keep the directory and include the paths in the final report.
+
+Before committing, check `git status --short` and restore accidental generated files such as `webui/bun.lock` if they were only touched by verification tooling. Do not stage `webui\.verify-evidence-*` directories.
