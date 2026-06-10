@@ -9,12 +9,12 @@ description: Use when user wants to do a full maintainer-quality review of a PR,
 
 Structured maintainer-quality code review for PRs. Read changed files in context, verify the PR's stated behavior against implementation and tests, judge merge readiness, produce prioritized findings, and optionally submit as a GitHub review with pending review pattern.
 
-**Prerequisite**: Run `pr-triage` first to understand the PR's purpose. Reviews without context miss the point.
+**Prerequisite**: Run `triage` first to understand the PR's purpose. Reviews without context miss the point.
 
 ## When to Use
 
 - User says "review PR #X", "do a code review", or asks whether a PR is merge-ready
-- After `pr-triage` when user wants detailed code analysis
+- After `triage` when user wants detailed code analysis of a PR
 - User wants to submit review comments on GitHub
 
 ## Workflow
@@ -25,7 +25,7 @@ Before reading changed files or running tests, use `pr-worktree` to ensure the P
 
 ### Step 1: Confirm Context
 
-If `pr-triage` wasn't run this session, do a lightweight context fetch:
+If `triage` was not run for this PR in this session, do a lightweight context fetch:
 
 ```bash
 gh pr view <N> --json title,body,headRefName,baseRefName,commits,files,mergeable,reviewDecision,statusCheckRollup
@@ -166,7 +166,7 @@ This lets the author apply the suggestion with one click.
 
 | Mistake | Fix |
 |---------|-----|
-| Reviewing without understanding purpose | Run `pr-triage` first |
+| Reviewing without understanding purpose | Run `triage` first |
 | Switching the user's current branch | Use `pr-worktree` and run review commands in the isolated worktree |
 | Only reading diff hunks | Read full files for context |
 | Posting comments individually | Use pending review to batch all comments |

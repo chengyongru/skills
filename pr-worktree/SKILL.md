@@ -1,6 +1,6 @@
 ---
 name: pr-worktree
-description: Use when any GitHub PR workflow needs to checkout, inspect, review, test, or modify a PR locally without disturbing the current workspace; provides isolated git worktree checkout and cleanup conventions for pr-triage, pr-review, and pr-fix
+description: Use when any GitHub PR workflow needs to checkout, inspect, review, test, or modify a PR locally without disturbing the current workspace; provides isolated git worktree checkout and cleanup conventions for triage, pr-review, and pr-fix
 ---
 
 # PR Worktree
@@ -9,7 +9,7 @@ description: Use when any GitHub PR workflow needs to checkout, inspect, review,
 
 Checkout GitHub PRs into isolated git worktrees so PR triage, review, tests, and maintainer fixes never switch branches or pollute the user's current workspace.
 
-Use this skill before any `gh pr checkout`-style operation in `pr-triage`, `pr-review`, or `pr-fix`.
+Use this skill before any `gh pr checkout`-style operation in `triage` PR mode, `pr-review`, or `pr-fix`.
 
 ## Workflow
 

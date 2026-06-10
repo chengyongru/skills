@@ -9,7 +9,7 @@ description: Use when user wants to checkout someone else's PR, make changes dir
 
 Maintainer workflow for directly modifying someone else's PR. Isolated worktree checkout → fix → commit → push. No forks, no new feature branches — push straight to the PR's head branch.
 
-**Prerequisite**: Understand the PR first (`pr-triage`), and know what needs fixing (`pr-review` or user's own assessment).
+**Prerequisite**: Understand the PR first (`triage`), and know what needs fixing (`pr-review` or user's own assessment).
 
 ## When to Use
 
@@ -110,7 +110,7 @@ gh pr comment <N> --body "Pushed a fix for <issue>: <explanation>"
 
 | Mistake | Fix |
 |--------|-----|
-| Modifying without understanding the PR | Run `pr-triage` first |
+| Modifying without understanding the PR | Run `triage` first |
 | Stashing/switching the user's current workspace | Use `pr-worktree` and make fixes in the isolated worktree |
 | Refactoring adjacent code while fixing | Only touch what needs fixing |
 | Force-pushing without asking | Always ask first — it rewrites author's history |
