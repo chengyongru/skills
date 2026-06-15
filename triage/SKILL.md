@@ -1,200 +1,202 @@
 ---
 name: triage
-description: Use when the user wants to quickly understand a complex PR, issue, article, document, web link, discussion, spec, changelog, or unfamiliar topic in plain language; summarize what it is, why it exists, what changed or is being claimed, relevant linked context, risks, and open questions. Match the user's language in the output. For GitHub PRs, use pr-worktree first for isolated local checkout before reading diffs.
+description: Use when the user wants to quickly understand a complex PR, issue, article, document, web link, discussion, spec, changelog, or unfamiliar topic in plain language; produce a concise decision brief that explains what it is, why it matters, what changed or is being claimed, the main risks, and the next useful action. Match the user's language. For GitHub PRs, use pr-worktree first for isolated local checkout before reading diffs.
 ---
 
 # Context Triage
 
-## Overview
+## Goal
 
-Turn complicated material into a concise, human-friendly briefing. The input may be a PR, issue, article, web page, design doc, release note, long discussion, or pasted text.
+Produce a fast decision brief, not a generic summary.
 
-Answer four questions:
+The user should be able to answer, at a glance:
 
 1. What is this?
-2. Why does it exist or matter?
-3. What are the important details, changes, claims, or consequences?
-4. What is uncertain, risky, or worth checking next?
+2. Why should I care?
+3. What changed, happened, or is being claimed?
+4. What is risky or uncertain?
+5. What should I do next?
 
-Use this as a fast understanding pass before deeper review, implementation, debugging, research, or decision-making.
+Default to the perspective of a busy maintainer, reviewer, decision-maker, or operator. Put the decision-useful point first.
 
 ## Language
 
-Match the user's language in the final triage.
+Match the user's language.
 
-- If the user writes in Chinese, write the triage in Chinese.
-- If the user writes in English, write the triage in English.
-- If the user mixes languages, use the main language of the user's request.
-- Keep code identifiers, file paths, commands, quoted titles, API names, and proper nouns in their original language.
-- Do not force a Chinese "简单来说" section for non-Chinese users. Use the equivalent natural label, such as "In plain terms".
+- If the user writes Chinese, write natural Chinese.
+- If the user writes English, write English.
+- If the user mixes languages, use the dominant language of the request.
+- Do not mix Chinese and English for ordinary concepts when Chinese is clear.
+- Keep code identifiers, file paths, commands, API names, product names, quoted titles, branch names, and proper nouns in their original form.
+- Use an English technical term only when translating it would be less precise.
 
-## Core Principle
+## Evidence
 
-**Infer meaning from multiple signals, never from a single surface.**
+Infer meaning from multiple signals, never from one surface.
 
-Titles, summaries, abstracts, PR bodies, and article intros are claims. Cross-check them against the body, linked context, commits, diffs, issues, comments, citations, dates, authorship, examples, and concrete artifacts.
+Titles, PR bodies, article intros, release notes, and issue summaries are claims. Cross-check them against concrete artifacts:
 
-When sources conflict, prefer primary evidence:
-
-1. Actual artifact or diff
-2. Primary source or linked issue/spec
-3. Concrete examples, logs, screenshots, or data
+1. Actual diff, artifact, data, log, screenshot, or reproduction
+2. Primary source, linked issue, spec, or official doc
+3. Concrete examples and timeline
 4. Author summary
 5. Title or headline
 
+If evidence conflicts, state the conflict briefly and prefer the concrete artifact.
+
 ## Workflow
 
-### Step 1: Classify the Input
+### 1. Classify
 
-Identify the material type and choose the right evidence path:
+Choose the evidence path:
 
 | Input | Evidence path |
 |---|---|
 | GitHub PR | Use the PR workflow below |
 | GitHub issue/discussion | Read title, body, labels, comments, linked PRs/issues, reproduction details, and timeline |
-| Article or web link | Read the page, then follow only the links needed to understand background, evidence, or consequences |
+| Article or web link | Read the page, then follow only links needed to verify background, evidence, or consequences |
 | Spec/design doc | Read goals, non-goals, architecture, alternatives, risks, and unresolved questions |
 | Changelog/release note | Identify user-visible changes, breaking changes, migration needs, and affected components |
 | Pasted text | Extract claims, actors, timeline, assumptions, and missing context |
 
-If the user's request is ambiguous, make a reasonable assumption and say what kind of triage you performed.
+If the request is ambiguous, make a reasonable assumption and say what you triaged in one short phrase.
 
-### Step 2: Gather Context
+### 2. Gather Context
 
-Fetch enough context to explain the situation accurately.
+Fetch enough evidence to explain the situation accurately. Stop when extra context no longer changes the conclusion.
 
-For web links and articles:
+For web links:
 
-- Open the provided link and identify the author/source, date, main claim, and target audience.
-- Follow linked material when it is directly needed to understand the topic, such as original announcements, specs, cited issues, referenced docs, previous posts, or source code.
-- Prefer primary sources over secondary summaries.
-- Stop following links once additional context stops changing the explanation.
-- Note inaccessible, paywalled, deleted, or ambiguous sources instead of guessing.
+- Identify source, author, date, main claim, and audience.
+- Follow directly relevant primary links only.
+- Note inaccessible, deleted, paywalled, or ambiguous sources instead of guessing.
 
-For local files or docs:
+For local files/docs:
 
 - Read the referenced file first.
-- Search nearby docs, tests, examples, or code paths only when they clarify intent or consequences.
+- Search nearby docs, tests, examples, or code only when it clarifies intent or consequences.
 
 For GitHub PRs:
 
-**First, use `pr-worktree` to checkout the PR into an isolated worktree.**
+First use `pr-worktree` to checkout the PR into an isolated worktree. Do not run `gh pr checkout` in the user's current workspace. All local reads, diffs, and tests for this PR should use the PR worktree as `workdir`.
 
-Do not run `gh pr checkout` in the user's current workspace. All local reads, diffs, and tests for this PR should use the PR worktree as `workdir`.
-
-Then run metadata fetches in parallel:
+Then fetch metadata in parallel:
 
 ```bash
-# PR metadata
-gh pr view <N> --json title,body,state,author,labels,createdAt,headRefName,baseRefName,commits,additions,deletions,changedFiles
-
-# CI status
+gh pr view <N> --json title,body,state,author,labels,createdAt,headRefName,baseRefName,commits,additions,deletions,changedFiles,mergeable,reviewDecision,statusCheckRollup,isDraft
 gh pr checks <N> 2>/dev/null || echo "no checks"
-
-# Linked issues (timeline)
 gh api repos/<OWNER/REPO>/issues/<N>/timeline --paginate \
-  --jq '.[] | select(.event == "cross-referenced" or .event == "connected") | "\(.event) | #\(.source.issue.number // .source.pull_request.number // "") | \(.source.issue.title // "")"'
+  --jq '.[] | select(.event == "cross-referenced" or .event == "connected") | "\(.event) | #\(.source.issue.number // .source.pull_request.number // "") | \(.source.issue.title // .source.pull_request.title // "")"'
 ```
 
-For the diff, use local git with the remote base ref because local base branches may be stale:
+Use the remote base for diff:
 
 ```bash
+git fetch origin <base-ref>
 git diff origin/<base-ref>...HEAD
 ```
 
-If `origin/<base-ref>` does not exist locally, run `git fetch origin <base-ref>` first.
+Keep the PR worktree after triage for follow-up review or fixes.
 
-If the user gave a PR URL, extract `owner/repo/number` first, then add `--repo <OWNER/REPO>` to `gh` metadata commands when needed. If no repo is given, infer the repo from the local checkout.
+### 3. Infer
 
-Do not automatically remove the PR worktree after triage. Keep it available for `pr-review`, `pr-fix`, or follow-up exploration.
-
-### Step 3: Infer the Story
-
-Synthesize the evidence into a story a busy human can understand.
+Do not narrate every fact. Distill the story.
 
 Look for:
 
-- The triggering problem, question, or opportunity
-- The actor or audience affected
-- The concrete change, claim, decision, or event
-- The timeline or dependency chain
-- The technical, product, operational, or user-facing impact
-- The tradeoffs, risks, missing pieces, and unresolved questions
+- The actual problem, opportunity, or decision
+- Who or what is affected
+- The smallest accurate description of the change or claim
+- The important dependency or timeline
+- The review, product, operational, or user impact
+- The main risk and the next useful action
 
-For bug-fix PRs, read the diff like a debugger:
+For bug-fix PRs, identify:
 
-- Is the bug caused by a race condition or timing issue?
-- Is it probabilistic or always reproducible?
-- What exact state and action sequence trigger it?
-- Does the fix add guards, retries, ordering, locking, merge logic, or validation?
-- Is the blast radius one user, one feature, or a broader subsystem?
+- Bug nature: race, deterministic trigger, probabilistic trigger, validation gap, ordering issue, stale state, missing guard, etc.
+- Exact trigger condition when visible
+- Reproduction idea on current main
+- Whether the fix narrows the blast radius or changes broader behavior
 
-### Step 4: Present the Briefing
+## Output Contract
 
-Start with a structured summary. Keep it short, but include enough context that the user does not need to open the source immediately.
+Default output must be short, conclusion-first, and easy to scan in one screen.
 
-Use this shape when it fits, translating headings to the user's language:
-
-```markdown
-## <Artifact>: <title>
-
-**Source:** <author/site/repo> | **Date:** <date if relevant> | **Status:** <state if relevant>
-
-### Purpose
-<1-2 sentences: what this is and why it exists or matters.>
-
-### Key Points
-- <important point, change, claim, or finding>
-- <important point, change, claim, or finding>
-
-### Context
-- <linked issue/spec/post/doc/source and why it matters>
-- <timeline or dependency if relevant>
-
-### Impact / Risk
-- **Impact:** <who or what is affected>
-- **Risk:** <low/medium/high + why>
-- **Watchouts:** <uncertainties, missing data, contradictions, or migration concerns>
-
-### Open Questions
-- <anything unclear or suspicious>
-```
-
-Immediately after the structured summary, add a plain-language translation in the user's language:
-
-> **简单来说** / **In plain terms**: <Explain the core meaning in 2-3 everyday sentences. Avoid repeating the structured summary or leaning on technical terms.>
-
-For PRs, include PR-specific metadata when available:
+Use this shape unless the user asks for a different format:
 
 ```markdown
-## PR #<N>: <title>
+**结论：** <artifact type + current decision state + core meaning in 1-2 sentences.>
 
-**Author:** @<author> | **<head> -> <base>** | **<N> commits, +<add>/-<del>, <files> files**
-**CI:** <pass/fail/pending/no checks>
+**它是什么：** <the shortest clear description of the thing.>
+
+**关键变化：** <2-4 bullets or one compact sentence. Mention only changes needed to understand the decision.>
+
+**风险：** <main uncertainty or review concern. Say "低/中/高" only if useful.>
+
+**下一步：** <one concrete next action.>
 ```
 
-For bug-fix PRs, also include the equivalent of:
+Translate headings naturally for non-Chinese users, for example: `Conclusion`, `What It Is`, `Key Changes`, `Risk`, `Next Step`.
 
-> **Bug 性质 / Bug nature**: <race condition, probabilistic trigger, deterministic trigger, and exact trigger condition>
->
-> **复现思路 / Reproduction idea**: <how to reproduce on main, with 1-2 concrete approaches such as temporary code injection or natural UI/network throttling>
+### Output Rules
 
-### Step 5: Offer Useful Next Steps
+- Lead with the answer, not metadata.
+- Prefer 5 short sections or fewer.
+- Avoid long metadata banners. Include author, CI, dates, file counts, labels, and status only when they change the decision.
+- Do not add a separate "plain terms" section if the whole answer is already plain.
+- Avoid generic phrases like "this is important because it improves maintainability" unless you name the specific boundary, workflow, user, or decision it affects.
+- Do not list many files. Name the 1-3 files/modules that matter.
+- Do not dump all CI jobs; say "CI 全绿", "CI 失败", "无 CI", or the exact failing job if that matters.
+- Do not over-explain process followed. Mention worktree, fetches, or tests only when relevant to trust or next steps.
+- Keep bullets flat. Avoid nested bullets.
+- For Chinese output, do not use English labels like `Impact / Risk` when `影响 / 风险` or `风险` is clear.
 
-Offer only the next steps that fit the material:
+### PR-Specific Emphasis
 
-- For a PR: `pr-review`, `pr-fix`, reproduce the bug on main, or continue investigating a specific subsystem.
-- For an article or doc: verify a claim from primary sources, inspect linked code/data, compare against another source, or produce a shorter executive summary.
-- For a spec or proposal: review risks, turn it into an implementation plan, or identify missing requirements.
+For PRs, the conclusion should tell a maintainer one of:
+
+- ready to review
+- blocked by merge conflict
+- blocked by failing CI
+- blocked by draft/review process
+- likely needs changes before review
+- risky despite green CI
+
+Then explain why in one sentence.
+
+For PRs, prioritize:
+
+1. What kind of PR it is: feature, bug fix, refactor, cleanup, test-only, docs, dependency bump
+2. What problem it solves
+3. What behavior or boundary changes
+4. What a reviewer should focus on
+5. Whether it is mergeable, draft, reviewed, or blocked
+
+Do not make PR triage a file-by-file changelog.
+
+For bug-fix PRs, add compact lines when evidence supports them:
+
+```markdown
+**Bug 性质：** <race/deterministic/probabilistic/etc. + trigger condition.>
+**复现思路：** <one practical way to reproduce on main.>
+```
+
+## Useful Next Steps
+
+Offer only next steps that fit the material:
+
+- PR: review the named risk area, reproduce the bug, run a targeted test, use `pr-review`, or use `pr-fix`
+- Article/doc: verify one key claim from primary evidence, inspect linked code/data, or produce a shorter executive summary
+- Spec/proposal: review risks, turn into implementation plan, or identify missing requirements
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---|---|
-| Only summarizing the first page | Follow directly relevant links when they explain background, evidence, or consequences |
-| Treating a title/body as truth | Cross-check against concrete artifacts and primary sources |
-| Producing a generic summary | Explain why it matters and who is affected |
-| Ignoring the user's language | Match the user's language while preserving code, paths, commands, and proper nouns |
-| Hiding uncertainty | Call out missing, inaccessible, contradictory, or weak evidence |
-| Polluting a repo while reading PRs | Always use `pr-worktree` for isolated PR checkout first |
-| Over-reading link chains | Stop when extra links no longer change the explanation |
+| Starting with metadata | Start with conclusion and decision state |
+| Summarizing everything | Select facts that change understanding or action |
+| Using mixed Chinese/English labels | Use the user's language; keep only identifiers/proper nouns unchanged |
+| Producing a file-by-file PR summary | Explain the change category, intent, risk, and review focus |
+| Treating title/body as truth | Cross-check against actual artifact and linked context |
+| Hiding uncertainty | State the missing or weak evidence briefly |
+| Polluting a repo while reading PRs | Use `pr-worktree` first |
