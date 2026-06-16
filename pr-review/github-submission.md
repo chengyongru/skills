@@ -4,7 +4,17 @@ Mechanical steps for creating, managing, and publishing GitHub PR reviews via th
 
 **Core rule: ALWAYS create as PENDING. NEVER auto-publish.** The user must explicitly say "发布" before the review goes live.
 
-The review MUST include inline comments on specific code lines (like a human would on the "Files changed" tab), not just a body summary.
+**Approval boundary: NEVER submit an `APPROVE` review.** This skill may publish `REQUEST_CHANGES` or `COMMENT` only. If no blocking findings are found, publish a `COMMENT` review that says so; approval is reserved for a human maintainer outside this skill.
+
+**Identity boundary: ALWAYS disclose nanobot.** Every GitHub review body must start with exactly:
+
+```text
+Automated PR review by nanobot. This is not a human maintainer review or approval.
+```
+
+Do not phrase the body or inline comments as if a human maintainer personally reviewed or approved the PR.
+
+The review MUST include inline comments on specific code lines in GitHub's "Files changed" tab style, not just a body summary.
 
 ## 1. Build JSON Payload and Create Pending Review
 
@@ -19,6 +29,8 @@ Inline comments use `line` (file line number) + `side` (`"RIGHT"` for new code, 
 import json
 
 body = (
+    "Automated PR review by nanobot. "
+    "This is not a human maintainer review or approval.\n\n"
     "Review body here. "
     "Use string concatenation for multi-line content."
 )
@@ -77,7 +89,7 @@ Show the PENDING review URL. Tell the user they can view it on GitHub's "Files c
 gh api repos/<OWNER/REPO>/pulls/<N>/reviews/<REVIEW_ID> --method DELETE
 ```
 
-## 3. Publish After Explicit Approval
+## 3. Publish After Explicit User Confirmation
 
 When the user confirms, submit the review event:
 
@@ -88,11 +100,10 @@ gh api repos/<OWNER/REPO>/pulls/<N>/reviews/<REVIEW_ID>/events \
 ```
 
 **Event type decision:**
-- `APPROVE`: Only nits, no blocking issues
 - `REQUEST_CHANGES`: Any "must fix" findings
-- `COMMENT`: Informational, questions, or suggestions without verdict
+- `COMMENT`: Informational findings, questions, suggestions without blocking verdict, or "no blocking findings found"
 
-Note: `PENDING` is NOT a valid event type for submission. It only exists as the initial state when `event` is omitted during creation.
+Do not use `APPROVE` even when there are no findings. Note: `PENDING` is NOT a valid event type for submission. It only exists as the initial state when `event` is omitted during creation.
 
 ## 4. Edit a Published Review
 
@@ -121,3 +132,5 @@ mutation {
 | Using `gh pr review --comment` | This creates a NEW review, cannot edit existing ones |
 | Using `python -c "..."` for payload building | Write script to temp file first — backticks/quotes in review body break bash |
 | Using `/tmp/` on Windows | Use a Windows-compatible temp path (e.g. `C:/tmp/`) |
+| Publishing a review without identity disclosure | Start the review body with the exact nanobot disclosure line |
+| Writing as if a human maintainer reviewed it | Say nanobot performed an automated review; do not imply human approval |
