@@ -37,13 +37,19 @@ Default state path:
 Common commands:
 
 ```bash
+# Policy management
 python <skill>/scripts/pr_audit_state.py set-policy --created-after "<ISO datetime>"
-python <skill>/scripts/pr_audit_state.py set-policy --min-pr-number <N>
 python <skill>/scripts/pr_audit_state.py policy
-python <skill>/scripts/pr_audit_state.py should-audit --pr 123 --head-sha abc123
+
+# Discovery: get all pending PRs in one call
+python <skill>/scripts/pr_audit_state.py list-pending --repo owner/name
+
+# Per-PR state transitions
+python <skill>/scripts/pr_audit_state.py should-audit --pr 123 --created-at "<ISO>"
 python <skill>/scripts/pr_audit_state.py mark-started --pr 123 --head-sha abc123 --title "Fix bug"
-python <skill>/scripts/pr_audit_state.py mark-reviewed --pr 123 --head-sha abc123 --verdict "Request changes" --label bug --label backend
+python <skill>/scripts/pr_audit_state.py mark-reviewed --pr 123 --verdict "Clean" --label enhancement
 python <skill>/scripts/pr_audit_state.py mark-skipped --pr 123 --reason "draft"
+python <skill>/scripts/pr_audit_state.py mark-failed --pr 123 --reason "checkout error"
 python <skill>/scripts/pr_audit_state.py list
 ```
 
@@ -87,30 +93,27 @@ python <skill>/scripts/pr_audit_state.py set-policy --min-pr-number <N>
 
 Use `created_after` when possible because it directly represents "do not audit PRs created before automation started." Use `min_pr_number` only when that is the available policy input. Do not invent or hardcode a cutoff inside the skill; it must come from the user, the external task configuration, or repository policy.
 
-### Step 2: Discover PRs and Labels
+### Step 2: Discover Pending PRs and Labels
 
-Use GitHub CLI:
-
-```bash
-gh pr list --state open --limit 100 --json number,title,author,isDraft,headRefName,headRefOid,baseRefName,labels,updatedAt,createdAt,url
-gh label list --limit 200
-```
-
-Keep the live labels in context for this run. Infer the repository's taxonomy from current label names and descriptions; do not assume labels from another repository.
-
-### Step 3: Filter Idempotently
-
-For each candidate PR, call the state script:
+Get the list of PRs that need auditing in a single call:
 
 ```bash
-python <skill>/scripts/pr_audit_state.py should-audit --pr <N> --head-sha <SHA> --created-at "<createdAt>"
+python <skill>/scripts/pr_audit_state.py list-pending --repo owner/name
 ```
 
-Skip the PR when `should_audit` is false. Common reasons include `already_audited_once`, `before_created_after_cutoff`, `before_min_pr_number`, and `missing_created_at_for_cutoff`.
+This handles all filtering internally: reads policy `created_after` from state, fetches open PRs from GitHub, skips drafts and pre-cutoff PRs, and excludes already-audited entries. Returns only `{"pending": [...]}` — each entry includes `pr`, `title`, `author`, `head_sha`, `url`, `created_at`.
 
-Use `--force` only when the user explicitly asks to re-run an audit.
+When there are no pending PRs, the output is `{"pending": []}` — silent exit.
 
-### Step 4: Audit One PR at a Time
+Also fetch the repository's labels for this run:
+
+```bash
+gh label list --repo owner/name --limit 200
+```
+
+Infer the repository's taxonomy from current label names and descriptions; do not assume labels from another repository.
+
+### Step 3: Audit One PR at a Time
 
 For each selected PR:
 
@@ -131,7 +134,7 @@ For each selected PR:
 
 If the PR is skipped by policy after inspection, use `mark-skipped`. If audit fails due to environment, permissions, checkout, or tests, use `mark-failed` with a concise reason. Failed PRs are still considered attempted and should not loop forever across repeated invocations; retry only when explicitly forced.
 
-### Step 5: Produce Digest
+### Step 4: Produce Digest
 
 The final response should be in the user's language and include:
 
@@ -159,3 +162,4 @@ The review artifact itself, if shown or published, must remain in professional E
 | Approving PRs | Never submit `APPROVE`; `pr-review` can only comment or request changes |
 | Running too many PRs in one invocation | Apply a run budget and continue next time |
 | Letting failed audits loop forever | Mark failed attempts and require explicit retry |
+| Calling `should-audit` per PR in a loop | Use `list-pending --repo owner/name` to get pending PRs in one call |

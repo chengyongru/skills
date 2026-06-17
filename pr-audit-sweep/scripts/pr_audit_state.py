@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -341,6 +342,94 @@ def cmd_set_policy(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_list_pending(args: argparse.Namespace) -> int:
+    state = load_state(args.state)
+    policy = state.setdefault("policy", {"mode": "once_per_pr"})
+    created_after = policy.get("created_after")
+    repo = args.repo
+
+    cmd = [
+        "gh", "pr", "list",
+        "--repo", repo,
+        "--state", "open",
+        "--limit", str(args.limit),
+        "--json", "number,createdAt,title,isDraft,author,headRefOid,url",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print_json({"error": "gh pr list failed", "stderr": result.stderr.strip()})
+        return 1
+
+    try:
+        prs = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        print_json({"error": f"gh pr list returned invalid JSON: {exc}"})
+        return 1
+
+    if not isinstance(prs, list):
+        print_json({"error": "gh pr list returned non-array"})
+        return 1
+
+    pending: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+
+    for pr in prs:
+        if not isinstance(pr, dict):
+            continue
+        pr_num = pr.get("number")
+        if pr_num is None:
+            continue
+
+        if pr.get("isDraft"):
+            skipped.append({"pr": pr_num, "reason": "draft", "title": pr.get("title", "")})
+            continue
+
+        if created_after:
+            created_at_raw = pr.get("createdAt", "")
+            if not created_at_raw:
+                skipped.append({"pr": pr_num, "reason": "missing_created_at", "title": pr.get("title", "")})
+                continue
+            try:
+                created_at_dt = parse_iso(created_at_raw, "createdAt")
+                created_after_dt = parse_iso(created_after, "policy.created_after")
+            except SystemExit:
+                skipped.append({"pr": pr_num, "reason": "invalid_created_at", "created_at": created_at_raw, "title": pr.get("title", "")})
+                continue
+            if created_at_dt < created_after_dt:
+                skipped.append({"pr": pr_num, "reason": "before_cutoff", "created_at": created_at_raw, "title": pr.get("title", "")})
+                continue
+
+        entry = get_entry(state, pr_num)
+        if entry and entry.get("status") in FINAL_STATES:
+            skipped.append({"pr": pr_num, "reason": "already_audited", "status": entry.get("status"), "title": pr.get("title", "")})
+            continue
+        if entry and entry.get("status") == "in_progress":
+            skipped.append({"pr": pr_num, "reason": "in_progress", "title": pr.get("title", "")})
+            continue
+
+        pending.append({
+            "pr": pr_num,
+            "created_at": pr.get("createdAt", ""),
+            "title": pr.get("title", ""),
+            "author": pr.get("author", {}).get("login", "") if isinstance(pr.get("author"), dict) else "",
+            "head_sha": pr.get("headRefOid", ""),
+            "url": pr.get("url", ""),
+        })
+
+    if args.verbose:
+        print_json({
+            "repo": repo,
+            "total_fetched": len(prs),
+            "total_pending": len(pending),
+            "total_skipped": len(skipped),
+            "pending": pending,
+            "skipped": skipped,
+        })
+    else:
+        print_json({"pending": pending})
+    return 0
+
+
 def cmd_policy(args: argparse.Namespace) -> int:
     state = load_state(args.state)
     print_json({"policy": state.get("policy", {}), "state": str(args.state)})
@@ -405,6 +494,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("clear", help="Clear one PR entry for explicit re-audit")
     p.add_argument("--pr", type=int, required=True, help="PR number")
     p.set_defaults(func=cmd_clear)
+
+    p = sub.add_parser("list-pending", help="List open PRs that need auditing")
+    p.add_argument("--repo", required=True, help="GitHub repo in owner/name format")
+    p.add_argument("--limit", type=int, default=30, help="Max PRs to fetch (default 30)")
+    p.add_argument("--verbose", action="store_true", help="Include skipped/resolved/error details")
+    p.set_defaults(func=cmd_list_pending)
 
     p = sub.add_parser("set-policy", help="Set audit cutoff policy")
     p.add_argument("--created-after", default="", help="Audit only PRs created at or after this ISO datetime")
