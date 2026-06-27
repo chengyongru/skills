@@ -6,11 +6,7 @@ Mechanical steps for creating, managing, and publishing GitHub PR reviews via th
 
 **Approval boundary: NEVER submit an `APPROVE` review.** This skill may publish `REQUEST_CHANGES` or `COMMENT` only. If no blocking findings are found, publish a `COMMENT` review that says so; approval is reserved for a human maintainer outside this skill.
 
-**Identity boundary: ALWAYS disclose nanobot.** Every GitHub review body must start with exactly:
-
-```text
-Automated PR review by nanobot. This is not a human maintainer review or approval.
-```
+**Identity boundary: ALWAYS disclose nanobot.** Every GitHub review body must start with an automated-review disclosure written in the review-request language. The disclosure must preserve these facts: nanobot performed an automated review; this is not a human maintainer review; this is not an approval.
 
 Do not phrase the body or inline comments as if a human maintainer personally reviewed or approved the PR.
 
@@ -28,11 +24,13 @@ Inline comments use `line` (file line number) + `side` (`"RIGHT"` for new code, 
 # /tmp/build_review.py
 import json
 
+disclosure = "<automated-review disclosure in the review-request language>"
+
 body = (
-    "Automated PR review by nanobot. "
-    "This is not a human maintainer review or approval.\n\n"
-    "Review body here. "
-    "Use string concatenation for multi-line content."
+    disclosure
+    + "\n\n"
+    + "Review body here. "
+    + "Use string concatenation for multi-line content."
 )
 
 comments = [
@@ -132,5 +130,5 @@ mutation {
 | Using `gh pr review --comment` | This creates a NEW review, cannot edit existing ones |
 | Using `python -c "..."` for payload building | Write script to temp file first — backticks/quotes in review body break bash |
 | Using `/tmp/` on Windows | Use a Windows-compatible temp path (e.g. `C:/tmp/`) |
-| Publishing a review without identity disclosure | Start the review body with the exact nanobot disclosure line |
+| Publishing a review without identity disclosure | Start the review body with the nanobot disclosure in the review-request language |
 | Writing as if a human maintainer reviewed it | Say nanobot performed an automated review; do not imply human approval |

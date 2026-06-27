@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Use when user wants to do a full maintainer-quality review of a PR, identify blockers or recommend rejection/closure, label the PR using existing repository labels, submit review comments to GitHub, or get actionable findings on correctness, architecture, maintainability, focus, tests, and code quality; produce PR review findings in professional English; never approve PRs; disclose GitHub reviews as nanobot automated reviews; use pr-worktree for isolated local checkout before reading or testing PR code
+description: Use when user wants to do a full maintainer-quality review of a PR, identify blockers or recommend rejection/closure, label the PR using existing repository labels, submit review comments to GitHub, or get actionable findings on correctness, architecture, maintainability, focus, tests, and code quality; produce PR review findings in the user's review-request language; never approve PRs; disclose GitHub reviews as nanobot automated reviews; use pr-worktree for isolated local checkout before reading or testing PR code
 ---
 
 # PR Review
@@ -153,7 +153,7 @@ Design at least one adversarial or black-box check from the PR's claimed invaria
 
 Always perform a **full audit**. Do not ask the user to choose a review scope. Even if the user mentions a specific concern, review the PR fully and include that concern in the normal severity-ranked findings when relevant.
 
-**Language: Chat around the review in the same language the user used for the request. The actual PR review artifact, including findings, verdict, GitHub review body, and inline comments, must be in professional English.** Code identifiers, file paths, and technical terms stay in their original language. When submitting to GitHub, begin the body with: `Automated PR review by nanobot. This is not a human maintainer review or approval.`
+**Language: Infer the review language from the user's review request and use that language for both the surrounding conversation and the review artifact.** This includes severity headings, findings, verdict, GitHub review body, and inline comments. If the user explicitly asks for a language, use that language; otherwise use the primary language of the request. Code identifiers, file paths, and technical terms stay in their original language. When submitting to GitHub, begin the body with an automated-review disclosure written in the review language. The disclosure must preserve these facts: nanobot performed an automated review; it is not a human maintainer review; it is not an approval.
 
 ### Step 4.5: Apply Maintainer Review and Rejection Gates
 
@@ -182,40 +182,45 @@ Not every failed gate should produce a fix list. Use this calibration:
 
 ### Step 5: Present Findings
 
-Structure the PR review artifact in professional English by severity. Every finding must include file:line and a concrete suggestion:
+Structure the PR review artifact in the review-request language by severity. Every finding must include file:line and a concrete suggestion.
+
+Use localized section headings, not fixed labels from another language. Translate the semantic sections into the review language: review title, blocking must-fix findings, recommended should-fix findings, nitpicks, positive notes, and review verdict. Translate verdict labels as well: no blocking findings, request changes, comment-only, and reject or close.
+
+Template:
 
 ```
-## Review: PR #<N>
+## <localized review title, including PR number>
 
-### Must Fix
+### <localized Must Fix heading>
 - **`<file>:<line>`**: <issue description> — <concrete suggested fix>
 
-### Should Fix
+### <localized Should Fix heading>
 - **`<file>:<line>`**: <issue description>
 
-### Nitpick
+### <localized Nitpick heading>
 - **`<file>:<line>`**: <suggestion>
 
-### Positive Notes
+### <localized Positive Notes heading>
 - <what the author did well>
 
-### Review Verdict
-- <No blocking findings / Request changes / Comment-only / Reject or close> — <one-sentence rationale>
+### <localized Review Verdict heading>
+- <localized verdict label> — <one-sentence rationale>
 ```
 
 **Rules for findings:**
 - Never flag style issues unless they violate project conventions
-- Every "must fix" must explain WHY it's blocking
+- Every localized Must Fix / blocking finding must explain WHY it's blocking
 - Every suggestion must be concrete (show the fix, don't just say "fix this")
 - Always include positive notes — reviews should be constructive
-- Surrounding conversation with the user must use the user's language. The review findings, verdict, GitHub body, and inline comments must use professional English.
+- Surrounding conversation, review findings, verdict, GitHub body, and inline comments must use the user's review-request language.
 - If there are no findings, say that clearly, then state remaining test gaps or residual risk.
 
 **Severity calibration:**
-- **Must Fix**: wrong operation could execute, data/security boundary is weakened, public contract breaks, PR's central claim is false, or CI/merge state blocks safe merge.
-- **Should Fix**: likely bug, missing important test, ambiguous API/config semantics, unnecessary complexity in a risky path, architectural boundary drift, poor reuse of canonical helpers, or PR scope is too broad but not unsafe.
-- **Nitpick**: PR body wording, small minimum-diff cleanup, local naming/style churn, or non-blocking maintainability issue.
-- **Reject / Close**: accidental PR, no real reachable problem, duplicate/stale work, impossible scenario, or the proposed complexity is fundamentally not worth merging. Do not provide a long implementation checklist for these; explain the evidence and recommend closing.
+Apply these meanings under the localized severity headings:
+- **Must Fix / localized equivalent**: wrong operation could execute, data/security boundary is weakened, public contract breaks, PR's central claim is false, or CI/merge state blocks safe merge.
+- **Should Fix / localized equivalent**: likely bug, missing important test, ambiguous API/config semantics, unnecessary complexity in a risky path, architectural boundary drift, poor reuse of canonical helpers, or PR scope is too broad but not unsafe.
+- **Nitpick / localized equivalent**: PR body wording, small minimum-diff cleanup, local naming/style churn, or non-blocking maintainability issue.
+- **Reject / Close / localized equivalent**: accidental PR, no real reachable problem, duplicate/stale work, impossible scenario, or the proposed complexity is fundamentally not worth merging. Do not provide a long implementation checklist for these; explain the evidence and recommend closing.
 
 ### Step 6: Ask to Submit
 
@@ -250,10 +255,10 @@ This lets the author apply the suggestion with one click.
 | All negative, no positive | Include what the author did well |
 | Auto-publishing without user approval | ALWAYS create PENDING, wait for explicit "发布" |
 | Approving a PR | Never approve PRs; report "No blocking findings" and leave approval to a human maintainer |
-| Implying a human reviewed the PR | Start every GitHub review body with the nanobot automated-review disclosure |
-| Forcing Chinese in local chat | Match the user's language for local conversation |
-| Localizing the review findings themselves | Keep the actual PR review artifact in professional English |
-| Writing the GitHub review in the wrong language | GitHub review body and inline comments must be in professional English |
+| Implying a human reviewed the PR | Start every GitHub review body with the nanobot automated-review disclosure in the review language |
+| Forcing one language in local chat | Match the user's review-request language for local conversation |
+| Forcing fixed-language headings for requests in another language | Localize section headings and prose to the user's review-request language |
+| Writing the GitHub review in the wrong language | GitHub review body and inline comments must use the user's review-request language |
 | Asking what review scope the user wants | Always use full audit scope |
 | Trusting CI alone | Derive adversarial checks from the PR's own contract |
 | Ignoring PR body drift | Compare PR description, tests, and implementation semantics |
