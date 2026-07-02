@@ -1,4 +1,0 @@
-interface:
-  display_name: "PR Audit Sweep"
-  short_description: "Audit open GitHub PRs on a schedule."
-  default_prompt: "Audit open PRs in this repository using existing labels and produce a concise digest."
