@@ -1,270 +1,73 @@
 ---
 name: pr-review
-description: Use when user wants to do a full maintainer-quality review of a PR, identify blockers or recommend rejection/closure, label the PR using existing repository labels, submit review comments to GitHub, or get actionable findings on correctness, architecture, maintainability, focus, tests, and code quality; produce PR review findings in the user's review-request language; never approve PRs; disclose GitHub reviews as nanobot automated reviews; use pr-worktree for isolated local checkout before reading or testing PR code
+description: Use when user wants to do a maintainer-quality review of a GitHub PR, identify blockers or recommend rejection/closure, submit COMMENT-only automated GitHub review comments when findings warrant it, or get actionable findings on correctness, architecture, maintainability, focus, tests, and code quality; never approve PRs; use pr-worktree for isolated local checkout before reading or testing PR code
 ---
 
 # PR Review
 
-## Overview
+## Non-negotiables
 
-Structured maintainer-quality code review for PRs. Read changed files in context, verify the PR's stated behavior against implementation and tests, label the PR with appropriate existing repository labels, identify whether the PR has blockers, should be changed, split, or rejected, produce prioritized findings, and optionally submit as a GitHub review with pending review pattern.
-
-**Authority boundary**: This skill must never approve a PR or submit a GitHub `APPROVE` review. If no blocking findings are found, say "No blocking findings found" and leave the final merge decision to a human maintainer.
-
-**Identity boundary**: Any review submitted to GitHub must clearly state that it is an automated review by nanobot, not a human maintainer review. Do not write phrasing that implies a human personally reviewed or approved the PR.
-
-**Prerequisite**: Run `triage` first to understand the PR's purpose. Reviews without context miss the point.
-
-## When to Use
-
-- User says "review PR #X", "do a code review", or asks whether a PR is merge-ready
-- After `triage` when user wants detailed code analysis of a PR
-- User wants to submit review comments on GitHub
+- Review only the requested PR.
+- If the PR is already merged, skip review and report that it was skipped.
+- Use `pr-worktree` for checkout/inspection; never switch the user's current branch.
+- Fetch latest `origin/<base>` before judging the PR.
+- Do not approve, merge, close, delete branches, force-push, or alter labels/state unless the user explicitly asks for that exact action.
+- If GitHub feedback is warranted, this skill authorizes a nanobot automated `COMMENT` review. Never submit `APPROVE`.
+- If there are no blockers or useful comments, do not post a GitHub review just to say it is clean.
+- Keep the final user report brief unless asked for detail.
 
 ## Workflow
 
-### Step 0: Use an Isolated PR Worktree
+### 1. Metadata gate
 
-Before reading changed files or running tests, use `pr-worktree` to ensure the PR is checked out in an isolated worktree. Do not run `gh pr checkout` in the user's current workspace.
-
-### Step 1: Confirm Context
-
-If `triage` was not run for this PR in this session, do a lightweight context fetch:
+Fetch metadata first:
 
 ```bash
-gh pr view <N> --json title,body,headRefName,baseRefName,commits,files,mergeable,reviewDecision,statusCheckRollup
-gh pr view <N> --json labels
-gh label list --limit 200
-git diff --stat origin/<base>...HEAD
-git diff --name-only origin/<base>...HEAD
+gh pr view <N> --json number,title,state,mergedAt,isDraft,author,headRefName,baseRefName,mergeable,reviewDecision,statusCheckRollup,labels,additions,deletions,changedFiles,files,commits,url
 ```
 
-Infer the PR's purpose from title, body, commit history, touched files, and tests. Ask only if the purpose remains ambiguous enough that a review would be speculative.
+Stop early when the PR is already merged. For open PRs, infer the behavioral contract from title/body/commits/files/tests before reading code.
 
-Before reading code, write down the PR's claimed behavioral contract:
+### 2. Isolated context
 
-- What behavior is supposed to become stricter, looser, faster, or safer?
-- Which paths are in scope and explicitly out of scope?
-- What must never happen after this PR?
-- What compatibility behavior is intentionally preserved?
+Read `pr-worktree`, create or reuse an isolated worktree, fetch latest base, and inspect the PR from merged/full-repo context.
 
-Then decide whether the PR has a valid premise before spending the full review budget:
+Read repo-local guidance once when present: `AGENTS.md`, `.agent/design.md`, `.agent/security.md`, `.agent/gotchas.md`, `CONTRIBUTING.md`, nearby package docs.
 
-- What real user, maintainer, security, compatibility, or operational problem is this PR trying to solve?
-- Is the motivating scenario reachable in the product as shipped, or only hypothetical/dead/test-only code?
-- Is the fix proportional to the problem, or does it add broad machinery for a narrow or impossible case?
-- Does the PR look accidental, generated, stale, duplicate, or unrelated to the project's current direction?
+### 3. Review changed files
 
-If the premise is invalid, still verify enough evidence to be fair, but do not invent a patch plan for the author. The right review result may be "close this PR" or "reject this approach", not "please make these changes".
+Read changed files in context with targeted ranges. Search call sites only when the changed symbol crosses file boundaries or the PR changes shared behavior.
 
-### Step 1.5: Build the Maintainer Review Model
+For detailed review criteria, read [references/review-criteria.md](references/review-criteria.md) only when the PR is non-trivial or you need severity calibration.
 
-Read repository-local review policy before judging design. Prefer files such as `AGENTS.md`, `.agent/design.md`, `.agent/security.md`, `.agent/gotchas.md`, `CONTRIBUTING.md`, and nearby package docs when present.
+### 4. Verification decision
 
-From those docs and the changed-file list, identify:
+Always inspect remote CI/check status from metadata. Remote CI is the default source of truth for GitHub PRs.
 
-- **Expected ownership layer**: where this kind of behavior belongs.
-- **Critical paths**: files where changes must be minimal and strongly justified.
-- **Extension points**: registries, adapters, hooks, plugins, coordinators, templates, or config schemas the PR should use.
-- **Dependency direction**: which layers are allowed to know about each other.
-- **Existing canonical helpers**: parsing, validation, security, persistence, transport, UI state, or error-handling utilities that should not be bypassed.
+Do not rerun full local CI by default. Read [references/verification.md](references/verification.md) only if CI is missing/failing/stale/ambiguous or a concrete local reproduction is needed.
 
-Use this model to review the shape of the PR, not only whether the code runs. A PR can be functionally correct and still unacceptable if it puts behavior in the wrong layer, creates circular ownership, bypasses a required boundary, or makes the codebase harder to maintain for no real benefit.
+### 5. Findings gate before line work
 
-### Step 1.6: Label the PR
+First decide whether there is a real blocker, useful comment, or rejection reason.
 
-During review, inspect the repository's current labels and the PR's existing labels:
+- No blocker/useful comment → no inline comments, no GitHub review; report locally.
+- Has blocker/useful comment → read [references/line-comments.md](references/line-comments.md), anchor actual file lines, then read [references/github-submission.md](references/github-submission.md) and submit a `COMMENT` review.
 
-```bash
-gh label list --limit 200
-gh pr view <N> --json labels
-```
+Do not confirm inline line numbers during general exploration.
 
-Choose appropriate labels from labels that already exist in the repository. Do not create new labels, rename labels, remove labels, or replace human-maintainer labels unless the user explicitly asks.
+### 6. Final report
 
-Prefer one intent/status label plus one affected-area label when the repository's existing label taxonomy supports that distinction. Add up to three labels total only when each label adds real routing value.
+Report concisely:
 
-Infer the repository's taxonomy from label names and descriptions. Common patterns include:
+- PR state/mergeability/CI state
+- whether blockers or useful comments were found
+- whether a GitHub review was posted, with URL if posted
+- what was not done: no approve/merge/close/delete/label changes unless explicitly requested
 
-- intent/status labels, if present: bug, regression, enhancement, documentation, refactor, invalid, duplicate, stale, question
-- affected-area labels, if present: frontend, backend, api, cli, docs, tests, ci, provider, integration, security
+## Anti-loops
 
-Apply labels with:
-
-```bash
-gh pr edit <N> --add-label "<label>"
-```
-
-If labels are ambiguous, do not guess an overly specific label; use a broader existing label or report that no label was applied. In the final local response, mention which labels were added or why labeling was skipped.
-
-### Step 2: Read Changed Files
-
-For each file in the diff, read the FULL file (not just the diff hunk). Diff shows WHAT changed but you need surrounding context to judge IF the change is correct.
-
-Use `rg` to find all relevant call sites and sibling implementations. Do not assume a helper is only used where the diff shows it.
-
-For PRs that change validation, parsing, permissions, tool execution, provider adapters, gateways, storage, or other boundaries, build a small boundary matrix before judging correctness. Include dimensions such as:
-
-- fresh input vs historical replay/migration
-- valid input vs malformed/array/scalar/null/empty input
-- public API vs internal direct call
-- streaming vs non-streaming path
-- successful execution vs rejected/error path
-- telemetry/result fields that should reflect only successful work
-
-Actively look for a counterexample to the PR's central claim. A green test suite is not enough if a simple untested scalar, null, path, missing field, duplicate ID, or alternate entrypoint would violate the intended contract.
-
-Focus areas by priority:
-
-| Category | What to Look For |
-|----------|-----------------|
-| Premise | No real problem, unreachable scenario, accidental/stale/duplicate PR, disproportionate solution |
-| Architecture | Wrong ownership layer, core-path pollution, circular dependencies, bypassed extension points |
-| Correctness | Logic errors, edge cases, off-by-one, null/undefined |
-| Security | Injection, XSS, credential leaks, path traversal |
-| API contracts | Breaking changes, inconsistent signatures |
-| Error handling | Swallowed exceptions, missing error paths |
-| Tests | Missing tests for new behavior, wrong assertions |
-| Performance | N+1 queries, unbounded loops, memory leaks |
-| Focus / Scope | Multiple unrelated features, unnecessary churn, PR body drifting from code |
-| Maintainability | needless abstractions, low-value wrappers, poor reuse of canonical helpers, technical debt |
-| Style | Project conventions, naming, dead code, only when it affects maintainability or lint |
-
-### Step 3: Run Verification
-
-Always check mergeability and CI status from `gh pr view`. If CI is failing, blocked, or stale, mention it explicitly.
-
-Run verification when the PR touches code paths where behavior matters, not only when CI is failing:
-
-```bash
-# Run inside the isolated PR worktree from pr-worktree
-# Prefer focused tests first; broaden when shared contracts are touched.
-pytest tests/ -x -q --tb=short 2>&1 | tail -30
-```
-
-Design at least one adversarial or black-box check from the PR's claimed invariant when feasible. Examples:
-
-- If invalid input must not execute, probe malformed JSON, arrays, scalars, `"null"`, empty strings, missing fields, and direct registry/API calls.
-- If a suggestion/hint is added, verify the suggested action is not executed unless explicitly intended.
-- If a field reports successful work, verify rejected/failed attempts do not pollute it.
-- If a compatibility/replay path remains permissive, verify that permissiveness is not reused for fresh execution.
-
-### Step 4: Use Full Audit Scope
-
-Always perform a **full audit**. Do not ask the user to choose a review scope. Even if the user mentions a specific concern, review the PR fully and include that concern in the normal severity-ranked findings when relevant.
-
-**Language: Infer the review language from the user's review request and use that language for both the surrounding conversation and the review artifact.** This includes severity headings, findings, verdict, GitHub review body, and inline comments. If the user explicitly asks for a language, use that language; otherwise use the primary language of the request. Code identifiers, file paths, and technical terms stay in their original language. When submitting to GitHub, begin the body with an automated-review disclosure written in the review language. The disclosure must preserve these facts: nanobot performed an automated review; it is not a human maintainer review; it is not an approval.
-
-### Step 4.5: Apply Maintainer Review and Rejection Gates
-
-Before presenting findings, explicitly decide whether the PR has blockers or should be rejected/closed:
-
-- **Premise gate**: The PR solves a real, reachable, worthwhile problem. If it appears accidental, duplicate, stale, or aimed at an impossible/non-product path, recommend closing or rejecting rather than asking for edits.
-- **Correctness gate**: The implementation satisfies the claimed contract across all relevant entrypoints.
-- **Safety gate**: Invalid or rejected operations cannot be silently transformed into a different successful operation.
-- **Architecture boundary gate**: Behavior lives in the correct ownership layer and uses the intended extension point. UI/channel/provider/tool-specific behavior must not leak into unrelated core paths.
-- **Dependency direction gate**: The PR does not introduce circular dependencies, reverse ownership, or inappropriate knowledge between layers.
-- **Reuse/locality gate**: The PR reuses canonical helpers and established local patterns where that reduces risk. Do not demand abstraction just to remove acceptable local duplication.
-- **Core-path budget gate**: Changes to critical paths are minimal, general, and justified by the PR's contract.
-- **Focus gate**: The PR has one coherent theme. Unrelated features, policy changes, or refactors should be split.
-- **Minimum diff gate**: Pure churn, style-only renames, wrapper functions without value, and broad rewrites should be challenged unless they reduce real risk or complexity.
-- **Documentation gate**: PR body, comments, and tests describe the actual semantics. Ambiguous wording that could mislead maintainers is at least a nit; if it changes user expectations, raise it higher.
-- **Verification gate**: CI and local checks cover the risky behavior, and any residual risk is stated.
-
-Do not convert passing gates into approval. A clean review means "no blocking findings found in this pass", not "approved to merge".
-
-Not every failed gate should produce a fix list. Use this calibration:
-
-- **Reject / Close**: invalid premise, accidental PR, unreachable problem, duplicate/stale work, or a solution whose complexity is not worth carrying.
-- **Request changes**: valid problem, but implementation violates correctness, safety, architecture, dependency direction, or reviewability gates.
-- **Comment-only**: non-blocking concerns, unclear tradeoffs, or residual risk the maintainer should consider.
-- **No blocking findings**: gates pass based on the evidence reviewed. Do not call this approval.
-
-### Step 5: Present Findings
-
-Structure the PR review artifact in the review-request language by severity. Every finding must include file:line and a concrete suggestion.
-
-Use localized section headings, not fixed labels from another language. Translate the semantic sections into the review language: review title, blocking must-fix findings, recommended should-fix findings, nitpicks, positive notes, and review verdict. Translate verdict labels as well: no blocking findings, request changes, comment-only, and reject or close.
-
-Template:
-
-```
-## <localized review title, including PR number>
-
-### <localized Must Fix heading>
-- **`<file>:<line>`**: <issue description> — <concrete suggested fix>
-
-### <localized Should Fix heading>
-- **`<file>:<line>`**: <issue description>
-
-### <localized Nitpick heading>
-- **`<file>:<line>`**: <suggestion>
-
-### <localized Positive Notes heading>
-- <what the author did well>
-
-### <localized Review Verdict heading>
-- <localized verdict label> — <one-sentence rationale>
-```
-
-**Rules for findings:**
-- Never flag style issues unless they violate project conventions
-- Every localized Must Fix / blocking finding must explain WHY it's blocking
-- Every suggestion must be concrete (show the fix, don't just say "fix this")
-- Always include positive notes — reviews should be constructive
-- Surrounding conversation, review findings, verdict, GitHub body, and inline comments must use the user's review-request language.
-- If there are no findings, say that clearly, then state remaining test gaps or residual risk.
-
-**Severity calibration:**
-Apply these meanings under the localized severity headings:
-- **Must Fix / localized equivalent**: wrong operation could execute, data/security boundary is weakened, public contract breaks, PR's central claim is false, or CI/merge state blocks safe merge.
-- **Should Fix / localized equivalent**: likely bug, missing important test, ambiguous API/config semantics, unnecessary complexity in a risky path, architectural boundary drift, poor reuse of canonical helpers, or PR scope is too broad but not unsafe.
-- **Nitpick / localized equivalent**: PR body wording, small minimum-diff cleanup, local naming/style churn, or non-blocking maintainability issue.
-- **Reject / Close / localized equivalent**: accidental PR, no real reachable problem, duplicate/stale work, impossible scenario, or the proposed complexity is fundamentally not worth merging. Do not provide a long implementation checklist for these; explain the evidence and recommend closing.
-
-### Step 6: Ask to Submit
-
-After presenting findings, ask the user in their language whether to create or publish a PENDING review on GitHub.
-
-If yes, follow **github-submission.md** for the mechanical steps. If no, stop here.
-
-## Code Suggestion Format
-
-When suggesting code changes in review comments, use GitHub's suggestion syntax:
-
-````markdown
-```suggestion
-<the suggested code>
-```
-````
-
-This lets the author apply the suggestion with one click.
-
-## Common Mistakes
-
-| Mistake | Fix |
-|---------|-----|
-| Reviewing without understanding purpose | Run `triage` first |
-| Switching the user's current branch | Use `pr-worktree` and run review commands in the isolated worktree |
-| Only reading diff hunks | Read full files for context |
-| Posting comments individually | Use pending review to batch all comments |
-| Skipping labels | Read current repository labels and apply suitable existing labels during review |
-| Creating labels during review | Use only existing labels unless the user explicitly asks to create or rename labels |
-| Over-labeling | Add only labels that materially help classify or route the PR |
-| Vague findings ("this could be better") | Every finding needs a concrete suggestion |
-| All negative, no positive | Include what the author did well |
-| Auto-publishing without user approval | ALWAYS create PENDING, wait for explicit "发布" |
-| Approving a PR | Never approve PRs; report "No blocking findings" and leave approval to a human maintainer |
-| Implying a human reviewed the PR | Start every GitHub review body with the nanobot automated-review disclosure in the review language |
-| Forcing one language in local chat | Match the user's review-request language for local conversation |
-| Forcing fixed-language headings for requests in another language | Localize section headings and prose to the user's review-request language |
-| Writing the GitHub review in the wrong language | GitHub review body and inline comments must use the user's review-request language |
-| Asking what review scope the user wants | Always use full audit scope |
-| Trusting CI alone | Derive adversarial checks from the PR's own contract |
-| Ignoring PR body drift | Compare PR description, tests, and implementation semantics |
-| Reviewing only the new helper | Search all call sites and alternate entrypoints |
-| Accepting broad PRs | Apply the focus gate and recommend splitting unrelated work |
-| Treating every PR as salvageable | Apply the premise gate; invalid or accidental PRs should be closed, not rewritten |
-| Treating working code as merge approval | Also judge architecture, dependency direction, ownership, and long-term maintenance cost; still do not approve |
-| Demanding abstraction everywhere | Reuse canonical helpers, but respect repo-local guidance that favors local duplication in some adapters |
-| Overweighting style | Prefer minimum diff; raise style only when it affects lint or maintainability |
+- Do not reread this workflow during the same PR review.
+- Do not reread the same diff/source range unless the file changed or you are anchoring a concrete finding.
+- Do not run full local tests after remote CI is green just to increase confidence.
+- Do not expand into unrelated architecture archaeology without a concrete failure hypothesis.
+- Do not ask whether COMMENT-only GitHub review posting is allowed; this skill is the authorization.
