@@ -1,6 +1,6 @@
 # Verification Reference
 
-Use this file only when remote CI is insufficient for the review decision.
+Use this file only when `scripts/pr_context.py` reports missing/failing/pending/ambiguous CI, or when remote CI is otherwise insufficient for the review decision.
 
 ## Default
 

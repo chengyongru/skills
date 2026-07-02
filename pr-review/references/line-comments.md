@@ -8,22 +8,22 @@ Do not confirm inline line numbers during general exploration. First decide the 
 
 ## Preferred source of line numbers
 
-Use actual file line numbers from the isolated review/merge worktree, not diff-relative positions.
-
-Good commands:
+Use the bundled anchor helper from the isolated review/merge worktree:
 
 ```bash
-nl -ba <file> | sed -n '<start>,<end>p'
-grep -n '<symbol-or-unique-text>' <file>
+python3 <this-skill>/scripts/changed_line.py <N> --repo <OWNER/REPO> --file <path> --line <actual-file-line>
+python3 <this-skill>/scripts/changed_line.py <N> --repo <OWNER/REPO> --file <path> --pattern '<unique text>'
 ```
 
-The line must be in the PR diff on the side you comment on. For new/modified code, use:
+It checks whether the line is anchorable in the PR diff and emits the JSON skeleton:
 
 ```json
 { "path": "<file>", "line": <actual-file-line>, "side": "RIGHT" }
 ```
 
-For deleted code, use `side: "LEFT"` and the base-side line.
+For deleted code, pass `--side LEFT`; the helper reads base-side deleted lines from the diff.
+
+If the helper says the line is not in changed lines, do not force an inline comment there. Move the comment to the changed line that creates the side effect, or keep the concern in the review body only if body-only feedback is acceptable.
 
 ## Avoid repeated reads
 

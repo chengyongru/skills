@@ -20,11 +20,13 @@ description: Use when user wants to do a maintainer-quality review of a GitHub P
 
 ### 1. Metadata gate
 
-Fetch metadata first:
+Run the bundled context helper first:
 
 ```bash
-gh pr view <N> --json number,title,state,mergedAt,isDraft,author,headRefName,baseRefName,mergeable,reviewDecision,statusCheckRollup,labels,additions,deletions,changedFiles,files,commits,url
+python3 <this-skill>/scripts/pr_context.py <N> --repo <OWNER/REPO>
 ```
+
+Use its output for PR state, mergeability, size, labels, changed files, CI summary, and local-verification guidance.
 
 Stop early when the PR is already merged. For open PRs, infer the behavioral contract from title/body/commits/files/tests before reading code.
 
@@ -42,9 +44,9 @@ For detailed review criteria, read [references/review-criteria.md](references/re
 
 ### 4. Verification decision
 
-Always inspect remote CI/check status from metadata. Remote CI is the default source of truth for GitHub PRs.
+Use the CI summary from `scripts/pr_context.py`. Remote CI is the default source of truth for GitHub PRs.
 
-Do not rerun full local CI by default. Read [references/verification.md](references/verification.md) only if CI is missing/failing/stale/ambiguous or a concrete local reproduction is needed.
+Do not rerun full local CI by default. Read [references/verification.md](references/verification.md) only if the helper reports missing/failing/pending/ambiguous CI or a concrete local reproduction is needed.
 
 ### 5. Findings gate before line work
 
