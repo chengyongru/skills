@@ -11,7 +11,9 @@ description: Use when user wants to do a maintainer-quality review of a GitHub P
 - If the PR is already merged, skip review and report that it was skipped.
 - Use `pr-worktree` for checkout/inspection; never switch the user's current branch.
 - Fetch latest `origin/<base>` before judging the PR.
-- Do not approve, merge, close, delete branches, force-push, or alter labels/state unless the user explicitly asks for that exact action.
+- Do not approve, merge, close, delete branches, force-push, or alter PR state.
+- For every non-merged PR review, set exactly one `priority: p*` label.
+- Never add `valid`. Other labels may be added when the review warrants it; no separate authorization is needed.
 - If GitHub feedback is warranted, this skill authorizes a nanobot automated `COMMENT` review. Never submit `APPROVE`.
 - If there are no blockers or useful comments, do not post a GitHub review just to say it is clean.
 - Keep the final user report brief unless asked for detail.
@@ -57,14 +59,25 @@ First decide whether there is a real blocker, useful comment, or rejection reaso
 
 Do not confirm inline line numbers during general exploration.
 
-### 6. Final report
+### 6. Priority label
+
+For open/non-merged PRs, choose the priority after the review verdict is clear, then read [references/priority-labels.md](references/priority-labels.md) and run the helper:
+
+```bash
+python3 <this-skill>/scripts/set_priority_label.py <N> --repo <OWNER/REPO> --priority p1
+```
+
+Use the helper rather than `gh pr edit`; it preserves non-priority labels, replaces only old `priority: p*` labels, and never adds `valid`.
+
+### 7. Final report
 
 Report concisely:
 
 - PR state/mergeability/CI state
 - whether blockers or useful comments were found
 - whether a GitHub review was posted, with URL if posted
-- what was not done: no approve/merge/close/delete/label changes unless explicitly requested
+- final priority label
+- what was not done: no approve/merge/close/delete/PR-state changes; mention any labels changed beyond priority
 
 ## Anti-loops
 
