@@ -1,0 +1,4 @@
+interface:
+  display_name: "Idea Capture"
+  short_description: "Save or update a linked idea note"
+  default_prompt: "Use $idea-capture to save the current idea to my idea directory."

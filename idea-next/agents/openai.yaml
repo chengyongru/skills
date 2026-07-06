@@ -1,0 +1,4 @@
+interface:
+  display_name: "Idea Next"
+  short_description: "Choose one next action from idea notes"
+  default_prompt: "Use $idea-next to choose what I should do next from my idea directory."
