@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit, urlunsplit
 
-
 CONFIG_NAME = "idea-store.json"
 ORDERED_META_KEYS = [
     "id",
@@ -312,7 +311,8 @@ def weighted_token_counts(note: dict[str, Any]) -> Counter[str]:
     for field, text in note_search_fields(note).items():
         weight = SEARCH_FIELD_WEIGHTS.get(field, 1)
         for token in tokenize_search_text(text):
-            counts[token] += weight
+            if not single_cjk_token(token):
+                counts[token] += weight
     return counts
 
 
@@ -375,6 +375,7 @@ def search_boost(
 
 
 def bm25_scores(notes: list[dict[str, Any]], query_tokens: set[str]) -> list[float]:
+    query_tokens = {token for token in query_tokens if not single_cjk_token(token)}
     if not notes or not query_tokens:
         return [0.0 for _ in notes]
 
