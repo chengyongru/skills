@@ -51,4 +51,4 @@ Useful dimensions:
 
 When posting comments, prefer side-effect/risk analysis. Do not include fix suggestions unless the user asked for them or the repository norm requires them.
 
-Use natural review-request language. Avoid labels like `[MINOR]`, `[NIT]`, `[CRITICAL]` in inline comments unless the user explicitly wants that style.
+Use natural English for public GitHub review comments. Avoid labels like `[MINOR]`, `[NIT]`, `[CRITICAL]` in inline comments unless the user explicitly wants that style.

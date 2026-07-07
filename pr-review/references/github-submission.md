@@ -8,7 +8,8 @@ Load this only after you have at least one blocker or useful comment and have an
 - Never submit `APPROVE`.
 - Do not submit `REQUEST_CHANGES` unless the user explicitly asks for that exact event.
 - Do not create a GitHub review when there are no blockers/useful comments.
-- Start the review body with a nanobot automated-review disclosure in the review-request language. Preserve these facts: nanobot performed an automated review; this is not a human maintainer review; this is not an approval.
+- Public GitHub review bodies and inline comments must be in English, regardless of the user's chat language. Use the user's language only for the local final report back to the user.
+- Start the review body with the short English disclosure line `> Automated review from nanobot`.
 - Include inline comments on specific changed lines. Do not post only a body summary when commenting on code.
 
 ## Build and submit payload
@@ -20,7 +21,7 @@ Write the payload builder to a temp file first. Do not use `python -c`; Markdown
 import json
 
 body = (
-    "Automated PR review by nanobot. This is not a human maintainer review or approval."
+    "> Automated review from nanobot"
     "\n\n"
     "Review body here. Keep it concise."
 )
@@ -73,6 +74,6 @@ gh pr diff <N> --repo <OWNER>/<REPO> > /tmp/pr<N>.diff
 | Asking for extra publish confirmation | COMMENT posting is already authorized by this skill when findings warrant it |
 | Using `APPROVE` | Never approve from this skill |
 | Posting a clean-review comment | Do not post when there are no blockers/useful comments |
-| Missing disclosure | Start the body with nanobot automated-review disclosure |
+| Missing disclosure | Start the body with `> Automated review from nanobot` |
 | Posting body-only code feedback | Include inline comments anchored to changed lines |
 | Using `python -c` for payload | Write a temp script/file first |

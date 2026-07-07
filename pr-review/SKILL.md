@@ -16,6 +16,7 @@ description: Use when user wants to do a maintainer-quality review of a GitHub P
 - Never add `valid`. Other labels may be added when the review warrants it; no separate authorization is needed.
 - If GitHub feedback is warranted, this skill authorizes a nanobot automated `COMMENT` review. Never submit `APPROVE`.
 - If there are no blockers or useful comments, do not post a GitHub review just to say it is clean.
+- Use the user's language for the local final report. Use English for public GitHub review bodies and inline comments, regardless of the user's chat language.
 - Keep the final user report brief unless asked for detail.
 
 ## Workflow
