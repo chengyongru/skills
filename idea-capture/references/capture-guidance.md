@@ -16,8 +16,9 @@ Use the model to understand and compress the source:
 Use `scripts/idea_store.py` for mechanical actions:
 
 - Resolve the store.
-- Find by `id`, `source_id`, or file path.
-- List existing notes.
+- Search relevant notes with `find "<query>"`.
+- Read, mark, or delete only by exact `id`, `source_id`, `source_url`, or file path.
+- List existing notes for status/project scans.
 - Write or update notes.
 - Mark lifecycle status.
 - Delete exactly matched notes.

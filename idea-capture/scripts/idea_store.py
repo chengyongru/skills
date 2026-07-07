@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 
 CONFIG_NAME = "idea-store.json"
@@ -56,6 +59,20 @@ SECTION_ORDER = [
     "阻塞",
     "下一步",
 ]
+CJK_RUN_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
+SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+|[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+", re.IGNORECASE)
+SEARCH_FIELD_WEIGHTS = {
+    "id": 8,
+    "source_id": 8,
+    "source_url": 8,
+    "filename": 6,
+    "stem": 6,
+    "title": 5,
+    "metadata": 2,
+    "path": 2,
+    "body": 1,
+}
+SEARCH_EXACT_FIELDS = ("id", "source_id", "source_url", "filename", "stem", "path")
 
 
 def die(message: str, code: int = 2) -> None:
@@ -230,6 +247,215 @@ def read_note(path: Path) -> dict[str, Any]:
     }
 
 
+def normalize_search_text(value: Any) -> str:
+    text = unquote("" if value is None else str(value)).strip().replace("\\", "/")
+    if not text:
+        return ""
+
+    parsed = urlsplit(text)
+    if parsed.scheme and parsed.netloc:
+        return urlunsplit(
+            (
+                parsed.scheme.lower(),
+                parsed.netloc.lower(),
+                parsed.path.rstrip("/"),
+                parsed.query,
+                "",
+            )
+        ).lower()
+
+    return text.rstrip("/").lower()
+
+
+def tokenize_search_text(value: Any) -> list[str]:
+    text = normalize_search_text(value)
+    tokens: list[str] = []
+    for token in SEARCH_TOKEN_RE.findall(text):
+        token = token.lower()
+        if CJK_RUN_RE.fullmatch(token):
+            tokens.extend(token)
+            for width in (2, 3):
+                tokens.extend(token[index : index + width] for index in range(len(token) - width + 1))
+        else:
+            tokens.append(token)
+    return tokens
+
+
+def metadata_search_text(meta: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key, value in sorted(meta.items()):
+        if isinstance(value, list):
+            parts.append(str(key))
+            parts.extend(str(item) for item in value)
+        else:
+            parts.append(f"{key} {value}")
+    return " ".join(parts)
+
+
+def note_search_fields(note: dict[str, Any]) -> dict[str, str]:
+    meta = note["metadata"]
+    return {
+        "id": str(meta.get("id") or ""),
+        "source_id": str(meta.get("source_id") or ""),
+        "source_url": str(meta.get("source_url") or ""),
+        "filename": str(note["filename"]),
+        "stem": str(note["stem"]),
+        "path": str(note["path"]),
+        "title": str(note["title"]),
+        "metadata": metadata_search_text(meta),
+        "body": str(note.get("body") or ""),
+    }
+
+
+def weighted_token_counts(note: dict[str, Any]) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for field, text in note_search_fields(note).items():
+        weight = SEARCH_FIELD_WEIGHTS.get(field, 1)
+        for token in tokenize_search_text(text):
+            counts[token] += weight
+    return counts
+
+
+def add_reason(reasons: list[str], reason: str) -> None:
+    if reason not in reasons:
+        reasons.append(reason)
+
+
+def single_cjk_token(token: str) -> bool:
+    return len(token) == 1 and bool(CJK_RUN_RE.fullmatch(token))
+
+
+def search_boost(
+    query: str,
+    query_tokens: set[str],
+    fields: dict[str, str],
+) -> tuple[float, list[str]]:
+    normalized_query = normalize_search_text(query)
+    score = 0.0
+    reasons: list[str] = []
+
+    for field in SEARCH_EXACT_FIELDS:
+        normalized_value = normalize_search_text(fields.get(field))
+        if not normalized_query or not normalized_value:
+            continue
+        if normalized_value == normalized_query:
+            score += 100.0
+            add_reason(reasons, f"exact {field}")
+        elif normalized_query in normalized_value:
+            score += 35.0
+            add_reason(reasons, f"{field} contains query")
+        elif len(normalized_value) >= 4 and normalized_value in normalized_query:
+            score += 20.0
+            add_reason(reasons, f"query contains {field}")
+
+    field_token_boosts = {
+        "title": 7.0,
+        "stem": 6.0,
+        "filename": 6.0,
+        "source_id": 5.0,
+        "source_url": 5.0,
+        "metadata": 2.0,
+        "body": 1.0,
+    }
+    meaningful_tokens = {token for token in query_tokens if not single_cjk_token(token)}
+    for field, boost in field_token_boosts.items():
+        field_text = fields.get(field, "")
+        field_tokens = set(tokenize_search_text(field_text))
+        overlap = meaningful_tokens & field_tokens
+        if overlap:
+            score += boost * len(overlap)
+            add_reason(reasons, f"{field} token match")
+
+        normalized_value = normalize_search_text(field_text)
+        if len(normalized_query) >= 3 and normalized_query in normalized_value:
+            score += boost * 2
+            add_reason(reasons, f"{field} contains query")
+
+    return score, reasons
+
+
+def bm25_scores(notes: list[dict[str, Any]], query_tokens: set[str]) -> list[float]:
+    if not notes or not query_tokens:
+        return [0.0 for _ in notes]
+
+    documents = [weighted_token_counts(note) for note in notes]
+    document_lengths = [sum(document.values()) for document in documents]
+    average_length = sum(document_lengths) / len(document_lengths) if document_lengths else 0.0
+    if average_length <= 0:
+        return [0.0 for _ in notes]
+
+    document_frequency: Counter[str] = Counter()
+    for document in documents:
+        for token in document:
+            document_frequency[token] += 1
+
+    total_documents = len(documents)
+    k1 = 1.5
+    b = 0.75
+    scores: list[float] = []
+    for document, document_length in zip(documents, document_lengths, strict=True):
+        score = 0.0
+        for token in query_tokens:
+            frequency = document.get(token, 0)
+            if not frequency:
+                continue
+            idf = math.log(1 + (total_documents - document_frequency[token] + 0.5) / (document_frequency[token] + 0.5))
+            denominator = frequency + k1 * (1 - b + b * document_length / average_length)
+            score += idf * (frequency * (k1 + 1)) / denominator
+        scores.append(score)
+    return scores
+
+
+def clipped_snippet(text: str, limit: int = 240) -> str:
+    text = re.sub(r"\s+", " ", text.strip())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "…"
+
+
+def search_snippet(note: dict[str, Any], query: str, query_tokens: set[str]) -> str:
+    fields = note_search_fields(note)
+    normalized_query = normalize_search_text(query)
+    meaningful_tokens = {token for token in query_tokens if not single_cjk_token(token)}
+    candidates = [
+        fields["title"],
+        fields["source_id"],
+        fields["source_url"],
+        *str(note.get("body") or "").splitlines(),
+    ]
+    for candidate in candidates:
+        normalized_candidate = normalize_search_text(candidate)
+        if len(normalized_query) >= 3 and normalized_query in normalized_candidate:
+            return clipped_snippet(candidate)
+        if meaningful_tokens and meaningful_tokens & set(tokenize_search_text(candidate)):
+            return clipped_snippet(candidate)
+    return clipped_snippet(fields["title"] or str(note.get("body") or ""))
+
+
+def search_result(
+    note: dict[str, Any],
+    *,
+    score: float,
+    reasons: list[str],
+    snippet: str,
+    include_body: bool = False,
+) -> dict[str, Any]:
+    result = {
+        "path": note["path"],
+        "filename": note["filename"],
+        "stem": note["stem"],
+        "metadata": note["metadata"],
+        "title": note["title"],
+        "score": round(score, 3),
+        "match_reason": reasons,
+        "snippet": snippet,
+    }
+    if include_body:
+        result["sections"] = note["sections"]
+        result["body"] = note["body"]
+    return result
+
+
 def iter_notes(ideas_dir: Path) -> list[dict[str, Any]]:
     return [read_note(path) for path in sorted(ideas_dir.glob("*.md")) if path.is_file()]
 
@@ -239,6 +465,7 @@ def find_notes(
     *,
     note_id: str | None = None,
     source_id: str | None = None,
+    source_url: str | None = None,
     path: str | None = None,
 ) -> list[dict[str, Any]]:
     if path:
@@ -257,7 +484,66 @@ def find_notes(
             matches.append(note)
         elif source_id and meta.get("source_id") == source_id:
             matches.append(note)
+        elif source_url and normalize_search_text(meta.get("source_url")) == normalize_search_text(source_url):
+            matches.append(note)
     return matches
+
+
+def search_notes(
+    ideas_dir: Path,
+    query: str,
+    *,
+    statuses: set[str] | None = None,
+    project: str | None = None,
+    limit: int = 10,
+    min_score: float = 0.0,
+    include_body: bool = False,
+) -> list[dict[str, Any]]:
+    if limit <= 0:
+        die("--top must be greater than 0.")
+
+    query_tokens = set(tokenize_search_text(query))
+    if not query_tokens and not normalize_search_text(query):
+        return []
+
+    notes = []
+    for note in iter_notes(ideas_dir):
+        meta = note["metadata"]
+        if statuses and meta.get("status") not in statuses:
+            continue
+        if project and meta.get("project") != project:
+            continue
+        notes.append(note)
+
+    bm25 = bm25_scores(notes, query_tokens)
+    results = []
+    for note, bm25_score in zip(notes, bm25, strict=True):
+        fields = note_search_fields(note)
+        boost, reasons = search_boost(query, query_tokens, fields)
+        score = bm25_score + boost
+        if score <= min_score:
+            continue
+        if bm25_score > 0:
+            add_reason(reasons, "bm25 token match")
+        results.append(
+            search_result(
+                note,
+                score=score,
+                reasons=reasons,
+                snippet=search_snippet(note, query, query_tokens),
+                include_body=include_body,
+            )
+        )
+
+    results.sort(key=lambda result: (-result["score"], result["filename"]))
+    exact_results = [
+        result
+        for result in results
+        if any(reason.startswith("exact ") for reason in result["match_reason"])
+    ]
+    if exact_results:
+        results = exact_results
+    return results[:limit]
 
 
 def require_one(matches: list[dict[str, Any]], label: str) -> dict[str, Any]:
@@ -342,15 +628,45 @@ def cmd_list(args: argparse.Namespace) -> None:
 
 def cmd_find(args: argparse.Namespace) -> None:
     ideas_dir = resolve_ideas_dir(args)
-    matches = find_notes(ideas_dir, note_id=args.id, source_id=args.source_id, path=args.path)
+    exact_locator = args.id or args.source_id or args.source_url or args.path
+    if args.query and exact_locator:
+        die("Use either a positional query or exact locator flags, not both.")
+    if args.query:
+        matches = search_notes(
+            ideas_dir,
+            args.query,
+            statuses=set(args.status or []),
+            project=args.project,
+            limit=args.top,
+            min_score=args.min_score,
+            include_body=args.include_body,
+        )
+    else:
+        matches = find_notes(
+            ideas_dir,
+            note_id=args.id,
+            source_id=args.source_id,
+            source_url=args.source_url,
+            path=args.path,
+        )
     if args.require_one:
-        matches = [require_one(matches, args.id or args.source_id or args.path)]
+        matches = [require_one(matches, args.query or exact_locator)]
     print(json.dumps(matches, ensure_ascii=False, indent=2))
 
 
 def cmd_read(args: argparse.Namespace) -> None:
     ideas_dir = resolve_ideas_dir(args)
-    note = require_one(find_notes(ideas_dir, note_id=args.id, source_id=args.source_id, path=args.path), args.id or args.source_id or args.path)
+    label = args.id or args.source_id or args.source_url or args.path
+    note = require_one(
+        find_notes(
+            ideas_dir,
+            note_id=args.id,
+            source_id=args.source_id,
+            source_url=args.source_url,
+            path=args.path,
+        ),
+        label,
+    )
     print(json.dumps(note, ensure_ascii=False, indent=2))
 
 
@@ -373,7 +689,12 @@ def cmd_write(args: argparse.Namespace) -> None:
     if not isinstance(events, list) or not events:
         meta["events"] = [f"{date.today().isoformat()} captured"]
 
-    existing = find_notes(ideas_dir, note_id=meta.get("id"), source_id=meta.get("source_id"))
+    existing = find_notes(
+        ideas_dir,
+        note_id=meta.get("id"),
+        source_id=meta.get("source_id"),
+        source_url=meta.get("source_url") or None,
+    )
     target = (ideas_dir / filename).resolve()
     if not str(target).startswith(str(ideas_dir)):
         die(f"Target escapes idea directory: {target}")
@@ -396,7 +717,17 @@ def cmd_write(args: argparse.Namespace) -> None:
 
 def cmd_mark(args: argparse.Namespace) -> None:
     ideas_dir = resolve_ideas_dir(args)
-    note = require_one(find_notes(ideas_dir, note_id=args.id, source_id=args.source_id, path=args.path), args.id or args.source_id or args.path)
+    label = args.id or args.source_id or args.source_url or args.path
+    note = require_one(
+        find_notes(
+            ideas_dir,
+            note_id=args.id,
+            source_id=args.source_id,
+            source_url=args.source_url,
+            path=args.path,
+        ),
+        label,
+    )
     path = Path(note["path"])
     meta = note["metadata"]
     meta["status"] = args.status
@@ -412,7 +743,17 @@ def cmd_mark(args: argparse.Namespace) -> None:
 
 def cmd_delete(args: argparse.Namespace) -> None:
     ideas_dir = resolve_ideas_dir(args)
-    note = require_one(find_notes(ideas_dir, note_id=args.id, source_id=args.source_id, path=args.path), args.id or args.source_id or args.path)
+    label = args.id or args.source_id or args.source_url or args.path
+    note = require_one(
+        find_notes(
+            ideas_dir,
+            note_id=args.id,
+            source_id=args.source_id,
+            source_url=args.source_url,
+            path=args.path,
+        ),
+        label,
+    )
     path = Path(note["path"]).resolve()
     if path.parent != ideas_dir:
         die(f"Refusing to delete outside idea directory: {path}")
@@ -443,10 +784,17 @@ def build_parser() -> argparse.ArgumentParser:
     list_cmd.set_defaults(func=cmd_list)
 
     find = sub.add_parser("find")
+    find.add_argument("query", nargs="?")
     find.add_argument("--dir")
     find.add_argument("--id")
     find.add_argument("--source-id")
+    find.add_argument("--source-url")
     find.add_argument("--path")
+    find.add_argument("--status", action="append")
+    find.add_argument("--project")
+    find.add_argument("--top", type=int, default=10)
+    find.add_argument("--min-score", type=float, default=0.0)
+    find.add_argument("--include-body", action="store_true")
     find.add_argument("--require-one", action="store_true")
     find.set_defaults(func=cmd_find)
 
@@ -454,6 +802,7 @@ def build_parser() -> argparse.ArgumentParser:
     read.add_argument("--dir")
     read.add_argument("--id")
     read.add_argument("--source-id")
+    read.add_argument("--source-url")
     read.add_argument("--path")
     read.set_defaults(func=cmd_read)
 
@@ -466,6 +815,7 @@ def build_parser() -> argparse.ArgumentParser:
     mark.add_argument("--dir")
     mark.add_argument("--id")
     mark.add_argument("--source-id")
+    mark.add_argument("--source-url")
     mark.add_argument("--path")
     mark.add_argument("--status", required=True, choices=["open", "doing", "done", "dropped", "duplicate"])
     mark.add_argument("--event")
@@ -475,6 +825,7 @@ def build_parser() -> argparse.ArgumentParser:
     delete.add_argument("--dir")
     delete.add_argument("--id")
     delete.add_argument("--source-id")
+    delete.add_argument("--source-url")
     delete.add_argument("--path")
     delete.set_defaults(func=cmd_delete)
 
