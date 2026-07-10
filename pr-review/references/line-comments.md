@@ -23,7 +23,9 @@ It checks whether the line is anchorable in the PR diff and emits the JSON skele
 
 For deleted code, pass `--side LEFT`; the helper reads base-side deleted lines from the diff.
 
-If the helper says the line is not in changed lines, do not force an inline comment there. Move the comment to the changed line that creates the side effect, or keep the concern in the review body only if body-only feedback is acceptable.
+If the helper says the line is not in changed lines, do not force an inline comment there. Move it only to a changed line that actually creates the side effect; otherwise keep the cross-cutting concern in the review body.
+
+Match the repository's normal language and tone. State the trigger, affected contract, and consequence; do not overstate risks or attach a severity label without evidence.
 
 ## Avoid repeated reads
 

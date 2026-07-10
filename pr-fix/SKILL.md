@@ -1,119 +1,122 @@
 ---
 name: pr-fix
-description: Use when user wants to checkout someone else's PR, make changes directly as a maintainer, and push to the PR branch; use pr-worktree for isolated checkout so fixes do not disturb the current workspace
+description: Use when the user explicitly wants to modify an existing GitHub PR as a maintainer and push focused fixes to its head branch; establish the confirmed issue, protected contract, minimal change cone, and verification evidence first; use pr-worktree so the current workspace is not disturbed
 ---
 
 # PR Fix
 
-## Overview
+## Non-negotiables
 
-Maintainer workflow for directly modifying someone else's PR. Isolated worktree checkout → fix → commit → push. No forks, no new feature branches — push straight to the PR's head branch.
-
-**Prerequisite**: Understand the PR first (`triage`), and know what needs fixing (`pr-review` or user's own assessment).
-
-## When to Use
-
-- User says "fix PR #X" or "push a fix to this PR"
-- After `pr-review` found issues that maintainer wants to fix directly
-- User wants to commit to someone else's PR branch
+- Use this only when the user explicitly authorizes modifying and pushing to the PR branch.
+- Use `pr-worktree` in `fix` mode; never switch or stash the user's current workspace.
+- Fix confirmed issues or an explicitly requested change. Do not turn risks/questions into code changes without resolving them.
+- Keep the patch inside the minimal causal change cone. Do not bundle cleanup, formatting, or speculative refactors.
+- Follow applicable repository instructions and existing contribution/commit conventions.
+- Never amend, rebase, rewrite the author's commits, or force-push without explicit approval.
+- Do not post comments, reviews, labels, or other PR-state changes unless separately requested or required by repository policy. When labels are authorized, use `pr-label` rather than changing them ad hoc.
 
 ## Workflow
 
-### Step 1: Checkout PR in an Isolated Worktree
+### 1. Establish the repair contract
 
-Use `pr-worktree` for checkout. Do not stash or switch the user's current workspace just to work on a PR.
+Before editing, write down:
 
-For maintainer fixes, ensure `gh pr checkout <N>` runs inside the isolated fix worktree so it checks out the PR head branch there, not in the original workspace.
+- the confirmed trigger and consequence;
+- the violated contract or requested before/after;
+- the expected change cone;
+- the closest regression or public-surface proof;
+- any migration, rollback, or compatibility constraint.
 
-Verify you're on the right branch:
+Use `triage` when the PR's purpose is still unclear. Use `pr-review` findings when available, but verify they still match the current head.
+
+### 2. Prepare an isolated fix worktree
+
+Read `pr-worktree` and run its helper:
 
 ```bash
-git log --oneline -5
+python3 <pr-worktree-skill>/scripts/pr_worktree.py prepare <N> --repo <OWNER/REPO> --mode fix --format markdown
+```
+
+Use the returned worktree path for every read, edit, test, commit, and push. Verify the manifest reports an attached branch and expected upstream/head repository. If the helper reports a dirty worktree, branch collision, or unwritable fork, stop and report it rather than improvising a destructive checkout.
+
+### 3. Inspect current context
+
+Find and read applicable repository instructions. Compare the current PR against the latest base and confirm the issue has not already changed since review.
+
+Read the narrow owner/call path needed for the repair. Preserve the author's intended design unless that design is the confirmed problem.
+
+### 4. Make the focused change
+
+- Change the smallest surface that enforces the contract.
+- Add or update the closest regression test.
+- For any file outside the expected cone, record the contract or consumer that forces it to change.
+- Preserve unrelated author and user changes.
+- Note unrelated defects for later; do not repair them in this push.
+
+### 5. Verify before committing
+
+Run the smallest reliable checks derived from the repair contract:
+
+1. Reproduce the old failure on the base when practical.
+2. Run the focused regression on the fixed head.
+3. Exercise the public surface, negative path, migration, restart, or concurrency behavior when that is the actual contract.
+4. Inspect the final diff for scope drift and accidental generated/lockfile churn.
+
+Do not rely only on the future CI run when a cheap focused proof is available. Do not duplicate a full green matrix without a reason.
+
+### 6. Commit without rewriting author history
+
+Stage specific files and follow the repository's commit conventions. Keep commits logically reviewable and explain why the change is required. Do not force a conventional prefix or maintainer marker when the repository uses another style.
+
+Before committing:
+
+```bash
 git branch --show-current
+git status --short --branch
+git diff --check
+git diff --cached
 ```
 
-### Step 2: Make Changes
-
-Fix the specific issues identified. Follow these rules:
-
-- **Surgical changes only** — fix what was identified, don't refactor adjacent code
-- **Match existing style** — follow the PR author's conventions, not your own
-- **Keep commits atomic** — one logical fix per commit
-- **Don't touch unrelated code** — even if you notice other issues, note them for a comment instead
-
-### Step 3: Commit
-
-```bash
-git add <specific files>
-git commit -m "$(cat <<'EOF'
-fix: <what was fixed and why>
-
-<maintainer edit: brief explanation of what was wrong and how it was fixed>
-EOF
-)"
-```
-
-**Commit message conventions:**
-- Use conventional prefix (`fix:`, `style:`, `refactor:`, `test:`)
-- Include `maintainer edit` or similar marker so author knows it wasn't them
-- Explain WHY, not just WHAT — the diff already shows WHAT
-
-### Step 4: Push
+### 7. Push normally
 
 ```bash
 git push
 ```
 
-This pushes directly to the PR branch because `gh pr checkout` sets up the tracking branch.
+The helper prepares the PR head branch and its tracking configuration. Verify the pushed commit appears on the requested PR.
 
-**If push fails** (branch protection, force-push required after rebase):
-- Ask user before force-pushing: `git push --force-with-lease`
-- Never force-push without user's explicit approval
+If the contributor fork is not writable, branch protection rejects the push, or history would need rewriting, stop and report the exact blocker. Ask before any `--force-with-lease`; never use plain `--force`.
 
-### Step 5: Verify
+### 8. Check remote state
 
 After pushing, confirm on GitHub:
 
 ```bash
-gh pr checks <N>
-gh pr view <N> --json commits --jq '.commits | length'
+gh pr checks <N> --repo <OWNER/REPO>
+gh pr view <N> --repo <OWNER/REPO> --json commits,headRefOid,url
 ```
 
-## Handling Multiple Fixes
+Report required checks as passing, failing, or pending. Do not claim success from a push alone.
 
-If there are multiple independent issues to fix:
+## Final report
 
-1. Fix and commit each one separately
-2. Push after ALL fixes are committed (not after each one)
-3. One push = one CI run = faster feedback
+Include:
 
-```
-fix: handle null response from API
-fix: add missing error handling in webhook
-style: fix inconsistent indentation
-```
+- confirmed issue and protected contract;
+- files and commits added to the PR;
+- focused checks and results;
+- push result and current CI state;
+- remaining risks or verification gaps;
+- any extra GitHub mutations performed, or state that none were made.
 
-Then `git push` once.
-
-## Working with the PR Author
-
-- **Leave a comment** explaining what you changed and why, unless the fix is trivial
-- **Don't overwrite author's commits** — avoid `git rebase` or `git commit --amend` on commits that aren't yours
-- **If you need to rebase** onto target branch, ask author first or let them handle it
-
-```bash
-# Comment on the PR after pushing fixes
-gh pr comment <N> --body "Pushed a fix for <issue>: <explanation>"
-```
-
-## Common Mistakes
+## Common mistakes
 
 | Mistake | Fix |
-|--------|-----|
-| Modifying without understanding the PR | Run `triage` first |
-| Stashing/switching the user's current workspace | Use `pr-worktree` and make fixes in the isolated worktree |
-| Refactoring adjacent code while fixing | Only touch what needs fixing |
-| Force-pushing without asking | Always ask first — it rewrites author's history |
-| Pushing after each commit | Batch commits, push once |
-| Pushing from a detached review worktree | Checkout the PR head branch inside the isolated fix worktree before committing |
-| Missing commit context | Always explain WHY in the commit message |
+|---|---|
+| Editing a risk that was never confirmed | Establish trigger, contract, consequence, and evidence first |
+| Stashing/switching the current workspace | Use the helper's isolated fix worktree |
+| Refactoring adjacent code | Stay inside the causal change cone |
+| Pushing from detached HEAD | Require the helper's `mode=fix` attached branch manifest |
+| Treating CI as the only proof | Run focused contract-driven verification before push |
+| Force-pushing after rejection | Stop and request explicit approval |
+| Posting an unsolicited PR comment | Keep publication separate from the authorized code push |

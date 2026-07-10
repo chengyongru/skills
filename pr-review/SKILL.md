@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Use when user wants to do a maintainer-quality review of a GitHub PR, identify blockers or recommend rejection/closure, submit COMMENT-only automated GitHub review comments when findings warrant it, or get actionable findings on correctness, architecture, maintainability, focus, tests, and code quality; never approve PRs; use pr-worktree for isolated local checkout before reading or testing PR code
+description: Use when the user wants a maintainer-quality review of a GitHub PR, actionable findings, blocker or closure recommendations, or explicitly authorized COMMENT-only GitHub feedback; evaluate scope, contracts, ownership, evidence, and long-term cost; never approve PRs; use pr-worktree for isolated local checkout before reading or testing PR code
 ---
 
 # PR Review
@@ -8,15 +8,14 @@ description: Use when user wants to do a maintainer-quality review of a GitHub P
 ## Non-negotiables
 
 - Review only the requested PR.
-- If the PR is already merged, skip review and report that it was skipped.
 - Use `pr-worktree` for checkout/inspection; never switch the user's current branch.
-- Fetch latest `origin/<base>` before judging the PR.
+- Fetch the PR head and latest remote base before judging the diff.
 - Do not approve, merge, close, delete branches, force-push, or alter PR state.
-- For every non-merged PR review, set exactly one `priority: p*` label.
-- Never add `valid`. Other labels may be added when the review warrants it; no separate authorization is needed.
-- If GitHub feedback is warranted, this skill authorizes a nanobot automated `COMMENT` review. Never submit `APPROVE`.
-- If there are no blockers or useful comments, do not post a GitHub review just to say it is clean.
-- Use the user's language for the local final report. Use English for public GitHub review bodies and inline comments, regardless of the user's chat language.
+- Treat review and publication as separate actions. Do not post reviews, comments, or labels unless the user explicitly requests it or applicable repository policy explicitly authorizes it.
+- If publication is authorized, submit `COMMENT` only. Never submit `APPROVE`; use `REQUEST_CHANGES` only when the user explicitly asks for that event.
+- A smell is a hypothesis, not a finding. Require a reachable path, concrete impact, and code/test/contract evidence.
+- Green CI is evidence for the configured matrix, not proof that every changed contract is safe.
+- Use the user's language for the local report. Follow repository norms or the PR discussion language for public comments.
 - Keep the final user report brief unless asked for detail.
 
 ## Workflow
@@ -31,59 +30,88 @@ python3 <this-skill>/scripts/pr_context.py <N> --repo <OWNER/REPO>
 
 Use its output for PR state, mergeability, size, labels, changed files, CI summary, and local-verification guidance.
 
-Stop early when the PR is already merged. For open PRs, infer the behavioral contract from title/body/commits/files/tests before reading code.
+If the PR is merged, state that clearly and keep the review retrospective/read-only. Do not attempt GitHub review submission on a merged PR.
 
 ### 2. Isolated context
 
-Read `pr-worktree`, create or reuse an isolated worktree, fetch latest base, and inspect the PR from merged/full-repo context.
+Read `pr-worktree`, run its helper to create or reuse an isolated review worktree, and inspect the PR from merged/full-repository context.
 
-Read repo-local guidance once when present: `AGENTS.md`, `.agent/design.md`, `.agent/security.md`, `.agent/gotchas.md`, `CONTRIBUTING.md`, nearby package docs.
+Find and read applicable repository-local instructions, including hierarchical `AGENTS.md`, contribution rules, design/security docs, and package-local guidance. Do not hardcode one repository's filenames as universal policy.
 
-### 3. Review changed files
+### 3. Build the review contract before deep code reading
 
-Read changed files in context with targeted ranges. Search call sites only when the changed symbol crosses file boundaries or the PR changes shared behavior.
+Write a compact review packet from the PR body, commits, changed files, nearby tests, and repository guidance:
 
-For detailed review criteria, read [references/review-criteria.md](references/review-criteria.md) only when the PR is non-trivial or you need severity calibration.
+- **Scope**: the problem, user-visible before/after, and explicit non-goals.
+- **Contracts**: public, persisted, security, concurrency, lifecycle, or model-visible behavior that may change.
+- **Expected change cone**: the owner module, nearest shared seam, closest tests, and required docs/config/migration.
+- **Actual change cone**: every changed area outside the expectation and its claimed causal reason.
+- **Proof obligations**: evidence required for the highest-risk contract.
 
-### 4. Verification decision
+If the central behavior cannot be explained from artifacts, report that uncertainty before speculating about implementation details.
 
-Use the CI summary from `scripts/pr_context.py`. Remote CI is the default source of truth for GitHub PRs.
+For non-trivial or cross-boundary PRs, read [references/review-criteria.md](references/review-criteria.md).
 
-Do not rerun full local CI by default. Read [references/verification.md](references/verification.md) only if the helper reports missing/failing/pending/ambiguous CI or a concrete local reproduction is needed.
+### 4. Inspect from contracts outward
 
-### 5. Findings gate before line work
+Read changed files in context with targeted ranges. Trace callers, consumers, state transitions, or persisted/wire formats only when needed to verify a contract.
 
-First decide whether there is a real blocker, useful comment, or rejection reason.
+For every file outside the expected change cone, ask:
 
-- No blocker/useful comment → no inline comments, no GitHub review; report locally.
-- Has blocker/useful comment → read [references/line-comments.md](references/line-comments.md), anchor actual file lines, then read [references/github-submission.md](references/github-submission.md) and submit a `COMMENT` review.
+1. Which invariant or consumer forces this file to change?
+2. What fails if it is left unchanged?
+3. Is the change required behavior, or bundled cleanup/formatting/abstraction?
+
+Unrelated cleanup is a scope finding even when the code is locally correct.
+
+### 5. Verification decision
+
+Use the CI summary from `scripts/pr_context.py` as the baseline signal for the repository's configured matrix.
+
+Compare CI coverage with the proof obligations. Do not rerun full local CI merely to duplicate a green matrix, but do not let green CI hide an uncovered public surface, migration, security boundary, race, package consumer, or restart path.
+
+Read [references/verification.md](references/verification.md) when CI is missing/failing/pending/ambiguous or when a focused reproduction, negative test, public-surface smoke test, migration check, or black-box validation is needed.
+
+### 6. Findings gate before line work
+
+Classify observations before writing comments:
+
+- **Confirmed**: reachable, concrete impact, supported by code/test/contract evidence.
+- **Risk**: plausible but missing a threat model, reproduction, or contract fact.
+- **Question**: intent or ownership is unclear.
+- **Not a finding**: existing behavior, tests, or external contracts resolve the concern.
+
+Only confirmed blockers and useful confirmed findings belong in the findings list. Report material risks or questions separately without presenting them as defects.
 
 Do not confirm inline line numbers during general exploration.
 
-### 6. Priority label
+### 7. Optional GitHub submission
 
-For open/non-merged PRs, choose the priority after the review verdict is clear, then read [references/priority-labels.md](references/priority-labels.md) and run the helper:
+Only when publication is authorized and at least one useful finding exists:
 
-```bash
-python3 <this-skill>/scripts/set_priority_label.py <N> --repo <OWNER/REPO> --priority p1
-```
+1. Read [references/line-comments.md](references/line-comments.md) and anchor concrete findings to changed lines when possible.
+2. Read [references/github-submission.md](references/github-submission.md).
+3. Submit one concise `COMMENT` review and record its URL.
 
-Use the helper rather than `gh pr edit`; it preserves non-priority labels, replaces only old `priority: p*` labels, and never adds `valid`.
+Do not post a clean-review comment merely to create activity. Apply labels only when the user or repository policy requests them. Use `pr-label` for policy discovery, planning, mutation, and verification rather than embedding a label taxonomy here.
 
-### 7. Final report
+### 8. Final report
 
 Report concisely:
 
-- PR state/mergeability/CI state
-- whether blockers or useful comments were found
-- whether a GitHub review was posted, with URL if posted
-- final priority label
-- what was not done: no approve/merge/close/delete/PR-state changes; mention any labels changed beyond priority
+- conclusion and review confidence
+- PR state, mergeability, and CI state
+- claimed change, expected/actual change cone, and changed contracts
+- confirmed findings ordered by impact
+- material risks, questions, and evidence gaps
+- focused verification performed and limitations
+- any GitHub mutations performed, with URLs; otherwise state that the review remained local/read-only
 
 ## Anti-loops
 
 - Do not reread this workflow during the same PR review.
 - Do not reread the same diff/source range unless the file changed or you are anchoring a concrete finding.
-- Do not run full local tests after remote CI is green just to increase confidence.
-- Do not expand into unrelated architecture archaeology without a concrete failure hypothesis.
-- Do not ask whether COMMENT-only GitHub review posting is allowed; this skill is the authorization.
+- Do not run full local tests after remote CI is green merely to increase confidence.
+- Do not expand into unrelated architecture archaeology without a contract or failure hypothesis.
+- Do not convert every uncertainty into a comment; resolve it or label it as a risk/question.
+- Do not let file count, unfamiliarity, or stylistic dislike substitute for a causal scope argument.

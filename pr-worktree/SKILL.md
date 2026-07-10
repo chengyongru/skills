@@ -1,75 +1,58 @@
 ---
 name: pr-worktree
-description: Use when any GitHub PR workflow needs to checkout, inspect, review, test, or modify a PR locally without disturbing the current workspace; provides isolated git worktree checkout and cleanup conventions for triage, pr-review, and pr-fix
+description: Use when any GitHub PR workflow needs to checkout, inspect, review, test, or modify a PR locally without disturbing the current workspace; drive isolated review/fix worktree preparation, status checks, and safe cleanup through the bundled deterministic helper
 ---
 
 # PR Worktree
 
-## Overview
+Use the bundled script as the source of truth. It resolves PR metadata, selects the base remote, fetches current base/PR refs, chooses an ignored or sibling path, creates or safely reuses the worktree, and returns a machine-readable manifest. Do not make the LLM reconstruct that lifecycle with ad hoc shell commands.
 
-Checkout GitHub PRs into isolated git worktrees so PR triage, review, tests, and maintainer fixes never switch branches or pollute the user's current workspace.
+## Non-negotiables
 
-Use this skill before any `gh pr checkout`-style operation in `triage` PR mode, `pr-review`, or `pr-fix`.
+- Never run `gh pr checkout` or switch branches in the user's current workspace.
+- Use `review` mode for read/test/review work and `fix` mode only when the user authorized commits and pushes.
+- Refuse to reuse a dirty, foreign, or unregistered path. Do not stash, reset, clean, or overwrite it.
+- Review mode must be detached at the fetched PR head. Fix mode must be attached to the PR head branch with upstream information.
+- Run all subsequent commands with `workdir` set to the manifest's worktree path.
+- Keep worktrees after triage/review for follow-up. Clean up only when the user asks.
+- Never force-push or force-remove through this skill.
 
-## Workflow
+## Prepare
 
-### Step 1: Resolve PR Metadata
-
-Get the PR number, repo, base, and head first:
-
-```bash
-gh pr view <N-or-url> --json number,headRefName,baseRefName,headRepositoryOwner,headRepository,author
-```
-
-If the user gave a URL, include `--repo <OWNER/REPO>` in later `gh` commands when needed.
-
-### Step 2: Create an Isolated Worktree
-
-Do not run `gh pr checkout` in the current workspace. Create a sibling/temp worktree, or use a local `.worktrees/` directory only when it is already ignored or established in the repo.
-
-Recommended path:
+From any path inside the base repository:
 
 ```bash
-git check-ignore -q .worktrees/ && WT=.worktrees/pr-<N> || WT=../<repo-name>-pr-<N>
-git fetch origin pull/<N>/head:refs/remotes/origin/pr/<N>
-git worktree add "$WT" refs/remotes/origin/pr/<N>
+python3 <this-skill>/scripts/pr_worktree.py prepare <PR-number-or-URL> --repo <OWNER/REPO> --mode review --format markdown
 ```
 
-If the worktree already exists, reuse it after checking its status:
+For maintainer edits:
 
 ```bash
-git -C "$WT" status --short
-git fetch origin pull/<N>/head:refs/remotes/origin/pr/<N>
-git -C "$WT" checkout --detach refs/remotes/origin/pr/<N>
+python3 <this-skill>/scripts/pr_worktree.py prepare <PR-number-or-URL> --repo <OWNER/REPO> --mode fix --format markdown
 ```
 
-If the repo uses a different remote name, detect it with `git remote -v` and substitute that remote.
+Omit `--repo` when the current GitHub repository context is unambiguous. Useful overrides:
 
-### Step 3: Work From the Worktree
+- `--repo-dir <path>` when invoking outside the base repository root;
+- `--path <path>` when an established worktree location is required;
+- `--remote <name>` when remote URL auto-detection cannot select the base repository remote;
+- `--format json` for orchestration.
 
-Run reads, diffs, tests, and build commands with `workdir` set to the PR worktree path.
+Read the manifest once. It provides:
 
-For diffs, compare against the remote base:
+- PR/base/head repositories and refs;
+- selected remote and worktree path;
+- branch/detached/upstream/clean state;
+- the checked-out head's relation to PR metadata (`match`, local ahead, behind, or diverged);
+- ready-to-run diff/status/push commands.
 
-```bash
-git -C "$WT" fetch origin <base-ref>
-git -C "$WT" diff origin/<base-ref>...HEAD
-```
+In review mode, the helper refuses a stale, behind, or diverged checkout. In fix mode it preserves a branch that is locally ahead of GitHub metadata, but refuses behind or diverged state so existing maintainer commits are never reset implicitly. For cross-repository fixes, treat `maintainerCanModify: false` as a warning that the eventual push may be rejected; do not change remotes or invent a replacement branch without user direction.
 
-Keep the user's original workspace branch unchanged.
+## Work from the manifest
 
-### Maintainer Fixes
+Set the tool `workdir` to the returned path. Use the returned base tracking ref for the three-dot diff. Do not fetch or rediscover metadata again unless the PR head changes while the task is active.
 
-When the task requires pushing to the PR branch, use the PR author's actual head branch and tracking remote.
-
-Prefer `gh pr checkout <N>` only inside the isolated worktree:
-
-```bash
-git worktree add "$WT_FIX" HEAD
-gh pr checkout <N>
-```
-
-Run both commands with `workdir` set appropriately so only the isolated worktree changes branch. Verify the tracking branch before committing:
+Before edits in fix mode, confirm:
 
 ```bash
 git branch --show-current
@@ -77,24 +60,31 @@ git status --short --branch
 git remote -v
 ```
 
-Never force-push without explicit user approval.
+The branch must be attached and the worktree clean.
 
-### Cleanup
+## Status
 
-Do not automatically delete the worktree at the end of triage/review; keeping it allows follow-up `pr-review` or `pr-fix` work. If the user asks to clean up:
+Use the helper instead of manually combining branch/head/dirty checks:
 
 ```bash
-git worktree remove "$WT"
-git worktree prune
+python3 <this-skill>/scripts/pr_worktree.py status --path <worktree-path> --format markdown
 ```
 
-If the worktree has local changes, ask before removing it.
+## Cleanup
 
-## Common Mistakes
+Only when the user requests cleanup:
 
-| Mistake | Fix |
-|---------|-----|
-| Running `gh pr checkout` in the user's current workspace | Create/use a PR worktree first |
-| Diffing against a stale local base branch | Fetch and diff against `origin/<base-ref>` |
-| Removing the worktree after triage automatically | Keep it for follow-up unless user asks |
-| Pushing from a detached review worktree | For fixes, checkout the real PR head branch inside the isolated worktree |
+```bash
+python3 <this-skill>/scripts/pr_worktree.py cleanup --repo-dir <base-repository> --path <worktree-path> --format markdown
+```
+
+Cleanup refuses dirty worktrees, attached branches without upstreams, and branches with unpushed commits. Report the refusal; do not bypass it with `--force` or manual deletion.
+
+## Failure handling
+
+- **Dirty/reused path**: preserve it and report the status preview.
+- **Foreign/unregistered path**: choose a new explicit path or ask the user; never delete it.
+- **PR ref fetch fails**: verify repository/remote/permissions, then report the exact command error.
+- **Fix checkout is detached or branch is already checked out elsewhere**: stop; do not force checkout.
+- **Contributor fork is unwritable**: report that direct maintainer push is unavailable and request direction.
+- **Helper unavailable**: only then use a manual worktree fallback, preserving every non-negotiable above.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Label"
+  short_description: "Safely inspect and update GitHub PR labels"
+  default_prompt: "Use $pr-label to inspect a GitHub PR label policy, plan a minimal label update, and apply it only when authorized."

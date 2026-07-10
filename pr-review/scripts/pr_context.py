@@ -141,23 +141,22 @@ def summarize_ci(checks: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def local_guidance(ci: dict[str, Any], skip_review: bool) -> str:
-    if skip_review:
-        return "skip review; no local verification needed"
+def local_guidance(ci: dict[str, Any], is_merged: bool) -> str:
     overall = ci["overall"]
+    prefix = "merged PR; use retrospective/read-only verification; " if is_merged else ""
     if overall == "green":
-        return "remote CI is green; do not rerun full local CI by default"
+        return prefix + "remote CI is green; compare its matrix with the changed proof obligations before adding focused checks"
     if overall == "missing":
-        return "remote CI is missing/unavailable; consider only focused local checks if review needs behavior evidence"
+        return prefix + "remote CI is missing/unavailable; use focused local checks when the review needs behavior evidence"
     if overall == "failing":
-        return "remote CI is failing; inspect failed checks first, and run local checks only for a concrete reproduction"
+        return prefix + "remote CI is failing; inspect failed checks first, then reproduce only decision-relevant failures"
     if overall == "pending":
-        return "remote CI is pending; mention pending state or wait, local full CI is not a substitute"
-    return "remote CI is ambiguous; inspect check details before deciding on focused local verification"
+        return prefix + "remote CI is pending; report or wait for it because local full CI is not a substitute for required checks"
+    return prefix + "remote CI is ambiguous; inspect check details and changed proof obligations before choosing focused verification"
 
 
 def summarize(data: dict[str, Any]) -> dict[str, Any]:
-    skip_review = bool(data.get("mergedAt") or str(data.get("state", "")).upper() == "MERGED")
+    is_merged = bool(data.get("mergedAt") or str(data.get("state", "")).upper() == "MERGED")
     ci = summarize_ci(data.get("statusCheckRollup") or [])
     return {
         "number": data.get("number"),
@@ -165,8 +164,8 @@ def summarize(data: dict[str, Any]) -> dict[str, Any]:
         "url": data.get("url"),
         "state": data.get("state"),
         "mergedAt": data.get("mergedAt"),
-        "skipReview": skip_review,
-        "skipReason": "already merged" if skip_review else None,
+        "isMerged": is_merged,
+        "reviewMode": "retrospective-read-only" if is_merged else "active-read-only",
         "isDraft": data.get("isDraft"),
         "author": (data.get("author") or {}).get("login"),
         "baseRefName": data.get("baseRefName"),
@@ -181,7 +180,7 @@ def summarize(data: dict[str, Any]) -> dict[str, Any]:
             "changedFiles": data.get("changedFiles"),
         },
         "ci": ci,
-        "localVerificationGuidance": local_guidance(ci, skip_review),
+        "localVerificationGuidance": local_guidance(ci, is_merged),
         "files": [
             {
                 "path": item.get("path"),
@@ -207,7 +206,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Mergeable: {summary.get('mergeable')}; reviewDecision: {summary.get('reviewDecision')}",
         f"- Size: +{size.get('additions')} / -{size.get('deletions')} across {size.get('changedFiles')} files",
         f"- Labels: {', '.join(summary.get('labels') or []) or '(none)'}",
-        f"- Skip review: {'yes' if summary.get('skipReview') else 'no'}{(' — ' + summary['skipReason']) if summary.get('skipReason') else ''}",
+        f"- Review mode: {summary.get('reviewMode')}",
         f"- CI: {ci['overall']} ({ci['total']} checks; {ci['counts']})",
     ]
     if ci["important"]:
