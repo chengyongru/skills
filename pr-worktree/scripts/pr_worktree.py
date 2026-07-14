@@ -155,9 +155,17 @@ def resolve_worktree_path(root: Path, raw: str | None, number: int, mode: str) -
     return path.resolve()
 
 
-def status_lines(path: Path) -> list[str]:
-    raw = output(["git", "status", "--porcelain"], cwd=path)
+def status_lines(path: Path, *, include_untracked: bool = False) -> list[str]:
+    untracked = "normal" if include_untracked else "no"
+    raw = output(
+        ["git", "status", "--porcelain", f"--untracked-files={untracked}"],
+        cwd=path,
+    )
     return raw.splitlines() if raw else []
+
+
+def untracked_status_lines(path: Path) -> list[str]:
+    return [line for line in status_lines(path, include_untracked=True) if line.startswith("?? ")]
 
 
 def ensure_reusable_worktree(root: Path, path: Path) -> None:
@@ -227,6 +235,7 @@ def upstream(path: Path) -> str | None:
 def worktree_status(path: Path) -> dict[str, Any]:
     branch = output(["git", "branch", "--show-current"], cwd=path)
     dirty = status_lines(path)
+    untracked = untracked_status_lines(path)
     return {
         "path": str(path),
         "headOid": output(["git", "rev-parse", "HEAD"], cwd=path),
@@ -235,6 +244,7 @@ def worktree_status(path: Path) -> dict[str, Any]:
         "upstream": upstream(path),
         "clean": not dirty,
         "status": dirty,
+        "untracked": untracked,
     }
 
 
@@ -367,6 +377,9 @@ def cleanup(args: argparse.Namespace) -> dict[str, Any]:
     state = worktree_status(path)
     if not state["clean"]:
         raise RuntimeError(f"refusing to remove dirty worktree: {path}")
+    if state["untracked"]:
+        preview = "\n".join(state["untracked"][:20])
+        raise RuntimeError(f"refusing to remove worktree with untracked files {path}:\n{preview}")
     if state["branch"]:
         if not state["upstream"]:
             raise RuntimeError(f"refusing to remove attached branch without upstream: {state['branch']}")
@@ -400,6 +413,7 @@ def render_markdown(result: dict[str, Any]) -> str:
             f"- Branch: `{worktree.get('branch') or '(detached)'}`",
             f"- Upstream: `{worktree.get('upstream') or '(none)'}`",
             f"- Clean: {worktree['clean']}",
+            f"- Untracked entries: {len(worktree['untracked'])}",
             f"- Cross-repository: {result.get('isCrossRepository')}; maintainer can modify: {result.get('maintainerCanModify')}",
             "\n## Next commands",
         ]
@@ -417,6 +431,7 @@ def render_markdown(result: dict[str, Any]) -> str:
                 f"- Upstream: `{worktree.get('upstream') or '(none)'}`",
                 f"- Clean: {worktree['clean']}",
                 *(f"- Change: `{line}`" for line in worktree["status"]),
+                *(f"- Untracked: `{line[3:]}`" for line in worktree["untracked"]),
             ]
         )
     return f"# PR worktree cleanup\n- Action: {action}\n- Path: `{result['path']}`"

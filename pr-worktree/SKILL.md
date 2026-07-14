@@ -11,7 +11,7 @@ Use the bundled script as the source of truth. It resolves PR metadata, selects 
 
 - Never run `gh pr checkout` or switch branches in the user's current workspace.
 - Use `review` mode for read/test/review work and `fix` mode only when the user authorized commits and pushes.
-- Refuse to reuse a dirty, foreign, or unregistered path. Do not stash, reset, clean, or overwrite it.
+- Refuse to reuse a path with tracked changes, or a foreign or unregistered path. Untracked files do not make a worktree dirty; report and preserve them without stashing, cleaning, or overwriting them.
 - Review mode must be detached at the fetched PR head. Fix mode must be attached to the PR head branch with upstream information.
 - Run all subsequent commands with `workdir` set to the manifest's worktree path.
 - Keep worktrees after triage/review for follow-up. Clean up only when the user asks.
@@ -42,7 +42,7 @@ Read the manifest once. It provides:
 
 - PR/base/head repositories and refs;
 - selected remote and worktree path;
-- branch/detached/upstream/clean state;
+- branch/detached/upstream/tracked-clean state and separately reported untracked entries;
 - the checked-out head's relation to PR metadata (`match`, local ahead, behind, or diverged);
 - ready-to-run diff/status/push commands.
 
@@ -60,7 +60,7 @@ git status --short --branch
 git remote -v
 ```
 
-The branch must be attached and the worktree clean.
+The branch must be attached and tracked-clean. Untracked files may remain and must not be altered.
 
 ## Status
 
@@ -78,11 +78,11 @@ Only when the user requests cleanup:
 python3 <this-skill>/scripts/pr_worktree.py cleanup --repo-dir <base-repository> --path <worktree-path> --format markdown
 ```
 
-Cleanup refuses dirty worktrees, attached branches without upstreams, and branches with unpushed commits. Report the refusal; do not bypass it with `--force` or manual deletion.
+Cleanup refuses tracked changes, untracked files, attached branches without upstreams, and branches with unpushed commits. Prepare/reuse ignores untracked files, but cleanup preserves them rather than deleting them. Report the refusal; do not bypass it with `--force` or manual deletion.
 
 ## Failure handling
 
-- **Dirty/reused path**: preserve it and report the status preview.
+- **Tracked-dirty reused path**: preserve it and report the status preview. Untracked-only paths are reusable; leave those files untouched.
 - **Foreign/unregistered path**: choose a new explicit path or ask the user; never delete it.
 - **PR ref fetch fails**: verify repository/remote/permissions, then report the exact command error.
 - **Fix checkout is detached or branch is already checked out elsewhere**: stop; do not force checkout.
