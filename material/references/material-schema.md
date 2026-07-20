@@ -10,7 +10,13 @@ The durable store config is:
 { "materials_dir": "/absolute/path/to/material" }
 ```
 
-The helper script resolves it from `$CODEX_HOME/material-store.json`, or `~/.codex/material-store.json` when `CODEX_HOME` is unset.
+The helper script resolves the config file from a XDG-style config directory (agent-independent):
+
+1. `$MATERIAL_CONFIG_HOME/material-store.json` (full directory override)
+2. `$XDG_CONFIG_HOME/material/material-store.json`
+3. `~/.config/material/material-store.json`
+
+The directory is created automatically on the first `resolve --save`.
 
 ## Note Shape
 

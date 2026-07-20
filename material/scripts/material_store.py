@@ -67,12 +67,24 @@ def die(message: str, code: int = 2) -> None:
     raise SystemExit(code)
 
 
-def codex_home() -> Path:
-    return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
+def config_dir() -> Path:
+    """Resolve the XDG-style config directory for this skill.
+
+    Priority:
+      1. $MATERIAL_CONFIG_HOME (full directory override)
+      2. $XDG_CONFIG_HOME/material
+      3. ~/.config/material
+    """
+    override = os.environ.get("MATERIAL_CONFIG_HOME")
+    if override:
+        return Path(override).expanduser()
+    base = os.environ.get("XDG_CONFIG_HOME")
+    root = Path(base).expanduser() if base else Path.home() / ".config"
+    return root / "material"
 
 
 def config_path() -> Path:
-    return codex_home() / CONFIG_NAME
+    return config_dir() / CONFIG_NAME
 
 
 def load_config() -> dict[str, Any]:
