@@ -1,4 +1,4 @@
 interface:
   display_name: "Rewrite"
-  short_description: "Polish notes and reduce AI-ish prose"
-  default_prompt: "Use $rewrite to polish this note and reduce AI-ish prose without changing its substance."
+  short_description: "Improve Chinese technical writing with restraint"
+  default_prompt: "Use $rewrite to improve this Chinese technical note through minimal, comparative edits that preserve its facts, voice, and existing strengths."

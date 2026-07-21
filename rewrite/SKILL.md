@@ -1,68 +1,92 @@
 ---
 name: rewrite
-description: Rewrite and polish the user's existing Chinese technical notes to reduce AI-ish prose while preserving the original facts, structure, intent, and level of abstraction. Use when the user asks to rewrite, polish, 润色, 去 AI 味, 降低 AI 味, make a note feel more natural, or clean up an AI-assisted draft without changing its substance.
+description: Rewrite and polish existing Chinese technical writing through selective, comparative edits that make it more engaging to intended readers while preserving facts, narrative ownership, author perspective, and technical substance. Use when the user asks to rewrite, polish, 润色, 提升吸引力, or improve readability, flow, rhythm, viewpoint, or narrative without changing the underlying content.
 ---
 
 # Rewrite
 
-## Goal
+## 目标
 
-Polish an existing note so it feels less like an AI-generated draft and more like a clear technical note. Operate on the supplied draft instead of building a personal voice profile.
+让现有中文技术文章更值得目标读者读下去。
 
-The user may have used AI to produce the first version. The point is not to make the text more decorative, but to remove the parts that create discomfort: generic structure, inflated wording, mechanical contrasts, and conclusions that sound stronger than the evidence.
+吸引力不是注意力留存，也不等于悬念、热闹或文采。当读者预期后文提供的价值持续高于阅读成本，他就有理由继续读。改写既可以增加价值，也可以降低阅读成本；删除重复、无关或作用很弱的内容，往往比添加解释更有效。文章的价值可以来自新的事实、清楚的解释、可信的判断、独特的观察、实用的结论，也可以来自自然的语言节奏。
 
-## Narrative
+不同文章依靠的价值不同。教程可能靠清晰和实用，工程复盘可能靠具体证据和判断，短反思可能靠观察与声音。不要强迫每篇文章都具备冲突、反转或完整故事。张力只有在材料中确实存在疑问、矛盾或取舍时才有用。
 
-Aim for `娓娓道来`: let the note unfold in the order a reader would naturally follow. Do not frontload the structure or announce the analysis plan; let each paragraph answer the question created by the previous one.
+## 先判断写作关系
 
-Do not confuse this with spoon-feeding. Assume the reader is technically competent. Explain only the missing step needed for the current argument, not general background the reader can infer.
+阅读全文后再修改。主要依据文章本身、用户当前明确提出的要求，以及理解身份或发布语境所必需的上下文。不要依赖外部写作风格备忘，也不要先虚构一套作者画像。
 
-## Scope
+在心里确认：
 
-Rewrite conservatively.
+- 谁在写，写给谁看；
+- 读者已经知道什么，不必再解释什么；
+- 文章要记录、解释、说服、复盘，还是留下判断；
+- 读者读完后应当多获得什么；
+- 文中的观察、行动、想法和结论分别属于谁。
 
-- Preserve facts, code, links, examples, and technical claims unless the user explicitly asks for substantive improvement.
-- Preserve the note's genre and narrative position. Do not turn a debugging record into an architecture review, or a rough practical note into a polished essay.
-- Preserve the original level of abstraction. If the source is about a concrete debugging process, improve the process narration instead of replacing it with generic engineering vocabulary.
-- Prefer local sentence and paragraph edits over full restructuring unless the current structure is the source of the AI smell.
+这些答案用于决定取舍，不要机械写进开头。署名、发布位置和上下文本已说明的身份，通常无需主动强调。事实归属会影响含义却无法确认时，先查证；仍不确定再询问用户，不要用含混的“我们”掩盖问题。
 
-## What To Remove
+## 先保护原文
 
-Remove or reduce common AI-ish patterns:
+默认原文中已经有值得保留的部分。改写前先找出它的具体优点，例如直接的开头、准确的判断、自然的转折、有效的例子或有个人特点的句子。把这些视为约束，而不是待优化素材。
 
-- Meta-analysis scaffolding in the prose. Do the analysis internally, then write the concrete factors directly.
-- Repetitive contrast frames, especially when many paragraphs use the same `不是 A，而是 B` shape.
-- Generic engineering nouns that make the text sound more systematic than the source.
-- Empty polish: broad claims, corporate politeness, and decorative transitions.
-- Dramatic verbs where a factual statement is enough.
-- Quotation marks used only for emphasis.
-- Teaching tone: over-defining concepts, overusing `也就是说` / `换句话说`, or summarizing what the reader can already infer.
+只处理真正妨碍阅读价值的部分。默认做局部修改；只有视角、因果顺序、材料取舍或整体结构本身有问题时，才进行结构性重写。允许结论是“原文已经完成任务”，此时少改或不改都比为了体现工作量而重写更好。
 
-## What To Keep
+## 删除也是改写
 
-Keep the useful parts of the draft:
+先判断一句话、一个例子或一个段落是否值得存在。内容即使真实、通顺，也可能只是重复前文、解释读者已经知道的背景、记录与结论无关的过程，或用较长篇幅表达一个已经成立的判断。这些内容可以直接删除，不必为了维持篇幅或结构再补一段替代文字。
 
-- Concrete observations, traces, code snippets, commands, links, and failure modes.
-- Necessary English technical terms such as `PR`, `CI`, `LLM`, `parser`, `worker`, `exit`, and `exception`.
-- The main engineering judgment, as long as the evidence in the draft supports it.
-- Mild directness when it helps the point, but not as a catchphrase.
+删减的目的不是让文章尽可能短，而是提高有效内容的密度。不要删掉支撑结论的证据、必要的推理步骤、作者真正有价值的观察，或读者理解后文所需的上下文。
 
-## Method
+## 改写原则
 
-1. Identify the note's actual job: record, explain, review, request, or summarize.
-2. Mark facts that must not change: names, numbers, commands, code, links, and causal claims.
-3. Find the AI smell: over-structured framing, generic abstraction, unnatural emphasis, inflated conclusion, or repeated sentence pattern.
-4. Check the flow: each paragraph should follow naturally from the previous one without announcing the outline.
-5. Rewrite only as much as needed to make the note natural and technically clear.
-6. Recheck that no new technical design or stronger conclusion was introduced.
+### 让价值带动阅读
 
-## Final Check
+开头尽快给出具体对象、问题或判断，让读者知道文章为何值得读。不要为了制造吸引力而故作悬念、使用夸张措辞或添加原文不存在的疑问。
 
-Before returning the rewrite, verify:
+每个段落都要为阅读提供新的事实、解释、证据、判断或后果。不能推进理解的段落，优先考虑删除，而不是改写得更漂亮。推进不要求始终维持悬念。结尾把问题说到材料允许的程度即可，不必强行呼应开头或制造“回报感”。
 
-- Did the text preserve the original facts and scope?
-- Did it remove AI-ish scaffolding instead of adding new style rules?
-- Did the explanation unfold naturally without treating the reader as a beginner?
-- Did it keep concrete debugging or engineering details concrete?
-- Did it avoid making the article more systematic than the source?
-- Did it avoid changing the user's intended conclusion?
+### 保持视角和事实归属
+
+保持叙述者稳定，区分作者、问题提出者、引用对象和其他参与者。不要把作者拒绝过的想法写成作者的中间判断，也不要把分歧改写成共同发现。
+
+文章不是工作日志或对话记录。一个事件是否值得写，取决于它给判断带来了什么变化，而不是它是否发生过。保留事实时，同时保留它的归属、时序、强度和不确定性。
+
+### 写出自然的中文推进
+
+把起承转合作为阅读中的自然运动，而不是四段式模板。该承接时把论据讲透，真正出现矛盾、边界或新证据时再转，结尾落到判断或后果。
+
+句式变化服从思路。相邻句反复使用“不是 A，而是 B”“一方面/另一方面”或相同的主谓结构时，调整信息顺序和论证关系，不要只换连接词。重复能够形成有意的强调或排比时可以保留。
+
+优先使用能说明具体对象、原因和后果的主语与动词。一个词语虽然符合语法，但在自然中文技术写作中很少这样使用，就重写整句或调整前后关系，不要寻找更华丽的同义词。
+
+### 尊重技术读者
+
+保留名称、数字、命令、代码、链接、日志和有证据支持的因果判断。保留必要的技术密度，不为追求流畅而删掉关键推理，也不补充读者已经能够推断的背景。
+
+不要把结论写得比证据更强，不要创造更干净的动机、更鲜明的冲突或更圆满的结局。必要的英文技术词可以保留，中文表达更准确时则使用中文。
+
+## 执行顺序
+
+1. 阅读全文和必要上下文，确认作者、读者、文章任务、核心价值和事实归属。
+2. 列出必须保留的事实，以及原文已经做好的两三处内容。
+3. 找出最影响阅读价值的一两个问题，包括多余、重复或偏离主线的内容。不要同时最大化所有指标。
+4. 依次考虑保留、删除、移动、改写，只有存在真实信息缺口时才补充内容。默认从局部句段开始，结构性重写需要明确理由。
+5. 先删除无须存在的内容，再修正视角、材料取舍和因果顺序，随后处理段落推进，最后调整句式与用词。
+6. 将改写结果与原文逐段比较。每个实质改动都要能说明改善了什么、损失了什么；没有明确净收益就恢复原文。
+7. 连续通读全文，检查语气、节奏、事实强度和结论边界，而不是只检查被修改的句子。
+
+## 最终判断
+
+用相对评价代替绝对清单：
+
+- 目标读者从新版获得的事实、理解或判断，是否比原文更多或更容易获得？
+- 原文已有的直接、克制、准确和个人声音是否仍然存在？
+- 删除的内容是否降低了阅读成本，同时没有损失必要证据、推理或上下文？
+- 新版是否凭空增加了悬念、情绪、对称结构、自我介绍或总结口吻？
+- 事实的归属、时序、不确定性和技术含义是否保持准确？
+- 句式和节奏是否自然，变化是否服务于思路？
+- 新版整体是否确实优于原文，而不只是显得改动更多、更完整或更“像文章”？
+
+如果不能明确说明新版整体优于原文，就保留原文或缩小修改范围。
