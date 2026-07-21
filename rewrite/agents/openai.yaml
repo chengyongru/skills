@@ -1,4 +1,4 @@
 interface:
   display_name: "Rewrite"
-  short_description: "Improve Chinese technical writing with restraint"
-  default_prompt: "Use $rewrite to improve this Chinese technical note through minimal, comparative edits that preserve its facts, voice, and existing strengths."
+  short_description: "Rewrite Chinese technical writing with voice references"
+  default_prompt: "Use $rewrite to improve this Chinese technical writing with relevant author, factual, and platform references while preserving its facts and voice."
