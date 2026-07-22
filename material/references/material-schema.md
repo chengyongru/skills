@@ -111,7 +111,7 @@ If a filename collides, add a semantic qualifier such as the topic or component.
 
 ## Script Payload
 
-Use `scripts/material_store.py write` with JSON like:
+Pass an inline JSON object to `scripts/material_store.py write --note-json '<json>'`, pass a JSON file path to the same option, or omit the option and pipe JSON through stdin. The payload shape is:
 
 ```json
 {

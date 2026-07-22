@@ -608,13 +608,25 @@ def normalize_tag_list(value: Any) -> list[str]:
 
 def load_note_payload(args: argparse.Namespace) -> dict[str, Any]:
     if args.note_json:
-        raw = Path(args.note_json).read_text(encoding="utf-8")
+        try:
+            payload = json.loads(args.note_json)
+        except json.JSONDecodeError as inline_error:
+            try:
+                raw = Path(args.note_json).read_text(encoding="utf-8")
+            except OSError as file_error:
+                die(
+                    "--note-json must be valid inline JSON or a readable JSON file: "
+                    f"{inline_error}; {file_error}"
+                )
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                die(f"Invalid note JSON in {args.note_json}: {exc}")
     else:
-        raw = sys.stdin.read()
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        die(f"Invalid note JSON: {exc}")
+        try:
+            payload = json.load(sys.stdin)
+        except json.JSONDecodeError as exc:
+            die(f"Invalid note JSON from stdin: {exc}")
     if not isinstance(payload, dict):
         die("Note JSON must be an object.")
     return payload
@@ -845,7 +857,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     write = sub.add_parser("write")
     write.add_argument("--dir")
-    write.add_argument("--note-json")
+    write.add_argument(
+        "--note-json",
+        help="inline JSON object or path to a UTF-8 JSON file; reads stdin when omitted",
+    )
     write.set_defaults(func=cmd_write)
 
     mark = sub.add_parser("mark")
