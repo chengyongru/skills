@@ -13,7 +13,7 @@ description: Use when the user explicitly wants to modify an existing GitHub PR 
 - Keep the patch inside the minimal causal change cone. Do not bundle cleanup, formatting, or speculative refactors.
 - Follow applicable repository instructions and existing contribution/commit conventions.
 - Never amend, rebase, rewrite the author's commits, or force-push without explicit approval.
-- Do not post comments, reviews, labels, or other PR-state changes unless separately requested or required by repository policy. When labels are authorized, use `pr-label` rather than changing them ad hoc.
+- Do not post comments, reviews, labels, or other PR-state changes unless separately requested or required by repository policy. The title/body synchronization in step 8 is the only built-in exception. When labels are authorized, use `pr-label` rather than changing them ad hoc.
 
 ## Workflow
 
@@ -87,13 +87,27 @@ The helper prepares the PR head branch and its tracking configuration. Verify th
 
 If the contributor fork is not writable, branch protection rejects the push, or history would need rewriting, stop and report the exact blocker. Ask before any `--force-with-lease`; never use plain `--force`.
 
-### 8. Check remote state
+### 8. Synchronize the PR title and description when needed
+
+After pushing, compare the final diff and repair contract with the PR's current title and body:
+
+```bash
+gh pr view <N> --repo <OWNER/REPO> --json title,body,url
+```
+
+If the fix makes the existing title or description materially inaccurate, update the title and body
+so they describe the final pushed scope. Change only what is now inaccurate; preserve still-valid
+context, linked issues and closing keywords, attribution, templates, and checklists. Do not rewrite
+accurate metadata merely for style. Re-read the PR after editing and confirm both fields match the
+resulting implementation.
+
+### 9. Check remote state
 
 After pushing, confirm on GitHub:
 
 ```bash
 gh pr checks <N> --repo <OWNER/REPO>
-gh pr view <N> --repo <OWNER/REPO> --json commits,headRefOid,url
+gh pr view <N> --repo <OWNER/REPO> --json title,body,commits,headRefOid,url
 ```
 
 Report required checks as passing, failing, or pending. Do not claim success from a push alone.
@@ -106,6 +120,7 @@ Include:
 - files and commits added to the PR;
 - focused checks and results;
 - push result and current CI state;
+- whether the PR title and description already matched the final implementation or what was updated;
 - remaining risks or verification gaps;
 - any extra GitHub mutations performed, or state that none were made.
 
@@ -120,3 +135,4 @@ Include:
 | Treating CI as the only proof | Run focused contract-driven verification before push |
 | Force-pushing after rejection | Stop and request explicit approval |
 | Posting an unsolicited PR comment | Keep publication separate from the authorized code push |
+| Leaving stale title/body after the fix changes the PR's actual scope | Synchronize both with the final pushed implementation while preserving valid context |
