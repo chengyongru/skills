@@ -14,6 +14,21 @@ Use five questions to keep the review decision-focused:
 
 A PR is not safe because these dimensions average out. A single failed security, data, or compatibility obligation can block the change.
 
+## Reachability and value gate
+
+Establish value before implementation quality:
+
+1. Identify the current supported entrypoint, actor, consumer, or maintainer burden.
+2. Trace it to the changed boundary through repository-owned behavior.
+3. State the concrete present-day consequence or cost.
+4. Identify the contract or ownership rule that requires the change.
+
+A direct call to an internal helper, a synthetic state, or a hypothetical future extension does not establish product reachability. In-process plugins are not a security boundary when they can bypass the guard being tested. Defense in depth has value only when a current threat model or documented contract requires it.
+
+A documented public API, package, or supported extension seam counts as a current contract even when downstream callers are outside the repository. Mere importability or theoretical downstream use does not.
+
+If repository design makes the claimed state impossible, no supported consumer reaches it, or the only benefit is speculative, recommend close/no-merge and stop. Implementation correctness, green CI, and comprehensive tests do not compensate for a failed premise.
+
 ## Build the expected change cone
 
 Before deep code reading, predict the smallest justified footprint:
@@ -44,6 +59,8 @@ Assess each axis and take the highest result rather than an average:
 
 Changes to authority, irreversible data, core transactions, or concurrent side effects require the deepest review even when isolated to one file.
 
+High theoretical severity does not substitute for a reachable actor and consequence. Apply the risk axes only after the value gate passes.
+
 ## Contract inventory
 
 Treat a surface as a contract when external code, stored user state, or another subsystem relies on it. Do not use naming conventions such as a leading underscore as the only test.
@@ -61,12 +78,14 @@ Common contracts:
 
 ## Proof obligations by surface
 
+Apply these obligations only after establishing a supported path to the changed surface. Do not manufacture an impossible state merely to exercise the implementation.
+
 | Changed surface | Minimum useful evidence |
 |---|---|
 | Leaf adapter/integration | focused unit tests, error/lifecycle path, optional dependency or discovery behavior |
 | Public API/config/CLI/wire | old-caller fixture or compatibility check, round trip, malformed/error cases, public-interface smoke |
 | Persistent state/migration | old data fixture, restart/replay, duplicate handling, atomicity, upgrade/rollback story |
-| Security/authority | deny-first negative matrix, bypass attempts, parent/child capability monotonicity, secret-safe logging |
+| Security/authority | supported actor-to-boundary trace, deny-first negative matrix, bypass attempts, parent/child capability monotonicity when that delegation exists, secret-safe logging |
 | Concurrency/retry/cancel | ordering, partial completion, duplicate side effects, cancellation propagation, timeout/restart |
 | UI/user workflow | state tests plus real public-surface interaction when browser/runtime behavior matters |
 | Packaging/dependencies | clean build/install/import or consumer smoke in the supported environment |

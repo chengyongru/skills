@@ -4,14 +4,32 @@ Read this reference when the requested label is not already explicit or when lab
 
 ## Evidence hierarchy
 
-A label name is not a policy. Establish meaning and eligibility from:
+A label name is not a policy, and a mutation instruction is not factual evidence. Establish meaning and eligibility from:
 
-1. the user's explicit requested classification;
-2. repository-local instructions or contribution documentation;
+1. an explicit user-provided or repository-local policy definition;
+2. contribution documentation;
 3. labeler workflows/configuration and repository label descriptions;
-4. recent, consistent maintainer usage on comparable PRs.
+4. recent, consistent maintainer usage on comparable PRs;
+5. current PR evidence that satisfies the discovered rule.
 
 Treat conventions inferred only from historical usage as provisional. A few examples can reflect mistakes or a policy transition.
+
+An exact user request controls authorization and requested outcome. If it conflicts with the evidence, follow the authorized instruction but describe it as a directive, not a confirmed classification.
+
+## Reachability and impact evidence
+
+Impact-bearing labels must describe current repository behavior, not the theme of a diff.
+
+- **Bug/fix**: require a supported path whose current behavior violates an existing contract. Odd behavior in an unreachable helper is not a product bug.
+- **Security**: require a current trust boundary, reachable actor or capability, and concrete consequence. Permission-related code or generic hardening is insufficient unless repository policy explicitly includes hardening.
+- **Severity/priority**: require present-day user, operator, data, security, or maintenance impact at the level defined by the repository. A theoretically serious consequence on an impossible path has no current severity.
+- **Area/component/test**: may follow changed ownership or file content when repository policy defines them that way; they do not prove impact.
+
+Trace `supported entrypoint/actor → repository-owned caller → affected boundary → consequence`. A direct internal-helper call, synthetic state, speculative future consumer, arbitrary in-process plugin, PR-body assertion, or existing label does not complete that trace.
+
+A documented public API, package, or supported extension contract can establish reachability when consumers live elsewhere. Mere importability cannot.
+
+If repository design explicitly forbids the claimed state or no supported consumer can reach it, treat corresponding bug, security, severity, and priority labels as contradicted. Remove them only when the requested mutation scope authorizes synchronization or reclassification.
 
 ## Separate dimensions
 
@@ -59,10 +77,11 @@ For each substantive label, record:
 
 - the relevant PR fact;
 - the repository rule or precedent;
+- the supported path and concrete consequence for impact-bearing labels;
 - why nearby alternatives do not apply;
 - any remaining uncertainty.
 
-Do not translate review uncertainty into a high-severity label. If a finding is not yet confirmed, label it only when the repository explicitly has a workflow label for that uncertainty.
+Do not translate review uncertainty into a bug, security, severity, or priority label. If a finding is not yet confirmed, label it only when the repository explicitly has a workflow label for that uncertainty.
 
 ## Missing labels
 
