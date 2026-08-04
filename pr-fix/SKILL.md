@@ -7,13 +7,32 @@ description: Use when the user explicitly wants to modify an existing GitHub PR 
 
 ## Non-negotiables
 
-- Use this only when the user explicitly authorizes modifying and pushing to the PR branch.
-- Use `pr-worktree` in `fix` mode; never switch or stash the user's current workspace.
+- Use this only when the user explicitly authorizes modifying and pushing to the PR branch. When
+  `nanobot-gate` explicitly invokes gate remediation, that invocation authorizes the local fix
+  portion only; it does not authorize the publication steps below.
+- Use `pr-worktree` in `fix` mode; never switch or stash the user's current workspace. If the current
+  worktree is already attached to the requested PR head branch and its changes belong to the
+  authorized fix, reuse it directly; otherwise prepare a new isolated fix worktree.
 - Fix confirmed issues or an explicitly requested change. Do not turn risks/questions into code changes without resolving them.
 - Keep the patch inside the minimal causal change cone. Do not bundle cleanup, formatting, or speculative refactors.
 - Follow applicable repository instructions and existing contribution/commit conventions.
 - Never amend, rebase, rewrite the author's commits, or force-push without explicit approval.
 - Do not post comments, reviews, labels, or other PR-state changes unless separately requested or required by repository policy. The title/body synchronization in step 8 is the only built-in exception. When labels are authorized, use `pr-label` rather than changing them ad hoc.
+
+## Gate remediation mode
+
+When invoked by `nanobot-gate` to make the current candidate pass, execute steps 1–5 only:
+
+- establish the repair contract;
+- reuse or prepare the appropriate worktree;
+- make the focused change and add the closest regression proof;
+- run the focused verification and inspect the candidate diff.
+
+Then stop without committing, pushing, updating the PR title/body, or making any other GitHub
+mutation. Return the changed files, worktree path, verification evidence, and remaining gate status
+to `nanobot-gate`. The gate may repeat this local remediation loop until all required gates pass.
+After the final PASS, resume the normal steps 6–9 exactly once for the commit/push and remote-state
+checks.
 
 ## Workflow
 
@@ -38,6 +57,10 @@ python3 <pr-worktree-skill>/scripts/pr_worktree.py prepare <N> --repo <OWNER/REP
 ```
 
 Use the returned worktree path for every read, edit, test, commit, and push. Verify the manifest reports an attached branch and expected upstream/head repository. If the helper reports a dirty worktree, branch collision, or unwritable fork, stop and report it rather than improvising a destructive checkout.
+
+In gate remediation mode, a matching current fix worktree may intentionally be dirty. Confirm that
+its existing changes belong to the current repair before editing; only a newly prepared fix worktree
+must satisfy the clean manifest before work begins.
 
 ### 3. Inspect current context
 

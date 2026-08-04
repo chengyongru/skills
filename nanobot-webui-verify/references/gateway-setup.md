@@ -1,93 +1,77 @@
 # Gateway Setup Reference
 
-Use a repo-local temporary directory with a unique suffix so multiple black-box verifications can run at the same time. Keep workspace, config, logs, and PID inside that directory.
+Use the bundled lifecycle helper. It replaces ad hoc PowerShell for port allocation, config generation, process startup, readiness polling, PID tracking, log collection, and recursive runtime cleanup.
+
+## Start
 
 ```powershell
 $root = (Get-Location).Path
 $runId = "{0}-{1}" -f $PID, ([guid]::NewGuid().ToString('N').Substring(0, 8))
-$verifyDir = Join-Path $root ".verify-webui-$runId"
-$configPath = Join-Path $verifyDir 'config.json'
-$workspacePath = Join-Path $verifyDir 'workspace'
-New-Item -ItemType Directory -Force -Path $verifyDir, $workspacePath | Out-Null
-
-function Get-FreePort {
-  $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
-  $listener.Start()
-  $port = $listener.LocalEndpoint.Port
-  $listener.Stop()
-  return $port
-}
-$websocketPort = Get-FreePort
-$gatewayPort = Get-FreePort
-
-$sourceConfig = Join-Path $HOME '.nanobot\config.json'
-if (Test-Path $sourceConfig) {
-  Copy-Item -LiteralPath $sourceConfig -Destination $configPath
-  $config = Get-Content -Raw -Path $configPath | ConvertFrom-Json
-} else {
-  $config = [pscustomobject]@{}
-}
-
-if (-not $config.agents) { $config | Add-Member -NotePropertyName agents -NotePropertyValue ([pscustomobject]@{}) }
-if (-not $config.agents.defaults) { $config.agents | Add-Member -NotePropertyName defaults -NotePropertyValue ([pscustomobject]@{}) }
-if (-not $config.agents.defaults.provider) { $config.agents.defaults | Add-Member -Force -NotePropertyName provider -NotePropertyValue 'custom' }
-if (-not $config.agents.defaults.model) { $config.agents.defaults | Add-Member -Force -NotePropertyName model -NotePropertyValue 'verify-model' }
-$config.agents.defaults | Add-Member -Force -NotePropertyName workspace -NotePropertyValue $workspacePath
-$config.agents.defaults | Add-Member -Force -NotePropertyName maxToolIterations -NotePropertyValue 1
-
-if (-not $config.providers) { $config | Add-Member -NotePropertyName providers -NotePropertyValue ([pscustomobject]@{}) }
-if (-not $config.providers.custom) {
-  $config.providers | Add-Member -NotePropertyName custom -NotePropertyValue ([pscustomobject]@{
-    apiKey = 'verify-no-external-call'
-    apiBase = 'http://127.0.0.1:9/v1'
-  })
-}
-
-if (-not $config.channels) { $config | Add-Member -NotePropertyName channels -NotePropertyValue ([pscustomobject]@{}) }
-$config.channels | Add-Member -Force -NotePropertyName websocket -NotePropertyValue ([pscustomobject]@{
-  enabled = $true
-  host = '127.0.0.1'
-  port = $websocketPort
-})
-
-$config | Add-Member -Force -NotePropertyName gateway -NotePropertyValue ([pscustomobject]@{
-  host = '127.0.0.1'
-  port = $gatewayPort
-  heartbeat = [pscustomobject]@{ enabled = $false }
-})
-$json = $config | ConvertTo-Json -Depth 8
-[System.IO.File]::WriteAllText($configPath, $json, [System.Text.UTF8Encoding]::new($false))
-
-$out = Join-Path $verifyDir 'gateway.out.log'
-$err = Join-Path $verifyDir 'gateway.err.log'
-Remove-Item -Force -ErrorAction SilentlyContinue $out, $err
-$p = Start-Process -FilePath python -ArgumentList @('-m','nanobot','gateway','--config',$configPath) -WorkingDirectory $root -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -WindowStyle Hidden
-$p.Id | Set-Content (Join-Path $verifyDir 'gateway.pid')
+$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
+$helper = "C:\Users\HR\skills\nanobot-webui-verify\scripts\webui_runtime.py"
+$started = python $helper start --repo $root --evidence-dir $evidenceDir --run-id $runId |
+  ConvertFrom-Json
+if (-not $started.ok) { throw $started.error }
 ```
 
-Wait until the WebUI bootstrap route returns HTTP 200 before launching Playwright or WebSocket checks. Avoid raw TCP probes because the WebSocket server logs invalid HTTP request exceptions for them.
+Successful output contains only the values needed by later commands:
+
+```json
+{"ok":true,"status":"ready","manifest":"...runtime-manifest.json","gateway_pid":1234,"url":"http://127.0.0.1:54321/","session_name":"nanobot-webui-..."}
+```
+
+The helper:
+
+- creates the runtime only under `%TEMP%\nanobot-webui-verify\<run-id>`;
+- creates a minimal config with a non-routable dummy provider, isolated workspace, disabled heartbeat, and fresh websocket/gateway ports;
+- writes JSON as UTF-8 without BOM;
+- launches the real gateway as a hidden child process and records its actual PID;
+- bypasses proxies and waits for `GET /webui/bootstrap` to return HTTP 200;
+- removes failed-start runtimes after preserving their logs.
+
+It never copies the user's `~/.nanobot/config.json`, so verification cannot inherit real provider secrets or call an external model accidentally.
+
+## Status
 
 ```powershell
-$deadline = (Get-Date).AddSeconds(30)
-$bootstrapUrl = "http://127.0.0.1:$websocketPort/webui/bootstrap"
-while ((Get-Date) -lt $deadline) {
-  try {
-    $response = Invoke-WebRequest -UseBasicParsing -Uri $bootstrapUrl -TimeoutSec 2
-    if ($response.StatusCode -eq 200) { break }
-  } catch {}
-  Start-Sleep -Milliseconds 250
-}
-if ((Get-Date) -ge $deadline) {
-  Get-Content -Path $err -ErrorAction SilentlyContinue | Select-Object -Last 120
-  throw "gateway did not become ready at $bootstrapUrl"
-}
+python $helper status --manifest $started.manifest
 ```
 
-If a verification seeds session or transcript JSONL files directly, write them without a UTF-8 BOM:
+Status reports whether the PID is alive, whether its command line still matches the exact manifest config, whether both ports are owned, and whether the runtime directory exists. Port checks do not connect to the server and therefore do not produce invalid HTTP noise.
+
+## Cleanup
 
 ```powershell
-$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
-[System.IO.File]::WriteAllLines($jsonlPath, [string[]]$lines, $utf8NoBom)
+python $helper cleanup --manifest $started.manifest
 ```
 
-If the browser URL is needed in a later command, write `$websocketPort` to a file in `$verifyDir` or keep the same PowerShell session.
+Cleanup is idempotent. It:
+
+1. closes and deletes the named `playwright-cli` session when available;
+2. refuses to kill a live PID whose command line does not match the exact config path;
+3. stops the matching process tree, then verifies the PID and both ports are gone;
+4. copies gateway stdout/stderr into the evidence directory;
+5. validates that the runtime is below the fixed temp root and deletes it recursively;
+6. updates the retained manifest with `runtime_removed`, `ports_released`, logs, and warnings.
+
+Do not replace cleanup with per-file edits, shell-cell termination, or broad process-name kills.
+
+## Evidence Deletion
+
+Evidence remains after normal cleanup. Only after explicit user approval, delete the exact evidence directory through the manifest:
+
+```powershell
+python $helper purge-evidence --manifest $started.manifest
+```
+
+The helper requires a successfully cleaned manifest stored directly in a `.verify-evidence-*` directory below the repository's `webui` directory.
+
+## Seeded JSONL
+
+If a verification seeds session or transcript JSONL files directly, write them without a UTF-8 BOM. Store them in the isolated workspace path from the manifest/runtime while the gateway is active. Avoid PowerShell `Set-Content -Encoding UTF8` on Windows when it may emit a BOM.
+
+## Failure Recovery
+
+- If `start` returns `ok: false`, inspect `gateway.stdout.log`, `gateway.stderr.log`, and `runtime-manifest.json` in the evidence directory. The process and runtime have already been cleaned.
+- If `cleanup` refuses a PID mismatch, do not force-kill it. Run `status`, inspect the process externally, and report the ownership conflict.
+- If cleanup reports a port still owned, do not delete evidence or claim PASS. Run `status` and report the exact PID/ports.

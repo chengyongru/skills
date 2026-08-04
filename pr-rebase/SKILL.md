@@ -17,7 +17,10 @@ Rebase is a history-rewriting operation. Isolate it from the user's current work
 
 ## Relationship to the PR skills
 
-- Use `pr-worktree` first for PR checkout, branch ownership, and isolation.
+- Use `pr-worktree` first for PR checkout, branch ownership, and isolation. Reuse the current
+  worktree when it is already the requested PR's attached head branch and the rebase belongs to that
+  worktree; prepare another worktree only when the current one does not match or contains unrelated
+  work.
 - Use `pr-review` when the user wants a review or merge recommendation; do not turn rebase into a review.
 - Use `pr-fix` when the user also requests code changes to fix a PR. `pr-rebase` owns the history synchronization step and its verification.
 - Use `pr-label` only when label changes are explicitly requested.
@@ -37,7 +40,9 @@ If the PR is merged or closed, do not rewrite its branch. Report the state and s
 
 ### 2. Prepare an isolated worktree
 
-Read and follow `pr-worktree`. Prefer its deterministic helper in fix mode because the branch will be rewritten and possibly pushed:
+Read and follow `pr-worktree`. If a matching attached PR worktree is already current, continue there.
+Otherwise prefer its deterministic helper in fix mode because the branch will be rewritten and possibly
+pushed:
 
 ```bash
 python3 <pr-worktree-skill>/scripts/pr_worktree.py prepare <PR> --repo <OWNER/REPO> --mode fix --format markdown

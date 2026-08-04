@@ -16,36 +16,62 @@ Verify nanobot WebUI changes through the built frontend served by the real gatew
 
 ```powershell
 cd webui
-npm run test -- <relevant-test-file>
+bun run test -- <relevant-test-file>
 ```
 
 3. Build the WebUI:
 
 ```powershell
 cd webui
-npm run build
+bun run build
 ```
 
-4. Start `nanobot gateway` from the repository root with a per-run temporary config copied from `~/.nanobot` when available. Assign fresh free ports for `channels.websocket.port` and `gateway.port`; access the browser through the websocket port.
+4. Use the bundled lifecycle helper from the repository root. It creates a minimal isolated config under the fixed system-temp root, records the real gateway PID and ports, waits for `/webui/bootstrap`, and emits one compact JSON result:
 
-5. Wait for readiness with an HTTP request to `http://127.0.0.1:<websocket-port>/webui/bootstrap`; do not probe the WebSocket port with raw TCP, which logs noisy invalid HTTP request exceptions.
+```powershell
+$root = (Get-Location).Path
+$runId = "{0}-{1}" -f $PID, ([guid]::NewGuid().ToString('N').Substring(0, 8))
+$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
+$helper = "C:\Users\HR\skills\nanobot-webui-verify\scripts\webui_runtime.py"
+$started = python $helper start --repo $root --evidence-dir $evidenceDir --run-id $runId |
+  ConvertFrom-Json
+if (-not $started.ok) { throw $started.error }
+$manifest = $started.manifest
+$session = $started.session_name
+$webuiUrl = $started.url
+```
 
-6. Run `playwright-cli` headless checks against `http://127.0.0.1:<websocket-port>/`. Use a unique session name per verification run.
+5. Run `playwright-cli` headless checks against `$webuiUrl` using `$session`.
 
-7. Stop the gateway, close the `playwright-cli` session, and remove temporary specs, logs, test-results, and config directories. Preserve screenshot and snapshot evidence files; report their paths and ask the user whether to delete them.
+6. Always run the helper cleanup, even after a failed browser assertion. It closes the named browser session, validates and stops the exact gateway process tree, verifies both ports are released, copies gateway logs into the evidence directory, and deletes the runtime directory in one command:
 
-8. Report exact commands, pass/fail status, and any warnings that matter.
+```powershell
+python $helper cleanup --manifest $manifest
+```
 
-## Gateway Setup
+7. Run `status` if cleanup or process ownership is uncertain:
 
-For concrete PowerShell setup, read [references/gateway-setup.md](references/gateway-setup.md). The important constraints are:
+```powershell
+python $helper status --manifest $manifest
+```
 
-- Use a unique `.verify-webui-<runId>` directory per verification run.
-- Copy `~/.nanobot/config.json` into that directory when it exists, then mutate the copy only.
-- Assign fresh free `channels.websocket.port` and `gateway.port` values per gateway.
-- Use different websocket and gateway ports, and open the browser through the websocket port.
-- Write temporary `config.json` and any seeded session/transcript JSONL as UTF-8 without BOM. PowerShell `Set-Content -Encoding UTF8` can produce a BOM on Windows, which nanobot treats as invalid JSON.
-- Wait for `GET /webui/bootstrap` to return HTTP 200 before running WebSocket or browser checks.
+8. Report exact commands, pass/fail status, evidence paths, and any warnings that matter.
+
+## Lifecycle Rules
+
+- Treat `scripts/webui_runtime.py` as the only normal owner of gateway startup, status, and cleanup. Do not reconstruct its PowerShell/Python logic inline.
+- Do not infer gateway shutdown from termination of the shell or tool cell that launched it. The helper records and checks the actual child PID.
+- Do not create `.verify-webui-*` runtime directories in the repository and do not delete runtime files one by one. Runtime state belongs under the helper's fixed system-temp root.
+- Do not stop a PID unless it matches the manifest's exact gateway config. The helper enforces this before killing the process tree.
+- Do not probe the WebSocket server with a raw TCP connection. The helper uses `/webui/bootstrap` for readiness and non-traffic port ownership checks for cleanup.
+- Keep screenshots and snapshots in the repo-local `.verify-evidence-*` directory. Do not stage it.
+- If the user explicitly approves deletion of retained evidence, use the helper instead of deleting files individually:
+
+```powershell
+python $helper purge-evidence --manifest $manifest
+```
+
+For the command contract, manifest fields, and failure recovery, read [references/gateway-setup.md](references/gateway-setup.md).
 
 ## Proxy Rules
 
@@ -69,15 +95,10 @@ npm install -g @playwright/cli@latest
 playwright-cli --help
 ```
 
-Use a session name tied to `$runId` so concurrent verifications do not share browser state:
+The lifecycle helper returns a unique session name and URL:
 
 ```powershell
-$session = "nanobot-webui-$runId"
-$env:NANOBOT_WEBUI_URL = "http://127.0.0.1:$websocketPort"
-$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
-New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
-
-playwright-cli -s=$session open "$env:NANOBOT_WEBUI_URL/#/settings?section=models"
+playwright-cli -s=$session open "$($webuiUrl.TrimEnd('/'))/#/settings?section=models"
 $snapshotPath = Join-Path $evidenceDir 'settings-models.yaml'
 playwright-cli -s=$session snapshot --filename $snapshotPath
 if (-not (Test-Path $snapshotPath)) { throw "snapshot was not created: $snapshotPath" }
@@ -101,12 +122,7 @@ When verifying persisted chat refresh specifically:
 - For legacy transcript backfill, seed isolated `workspace/sessions/*.jsonl` and `webui/*.jsonl` files as UTF-8 without BOM, then fetch the public route.
 - For transcript append failure behavior, make the target transcript JSONL path a directory to trigger an append `OSError` for that chat only. Do not replace the entire `webui` runtime directory with a file; that can break unrelated bootstrap/hydration paths and weakens the evidence.
 
-Close the named browser session during cleanup:
-
-```powershell
-playwright-cli -s=$session close
-playwright-cli -s=$session delete-data
-```
+The helper closes and deletes the named browser session during cleanup.
 
 ## Playwright Test Fallback
 
@@ -114,33 +130,6 @@ Use this only when `playwright-cli` is too awkward for the needed assertions, po
 
 ## Cleanup
 
-Always stop the gateway process before finishing. Do not delete screenshots or snapshots automatically. Keep them in `$evidenceDir`, report the path, then ask the user whether to delete the evidence directory.
-
-```powershell
-if ($session) {
-  playwright-cli -s=$session close
-  playwright-cli -s=$session delete-data
-}
-if (Test-Path (Join-Path $verifyDir 'gateway.pid')) {
-  $pidText = (Get-Content (Join-Path $verifyDir 'gateway.pid') -Raw).Trim()
-  if ($pidText) {
-    Stop-Process -Id ([int]$pidText) -Force -ErrorAction SilentlyContinue
-  }
-}
-$evidenceDir = Join-Path $root "webui\.verify-evidence-$runId"
-$evidenceFiles = Get-ChildItem -Path $verifyDir -Recurse -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Extension -in '.png', '.jpg', '.jpeg', '.webp', '.yml', '.yaml' }
-if ($evidenceFiles) {
-  New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
-  foreach ($file in $evidenceFiles) {
-    Move-Item -LiteralPath $file.FullName -Destination (Join-Path $evidenceDir $file.Name) -Force
-  }
-}
-Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $root "webui\.verify-webui-$runId.spec.mjs")
-Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $root 'webui\test-results')
-Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $verifyDir
-```
-
-After reporting verification results, ask: "要不要删除保留的验证截图/快照目录 `$evidenceDir`？" Delete it only after explicit confirmation. If the user wants to attach screenshots to a PR, keep the directory and include the paths in the final report.
+Cleanup is complete only when the helper reports `runtime_removed: true` and `ports_released: true`. Do not delete screenshots or snapshots automatically. Keep them in `$evidenceDir`, report the path, then ask: "要不要删除保留的验证截图/快照目录 `$evidenceDir`？" Run `purge-evidence` only after explicit confirmation.
 
 Before committing, check `git status --short` and restore accidental generated files such as `webui/bun.lock` if they were only touched by verification tooling. Do not stage `webui\.verify-evidence-*` directories.

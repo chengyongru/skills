@@ -8,7 +8,9 @@ description: Use when the user wants a maintainer-quality review of a GitHub PR,
 ## Non-negotiables
 
 - Review only the requested PR.
-- Use `pr-worktree` for checkout/inspection; never switch the user's current branch.
+- Use `pr-worktree` for checkout/inspection; never switch the user's current branch. If the current
+  worktree is already a clean detached checkout at the requested PR head, reuse it directly instead
+  of creating a duplicate; otherwise prepare an isolated review worktree.
 - Fetch the PR head and latest remote base before judging the diff.
 - Do not approve, merge, close, delete branches, force-push, or alter PR state.
 - Treat review and publication as separate actions. Do not post reviews, comments, or labels unless the user explicitly requests it or applicable repository policy explicitly authorizes it.
