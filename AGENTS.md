@@ -7,6 +7,9 @@
 - Express safety boundaries through exact authorization, validated targets, and scoped operations.
 - Reserve prohibitive wording for an irreducible safety boundary with no equally clear positive form.
 - Keep generic skills project-neutral and route project-specific work to the matching specialized skill.
+- Keep `SKILL.md` under 60 lines by default.
+- Include only decisions, contracts, domain facts, and tool usage the model cannot reliably infer.
+- Move repeated fragile mechanics into deterministic scripts and remove unreferenced resources.
 
 ## Verification output
 

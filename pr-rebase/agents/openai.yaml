@@ -1,4 +1,0 @@
-interface:
-  display_name: "PR Rebase"
-  short_description: "Safely rebase an existing PR branch onto its latest base"
-  default_prompt: "Rebase this pull request onto the latest base branch, resolve conflicts safely, rerun focused verification, and update the remote branch."

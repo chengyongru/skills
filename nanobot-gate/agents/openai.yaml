@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nanobot Gate"
-  short_description: "Run snapshot-bound readiness and PR gates"
-  default_prompt: "Use $nanobot-gate to evaluate the current nanobot change with snapshot-bound simplify, verification, and PR-review gates."

@@ -1,266 +1,45 @@
 ---
 name: nanobot-gate
-description: Coordinate snapshot-bound simplify, public-interface verification, candidate review, formal GitHub PR review, and CI readiness for nanobot changes. Use when the user invokes $nanobot-gate, asks to run all gates, wants pre-push or merge readiness, needs a change verified before PR creation/release, or wants a resumable evidence-backed remediation loop.
+description: Coordinate snapshot-bound simplify, public verification, candidate review, formal PR review, and CI readiness for nanobot changes. Use for $nanobot-gate, all-gates requests, pre-push, PR, merge, or release readiness, and resumable remediation loops.
 ---
 
 # Nanobot Gate
 
-Run nanobot readiness as a candidate state machine, not a fixed script. Bind every conclusion to
-one content snapshot, invalidate stale results after edits, publish once, and report only evidence
-from the final candidate.
+Bind every conclusion to one candidate snapshot with `scripts/gate_state.py`. Keep prose in the conversation and raw evidence in an ignored evidence directory.
 
-Read [references/state-model.md](references/state-model.md) before starting. Use the bundled
-`scripts/gate_state.py` for candidate fingerprints and gate records. Keep
-machine-readable state and raw evidence in the evidence directory; deliver prose plans, status
-updates, and conclusions directly in the conversation.
+## Required gates
 
-Reuse the detailed procedures in these skills instead of restating them:
+- local readiness: `simplify`, `verify`;
+- pre-PR readiness: local gates plus `candidate-review`;
+- merge readiness: pre-PR gates plus formal `pr-review` and required CI;
+- release readiness: merge gates plus repository release checks.
 
-- `pr-worktree` for isolated start, fix, and detached review worktrees;
-- `simplify` for behavior-preserving cleanup;
-- `verify` for non-WebUI public-interface plans, evidence, and cleanup;
-- `nanobot-webui-verify` as the primary workflow whenever WebUI/browser/gateway behavior is affected;
-- `pr-review` for a real GitHub PR at a fetched remote head;
-- `pr-fix` for confirmed gate remediation.
+Use `pr-worktree` for isolation, `simplify` before freezing, `nanobot-webui-verify` for WebUI/gateway surfaces, generic `verify` for other public surfaces, `pr-fix` for confirmed remediation, and formal `pr-review` only at the fetched PR head.
 
-Load each skill before its phase first needs it.
+## Candidate cycle
 
-## Invariants
+1. Reuse the task-owned worktree when it matches; otherwise prepare one with `pr-worktree`. Read repository instructions and declare required gates.
+2. Share the change contract, supported path, protected behavior, proof obligations, pass rules, and limitations.
+3. Run `simplify`, finish all edits, then snapshot:
 
-- Work in the intended independent worktree and read applicable `AGENTS.md`,
-  `CONTRIBUTING.md`, and relevant design/security/gotcha guidance.
-- Preserve unrelated tracked and untracked changes with path-specific staging and cleanup.
-- Treat the diff as user-owned until edits are authorized. `simplify` may make only safe,
-  behavior-preserving cleanup. `pr-fix` may repair only confirmed findings.
-- Freeze candidate content while tests, browser checks, and review are running; finish active
-  read-only work before the next edit.
-- Bind gate evidence to the candidate ID in `gate-state.json`. Mark a result from another candidate
-  `STALE` and exclude it from readiness evidence.
-- Default to invalidating all recorded gates after a content change. Carry a result only when its
-  protected contract is demonstrably unaffected, and record the reason.
-- Verify through a public interface with a written observable pass rule. Use source inspection,
-  lint, build, type checks, and unit tests as supporting evidence.
-- Keep remediation local until the unpublished candidate is ready and GitHub mutation authority is
-  explicit.
-- Publish one completed local-ready candidate per cycle. A post-publication blocker starts a new
-  local cycle and requires publication authority again.
-- A formal `pr-review` requires a real GitHub PR and a clean detached worktree matching its fetched
-  head. Complete local candidate review first, then formal PR review at the fetched PR head.
-- Perform PR approvals, merges, closure, labels, comments, and other mutations only with exact
-  authorization. Treat PR creation as opt-in.
-- Preserve redacted evidence and obtain approval before deleting it.
+```powershell
+python <skill>\scripts\gate_state.py snapshot --repo <worktree> --base <base-ref> --state <evidence>\gate-state.json
+```
 
-## 1. Prepare and declare the terminal state
+4. Run read-only gates against that candidate. Record each result with `record --gate ... --status ... --evidence <raw-artifact> --judgment <result>`.
+5. Candidate review proves current reachability, material value, contract safety, and change-cone discipline. Formal PR review remains a separate remote-head gate.
+6. A content change creates a new candidate and makes prior results `STALE`. Carry an unaffected local result only with a contract-based `--reason`; rerun review, CI, and every gate after a base change.
+7. For a confirmed blocker, run `pr-fix` locally, resnapshot, and rerun stale required gates.
+8. Check readiness:
 
-Determine what the user is asking the gate to prove:
+```powershell
+python <skill>\scripts\gate_state.py check --state <evidence>\gate-state.json --required <gates...>
+```
 
-- **local readiness**: simplify and verify are required; formal PR review is optional;
-- **pre-PR readiness**: simplify, verify, and a read-only candidate review are required;
-- **merge readiness**: simplify, verify, candidate review, formal PR review, and required remote CI
-  are required;
-- **release readiness**: merge-readiness gates plus repository release checks are required.
+## Publication
 
-Record required versus optional gates before execution. `NOT_RUN` for an optional gate does not
-degrade the overall result; `NOT_RUN` for a required gate does.
+With explicit authority, stage intended source paths, commit, push once, and create/update the PR as requested. Resnapshot to confirm content identity, then bind formal review and CI to the exact remote SHA. A remote blocker starts a new local candidate cycle.
 
-Inspect the current worktree before creating another:
+## Result
 
-- Reuse a task-owned topic/fix worktree, including authorized dirty candidate changes.
-- Reuse a review worktree only when it is clean, detached, and matches the fetched PR head.
-- Otherwise use `pr-worktree start` for a new candidate or `prepare --mode fix|review` for a PR.
-- Leave the user's unrelated workspace and stash state untouched.
-
-Create a unique evidence directory:
-
-~~~text
-<worktree>\webui\.verify-evidence-gates-<run-id>\
-~~~
-
-Capture status, branches, remotes, recent commits, repository instructions, PR metadata, and CI as
-raw evidence. Use `verify`'s context collector when available.
-
-## 2. Establish contract and plan
-
-Before tests or code edits, establish and share:
-
-- purpose and evidence-backed present-day value;
-- changed user/public surfaces and the supported path to the changed boundary;
-- expected and actual change cone;
-- protected behavior, compatibility, persistence, security, and lifecycle contracts;
-- proof obligations, pass rules, required gates, and limitations;
-- the cheapest high-signal checks and the escalation conditions for broader checks.
-
-Discover interfaces from repository evidence and select only the surfaces reached by the change.
-Prefer this cost order:
-
-~~~text
-static/contract checks -> focused tests -> public black-box check -> broader suite -> remote CI
-~~~
-
-Share the verification plan in commentary before executing it. Keep the plan concise: required
-gates, public actions, pass rules, evidence capture, escalation conditions, and limitations.
-
-## 3. Normalize, then freeze the candidate
-
-Run `simplify` before final verification:
-
-1. Audit reuse, avoidable complexity, repeated work, and abstraction ownership.
-2. Apply only behavior-preserving cleanup inside the change cone.
-3. Run the narrowest focused proof for any cleanup.
-4. Record either the exact edit or “no safe cleanup found.”
-
-Format only changed files with repository-approved commands; nanobot guidance excludes broad
-`ruff format` runs.
-
-After all mutating cleanup stops, create or refresh the candidate snapshot:
-
-~~~powershell
-python <skill>\scripts\gate_state.py snapshot --repo <candidate-worktree> --base <base-ref> --state <evidence>\gate-state.json
-python <skill>\scripts\gate_state.py record --state <evidence>\gate-state.json --gate simplify --status PASS --required --evidence <raw-log-or-artifact> --judgment "<result>"
-~~~
-
-The candidate ID fingerprints the base and materialized diff, including non-ignored untracked files.
-A content-preserving commit does not invalidate local evidence; a changed base or diff does.
-
-## 4. Run read-only gates against the frozen candidate
-
-When tools and resources allow, run independent read-only verification and review work in parallel.
-Every action must use the frozen candidate and state its candidate ID.
-
-### Verify
-
-For browser-visible, route, settings, chat, sidebar, and gateway-facing changes, invoke
-`nanobot-webui-verify` as the primary workflow. Invoke generic `verify` for the remaining public
-surfaces.
-
-- Run the smallest set that proves the contract.
-- Exercise the changed workflow through CLI, API, package consumer, service, or built WebUI.
-- Capture command metadata, output, runtime logs, visible state, and screenshots/snapshots where
-  relevant.
-- Use isolated disposable config/workspaces, fresh ports, and redacted or dummy credentials.
-- For WebUI, build first, use the real gateway/WebSocket path, wait on the documented HTTP
-  readiness endpoint, exercise visible controls, inspect console/runtime errors, and verify
-  persistence when relevant.
-- Escalate to broader local tests only when risk, repository policy, or earlier results justify it.
-
-If an unrelated check fails, perform differential baseline triage only then: run the exact failing
-check against the fetched base or original PR head in an isolated worktree. Classify:
-
-- candidate fails, baseline passes: regression (`FAIL`);
-- both fail identically: baseline limitation (`WARN`) only if changed-path proof remains complete;
-- baseline unavailable: `BLOCKED` or `WARN` according to whether required proof remains possible.
-
-### Candidate review
-
-Perform a read-only review of the frozen local candidate before publication:
-
-- prove supported-path reachability and net value before deep findings;
-- review contract boundaries, compatibility, failure handling, and change-cone discipline;
-- classify observations as Confirmed, Risk, Question, or Not a finding;
-- put only confirmed actionable problems in the findings list.
-
-Call this **candidate review** and record it as `candidate-review` in the state manifest. Reserve
-**formal PR review** for a real PR checked in its detached review worktree. If a real PR already
-points to the same candidate content, formal `pr-review` may run now.
-
-Record gate results with `gate_state.py record`. Include `--remote-head <sha>` for formal review.
-
-## 5. Remediate with incremental invalidation
-
-For a confirmed blocking finding, invoke `pr-fix` in gate-remediation mode:
-
-1. Establish trigger, consequence, violated contract, change cone, and focused proof.
-2. Make the smallest local fix in the reusable candidate worktree.
-3. Refresh the candidate snapshot before trusting any result:
-
-   ~~~powershell
-   python <skill>\scripts\gate_state.py snapshot --repo <candidate-worktree> --base <base-ref> --state <evidence>\gate-state.json
-   ~~~
-
-4. By default every prior result becomes `STALE`. Carry an unaffected result only with
-   `--carry <gate> --reason "<contract-based reason>"`; cite the protected contract in the reason.
-   Candidate review, formal review, remote CI, and every result across a base change are rerun for
-   the new candidate.
-5. Rerun stale required gates and the focused regression proof.
-
-Repeat until the unpublished candidate is ready or an external blocker requires user direction.
-Complete this local loop before entering the authorized commit/push phase.
-
-Before publication, run:
-
-~~~powershell
-python <skill>\scripts\gate_state.py check --state <evidence>\gate-state.json --required simplify verify candidate-review
-~~~
-
-Candidate review reaches PASS when confirmed blockers are resolved. Formal `pr-review` remains a
-separate gate and becomes applicable when a matching PR exists.
-
-## 6. Publish once, then reconcile remote state
-
-Only with authorization:
-
-1. Confirm the intended source files changed and stage those paths explicitly, leaving evidence
-   and disposable runtime files outside the commit.
-2. Commit while preserving existing history.
-3. Push normally; use force-push only with explicit approval.
-4. Create a PR when explicitly requested.
-5. Re-run `snapshot`. If the content-derived candidate ID is unchanged, local simplify/verify
-   evidence remains current even though HEAD changed.
-6. Fetch PR metadata and confirm the remote head SHA contains the same candidate.
-7. Run formal `pr-review` in a clean detached worktree at that exact SHA.
-8. Wait for required CI and record `remote-ci` against the same remote SHA.
-9. Update title/body only when the final scope made existing metadata materially inaccurate and the
-   applicable authorized workflow permits it. Preserve valid issue links and context.
-
-If push, PR creation, fork write access, or required checks are blocked, stop at that boundary and
-report the exact state as BLOCKED or WARN according to the required proof.
-
-If formal review or CI finds a blocker after publication, mark the remote gates failed, return to a
-new local remediation cycle, and require local readiness plus publication authority before another
-push. Publish the next repair after that cycle is locally ready.
-
-## 7. Status and completion rules
-
-Use:
-
-- `PASS`: required contract is proven for the current candidate;
-- `WARN`: primary behavior passes but a material non-blocking limitation remains;
-- `FAIL`: current candidate violates a required contract;
-- `BLOCKED`: required proof cannot proceed because of environment, authority, or infrastructure;
-- `NOT_RUN`: gate was optional or outside the requested terminal state; state which;
-- `STALE`: result belongs to another candidate and is excluded from the conclusion.
-
-Run `gate_state.py check` before the final response. Overall status is computed only from gates
-declared required for the requested terminal state:
-
-- `PASS`: every required gate passes;
-- `WARN`: required gates have no FAIL result, while a required gate warns or a material limitation remains;
-- `FAIL`: any required gate fails;
-- `BLOCKED`: required work awaits environment, authority, or infrastructure while failure remains unestablished;
-- `STALE`: refresh the required result before completion.
-
-## Evidence and cleanup
-
-At minimum retain:
-
-- `gate-state.json` and candidate IDs;
-- context/status, diff, command metadata, stdout, and stderr;
-- public-interface evidence and runtime/browser logs where relevant;
-- baseline comparison evidence for any failure reclassification;
-- PR metadata, reviewed remote SHA, and CI state.
-
-Redact tokens, cookies, API keys, authorization headers, and user configuration. Record PIDs and
-ports before startup. Stop exact processes, close browser sessions, remove only pre-validated
-disposable runtime/config/test data, and prove ports are released. Keep the evidence directory.
-
-## Direct final response
-
-Lead with outcome and PR link. Include:
-
-- terminal state requested, required gates, final candidate ID, base, and remote head;
-- per-gate status, evidence, pass-rule judgment, and whether anything was carried;
-- distinct candidate-review and formal PR-review results;
-- baseline comparisons, CI coverage, findings, risks, limitations, and cleanup;
-- every publication handoff and GitHub mutation performed.
-
-Ask whether to delete the retained evidence directory.
+Use `PASS`, `WARN`, `FAIL`, `BLOCKED`, `NOT_RUN`, or `STALE` from the current candidate only. Reply with the requested terminal state, candidate/base/remote identities, per-gate judgments and evidence, findings, CI, publication actions, limitations, and cleanup. Preserve redacted raw evidence and ask before deleting it.

@@ -1,134 +1,46 @@
-# Review Criteria Reference
+# PR review criteria
 
-Load this only when the PR is non-trivial, crosses subsystem boundaries, or needs severity calibration.
+Use for non-trivial, cross-boundary, or severity-sensitive PRs.
 
-## SCOPE model
+## SCOPE
 
-Use five questions to keep the review decision-focused:
+1. **Scope**: problem, affected user, before/after, non-goals.
+2. **Contracts**: public, persisted, security, concurrency, lifecycle, model-visible behavior.
+3. **Ownership**: layer and extension seam that own the behavior.
+4. **Proof**: reproduction and evidence for risky paths.
+5. **Entropy**: concepts, dependencies, migration, blast radius, and recurring maintenance.
 
-1. **Scope** — Should this behavior exist? State the problem, affected user, before/after, and non-goals.
-2. **Contracts** — Which public, persisted, security, concurrency, lifecycle, or model-visible promises may change?
-3. **Ownership** — Which layer owns the behavior, and which extension seam should carry it?
-4. **Proof** — What reproduction and verification demonstrate the claim and protect the risky paths?
-5. **Entropy** — What concepts, dependencies, migration burden, or future maintenance cost does the PR add?
+Establish a current supported entrypoint/actor/consumer or concrete maintainer burden, trace it through repository-owned behavior to the changed boundary, and state the present consequence. A documented public API or extension seam counts when consumers live elsewhere.
 
-A PR is not safe because these dimensions average out. A single failed security, data, or compatibility obligation can block the change.
-
-## Reachability and value gate
-
-Establish value before implementation quality:
-
-1. Identify the current supported entrypoint, actor, consumer, or maintainer burden.
-2. Trace it to the changed boundary through repository-owned behavior.
-3. State the concrete present-day consequence or cost.
-4. Identify the contract or ownership rule that requires the change.
-
-A direct call to an internal helper, a synthetic state, or a hypothetical future extension does not establish product reachability. In-process plugins are not a security boundary when they can bypass the guard being tested. Defense in depth has value only when a current threat model or documented contract requires it.
-
-A documented public API, package, or supported extension seam counts as a current contract even when downstream callers are outside the repository. Mere importability or theoretical downstream use does not.
-
-If repository design makes the claimed state impossible, no supported consumer reaches it, or the only benefit is speculative, recommend close/no-merge and stop. Implementation correctness, green CI, and comprehensive tests do not compensate for a failed premise.
-
-## Build the expected change cone
-
-Before deep code reading, predict the smallest justified footprint:
+Build the expected cone before deep reading:
 
 ```text
-problem → owner module → shared seam/consumer → closest tests → required docs/config/migration
+problem -> owner -> shared seam/consumer -> closest tests -> required docs/config/migration
 ```
 
-Compare it with the actual changed files. For every file outside the expected cone, require a causal explanation supported by at least one of:
+Each extra file needs a causal call path, changed contract, failing test, migration, compatibility shim, or user-facing document.
 
-- a call path or consumer that must adapt;
-- a contract or persisted/wire format that changes;
-- a test that would otherwise fail;
-- a required migration, compatibility shim, or user-facing document.
+## Risk and proof
 
-Bundled cleanup, formatting, speculative abstraction, or unrelated modernization is scope drift even when locally correct. A large diff may still be justified when every cross-layer edge is causal; file count alone is not a finding.
+Take the highest relevant risk across blast radius, external/persisted contract, authority, irreversibility, concurrency/lifecycle, and evidence gap.
 
-## Risk axes
-
-Assess each axis and take the highest result rather than an average:
-
-- **Boundary depth / blast radius** — leaf implementation, shared seam, core transaction, or trust boundary.
-- **External or persisted contract** — API, CLI, config, wire format, plugin schema, database/file format, cached state.
-- **Authority / security** — authentication, authorization, filesystem, process execution, network, secrets, tenant/session isolation.
-- **Irreversibility / migration** — deletion, overwrite, schema evolution, backfill, rollback, user data.
-- **Concurrency / lifecycle** — retries, cancellation, timeouts, ordering, idempotency, partial completion, restart recovery.
-- **Evidence gap** — behavior outside CI, unsupported platform, mocked external integration, browser/package/runtime-only surface.
-
-Changes to authority, irreversible data, core transactions, or concurrent side effects require the deepest review even when isolated to one file.
-
-High theoretical severity does not substitute for a reachable actor and consequence. Apply the risk axes only after the value gate passes.
-
-## Contract inventory
-
-Treat a surface as a contract when external code, stored user state, or another subsystem relies on it. Do not use naming conventions such as a leading underscore as the only test.
-
-Common contracts:
-
-- request/response shapes and error semantics;
-- config aliases, defaults, parse/dump behavior, and migration;
-- CLI flags, stdout/stderr, exit codes, signals, and environment behavior;
-- event ordering, streaming, retries, deduplication, and idempotency;
-- persisted records, replay, compaction, atomicity, and recovery;
-- plugin discovery, schemas, names, collision rules, and lazy loading;
-- prompt templates, tool descriptions, model-visible history, and sanitized context;
-- package exports, build artifacts, optional dependencies, and old import paths.
-
-## Proof obligations by surface
-
-Apply these obligations only after establishing a supported path to the changed surface. Do not manufacture an impossible state merely to exercise the implementation.
-
-| Changed surface | Minimum useful evidence |
+| Surface | Minimum useful proof |
 |---|---|
-| Leaf adapter/integration | focused unit tests, error/lifecycle path, optional dependency or discovery behavior |
-| Public API/config/CLI/wire | old-caller fixture or compatibility check, round trip, malformed/error cases, public-interface smoke |
-| Persistent state/migration | old data fixture, restart/replay, duplicate handling, atomicity, upgrade/rollback story |
-| Security/authority | supported actor-to-boundary trace, deny-first negative matrix, bypass attempts, parent/child capability monotonicity when that delegation exists, secret-safe logging |
-| Concurrency/retry/cancel | ordering, partial completion, duplicate side effects, cancellation propagation, timeout/restart |
-| UI/user workflow | state tests plus real public-surface interaction when browser/runtime behavior matters |
-| Packaging/dependencies | clean build/install/import or consumer smoke in the supported environment |
-| Model-visible behavior | deterministic contract/snapshot tests where possible and an explicit limitation when model evaluation is required |
+| public API/config/CLI/wire | old caller/round trip, malformed/error path, public smoke |
+| persistence/migration | old fixture, replay/restart, duplicates, atomicity, rollback story |
+| security/authority | supported actor trace, deny matrix, bypasses, delegation monotonicity |
+| concurrency/retry/cancel | ordering, partial completion, duplicate effects, timeout/restart |
+| UI workflow | state tests plus real interaction |
+| packaging | clean build/install/import or consumer smoke |
+| model-visible | deterministic contract/snapshot plus evaluation limitation |
 
-## Finding standard
+A finding states reachable trigger, violated contract, concrete consequence, and evidence. Classify partial cases as Risk or Question.
 
-An observation becomes a finding only when the review can state:
+Priority: premise/value -> security/data -> correctness/lifecycle -> compatibility -> ownership -> proof gaps -> performance -> maintainability -> consequential style.
 
-1. the reachable trigger or affected caller;
-2. the violated contract or incorrect behavior;
-3. the concrete consequence;
-4. the evidence in code, tests, reproduction, or authoritative docs.
+Recommendations:
 
-Classify everything else explicitly:
-
-- **Confirmed** — all four elements are present.
-- **Risk** — plausible consequence, but one or more proof elements are missing.
-- **Question** — intent, scope, or ownership needs clarification.
-- **Not a finding** — evidence resolves the concern or it is only preference.
-
-Do not launder uncertainty into severity through persuasive wording.
-
-## Review priority
-
-1. Premise and reachability.
-2. Security, authority, and data safety.
-3. Correctness across affected entrypoints and lifecycle states.
-4. Compatibility and migration.
-5. Ownership and dependency direction.
-6. Proof coverage and residual gaps.
-7. Performance and resource bounds.
-8. Maintainability, focus, and unnecessary entropy.
-9. Style only when it affects correctness, tooling, or sustained readability.
-
-## Severity calibration
-
-- **Reject / close recommendation** — invalid premise, duplicate/stale work, unreachable problem, or complexity whose carrying cost exceeds the value.
-- **Must fix** — wrong operation can execute, security/data boundary weakens, public contract breaks, central claim is false, or required checks block safe integration.
-- **Should fix / useful comment** — confirmed defect or material evidence gap with limited blast radius.
-- **Risk / question** — worth reporting separately, but not represented as a confirmed defect.
-- **No blocking findings** — reviewed obligations pass based on available evidence. This is not approval.
-
-## Comment content
-
-Lead with the side effect and affected contract. Include a fix suggestion only when the user asks or repository norms expect it. Follow the repository's normal language and tone; avoid decorative severity tags unless requested.
+- close/no-merge: invalid premise, unreachable problem, duplicate/stale work, or carrying cost above value;
+- must fix: reachable wrong operation, weakened security/data boundary, broken public contract, false central claim, or required failing check;
+- useful comment: confirmed limited defect or material proof gap;
+- risk/question: material uncertainty kept separate from findings.

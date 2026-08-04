@@ -1,161 +1,31 @@
 ---
 name: pr-fix
-description: Use when the user explicitly wants to modify an existing GitHub PR as a maintainer and push focused fixes to its head branch; establish the confirmed issue, protected contract, minimal change cone, and verification evidence first; use pr-worktree so the current workspace is not disturbed
+description: Apply and push a focused maintainer fix to an existing GitHub PR head branch. Use when the user explicitly authorizes modifying that PR. Establish the confirmed issue, protected contract, minimal change cone, and verification evidence; use pr-worktree for isolation.
 ---
 
 # PR Fix
 
-## Non-negotiables
+The user's authorization defines the PR and allowed mutation. Prepare or reuse a matching `pr-worktree --mode fix`; publication, history rewrite, comments, labels, and other PR mutations retain separate authorization.
 
-- Use this only when the user explicitly authorizes modifying and pushing to the PR branch. When
-  `nanobot-gate` explicitly invokes gate remediation, that invocation authorizes the local fix
-  portion only; it does not authorize the publication steps below.
-- Use `pr-worktree` in `fix` mode; never switch or stash the user's current workspace. If the current
-  worktree is already attached to the requested PR head branch and its changes belong to the
-  authorized fix, reuse it directly; otherwise prepare a new isolated fix worktree.
-- Fix confirmed issues or an explicitly requested change. Do not turn risks/questions into code changes without resolving them.
-- Keep the patch inside the minimal causal change cone. Do not bundle cleanup, formatting, or speculative refactors.
-- Follow applicable repository instructions and existing contribution/commit conventions.
-- Never amend, rebase, rewrite the author's commits, or force-push without explicit approval.
-- Do not post comments, reviews, labels, or other PR-state changes unless separately requested or required by repository policy. The title/body synchronization in step 8 is the only built-in exception. When labels are authorized, use `pr-label` rather than changing them ad hoc.
+## Repair cycle
 
-## Gate remediation mode
+1. Establish the confirmed trigger/consequence, violated contract or requested before/after, expected change cone, closest proof, and compatibility constraints.
+2. Prepare the PR fix worktree and confirm its attached branch, upstream, head repository, and existing task-owned changes.
+3. Read repository instructions, current base/PR diff, and the narrow owner/caller path.
+4. Change the smallest surface enforcing the contract; add or update the closest regression proof. Preserve unrelated author/user work and record why any file outside the expected cone changes.
+5. Verify the old failure on base when practical, the focused regression on the fixed head, and the relevant public/negative/migration/restart/concurrency path. Inspect final scope and generated churn.
 
-When invoked by `nanobot-gate` to make the current candidate pass, execute steps 1–5 only:
+When invoked by `nanobot-gate`, return the local edits and evidence after step 5. The gate owns resnapshotting, further remediation, and later publication.
 
-- establish the repair contract;
-- reuse or prepare the appropriate worktree;
-- make the focused change and add the closest regression proof;
-- run the focused verification and inspect the candidate diff.
+## Publish
 
-Then stop without committing, pushing, updating the PR title/body, or making any other GitHub
-mutation. Return the changed files, worktree path, verification evidence, and remaining gate status
-to `nanobot-gate`. The gate may repeat this local remediation loop until all required gates pass.
-After the final PASS, resume the normal steps 6–9 exactly once for the commit/push and remote-state
-checks.
+For directly authorized PR fixes:
 
-## Workflow
+1. Stage specific files, inspect the cached diff, and commit with repository conventions while preserving author history.
+2. Push normally and confirm the commit on the requested PR.
+3. Update title/body only when the final pushed scope made them inaccurate; preserve valid context, links, keywords, templates, and checklists.
+4. Read back title/body/head and report required CI as passing, failing, pending, or unavailable.
 
-### 1. Establish the repair contract
+Use `--force-with-lease` only after explicit history-rewrite approval. Use `pr-label` for authorized labels.
 
-Before editing, write down:
-
-- the confirmed trigger and consequence;
-- the violated contract or requested before/after;
-- the expected change cone;
-- the closest regression or public-surface proof;
-- any migration, rollback, or compatibility constraint.
-
-Use `triage` when the PR's purpose is still unclear. Use `pr-review` findings when available, but verify they still match the current head.
-
-### 2. Prepare an isolated fix worktree
-
-Read `pr-worktree` and run its helper:
-
-```bash
-python3 <pr-worktree-skill>/scripts/pr_worktree.py prepare <N> --repo <OWNER/REPO> --mode fix --format markdown
-```
-
-Use the returned worktree path for every read, edit, test, commit, and push. Verify the manifest reports an attached branch and expected upstream/head repository. If the helper reports a dirty worktree, branch collision, or unwritable fork, stop and report it rather than improvising a destructive checkout.
-
-In gate remediation mode, a matching current fix worktree may intentionally be dirty. Confirm that
-its existing changes belong to the current repair before editing; only a newly prepared fix worktree
-must satisfy the clean manifest before work begins.
-
-### 3. Inspect current context
-
-Find and read applicable repository instructions. Compare the current PR against the latest base and confirm the issue has not already changed since review.
-
-Read the narrow owner/call path needed for the repair. Preserve the author's intended design unless that design is the confirmed problem.
-
-### 4. Make the focused change
-
-- Change the smallest surface that enforces the contract.
-- Add or update the closest regression test.
-- For any file outside the expected cone, record the contract or consumer that forces it to change.
-- Preserve unrelated author and user changes.
-- Note unrelated defects for later; do not repair them in this push.
-
-### 5. Verify before committing
-
-Run the smallest reliable checks derived from the repair contract:
-
-1. Reproduce the old failure on the base when practical.
-2. Run the focused regression on the fixed head.
-3. Exercise the public surface, negative path, migration, restart, or concurrency behavior when that is the actual contract.
-4. Inspect the final diff for scope drift and accidental generated/lockfile churn.
-
-Do not rely only on the future CI run when a cheap focused proof is available. Do not duplicate a full green matrix without a reason.
-
-### 6. Commit without rewriting author history
-
-Stage specific files and follow the repository's commit conventions. Keep commits logically reviewable and explain why the change is required. Do not force a conventional prefix or maintainer marker when the repository uses another style.
-
-Before committing:
-
-```bash
-git branch --show-current
-git status --short --branch
-git diff --check
-git diff --cached
-```
-
-### 7. Push normally
-
-```bash
-git push
-```
-
-The helper prepares the PR head branch and its tracking configuration. Verify the pushed commit appears on the requested PR.
-
-If the contributor fork is not writable, branch protection rejects the push, or history would need rewriting, stop and report the exact blocker. Ask before any `--force-with-lease`; never use plain `--force`.
-
-### 8. Synchronize the PR title and description when needed
-
-After pushing, compare the final diff and repair contract with the PR's current title and body:
-
-```bash
-gh pr view <N> --repo <OWNER/REPO> --json title,body,url
-```
-
-If the fix makes the existing title or description materially inaccurate, update the title and body
-so they describe the final pushed scope. Change only what is now inaccurate; preserve still-valid
-context, linked issues and closing keywords, attribution, templates, and checklists. Do not rewrite
-accurate metadata merely for style. Re-read the PR after editing and confirm both fields match the
-resulting implementation.
-
-### 9. Check remote state
-
-After pushing, confirm on GitHub:
-
-```bash
-gh pr checks <N> --repo <OWNER/REPO>
-gh pr view <N> --repo <OWNER/REPO> --json title,body,commits,headRefOid,url
-```
-
-Report required checks as passing, failing, or pending. Do not claim success from a push alone.
-
-## Final report
-
-Include:
-
-- confirmed issue and protected contract;
-- files and commits added to the PR;
-- focused checks and results;
-- push result and current CI state;
-- whether the PR title and description already matched the final implementation or what was updated;
-- remaining risks or verification gaps;
-- any extra GitHub mutations performed, or state that none were made.
-
-## Common mistakes
-
-| Mistake | Fix |
-|---|---|
-| Editing a risk that was never confirmed | Establish trigger, contract, consequence, and evidence first |
-| Stashing/switching the current workspace | Use the helper's isolated fix worktree |
-| Refactoring adjacent code | Stay inside the causal change cone |
-| Pushing from detached HEAD | Require the helper's `mode=fix` attached branch manifest |
-| Treating CI as the only proof | Run focused contract-driven verification before push |
-| Force-pushing after rejection | Stop and request explicit approval |
-| Posting an unsolicited PR comment | Keep publication separate from the authorized code push |
-| Leaving stale title/body after the fix changes the PR's actual scope | Synchronize both with the final pushed implementation while preserving valid context |
+Reply with the repaired contract, changed files/commits, focused evidence, push and CI state, metadata updates, limitations, and every GitHub mutation.

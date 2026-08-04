@@ -1,38 +1,14 @@
-# Line Comment Reference
+# PR line comments
 
-Use this file only after you have a concrete blocker or useful comment worth posting.
-
-## Timing rule
-
-Do not confirm inline line numbers during general exploration. First decide the finding. Then anchor it.
-
-## Preferred source of line numbers
-
-Use the bundled anchor helper from the isolated review/merge worktree:
+Anchor a confirmed useful finding after the finding itself is established.
 
 ```bash
-python3 <this-skill>/scripts/changed_line.py <N> --repo <OWNER/REPO> --file <path> --line <actual-file-line>
-python3 <this-skill>/scripts/changed_line.py <N> --repo <OWNER/REPO> --file <path> --pattern '<unique text>'
+python <skill>/scripts/changed_line.py <PR> --repo <OWNER/REPO> --file <path> --line <line>
+python <skill>/scripts/changed_line.py <PR> --repo <OWNER/REPO> --file <path> --pattern '<unique text>'
 ```
 
-It checks whether the line is anchorable in the PR diff and emits the JSON skeleton:
+The helper verifies changed-line eligibility and emits `{path,line,side}`. Use `--side LEFT` for deleted code.
 
-```json
-{ "path": "<file>", "line": <actual-file-line>, "side": "RIGHT" }
-```
+When a line is outside the diff, anchor to the changed line that creates the effect or keep the concern in the review body. Read only the narrow surrounding range needed to disambiguate the target.
 
-For deleted code, pass `--side LEFT`; the helper reads base-side deleted lines from the diff.
-
-If the helper says the line is not in changed lines, do not force an inline comment there. Move it only to a changed line that actually creates the side effect; otherwise keep the cross-cutting concern in the review body.
-
-Match the repository's normal language and tone. State the trigger, affected contract, and consequence; do not overstate risks or attach a severity label without evidence.
-
-## Avoid repeated reads
-
-- Do not reread the whole file once the finding is known.
-- Read a narrow range around the target line and enough surrounding context to avoid anchoring to the wrong duplicate.
-- If the same text appears multiple times, use a more specific grep or nearby function/class name.
-
-## If GitHub rejects line + side
-
-Then and only then use the legacy diff `position` fallback from `references/github-submission.md`.
+State trigger, affected contract, consequence, and evidence in the repository's normal language. Use the legacy `position` fallback from `github-submission.md` when GitHub rejects a valid line/side anchor.

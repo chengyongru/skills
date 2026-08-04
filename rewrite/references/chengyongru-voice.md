@@ -1,172 +1,42 @@
 # Chengyongru author voice
 
-这是一份个人 rewrite skill 使用的第一版作者 reference。它来自全量 Codex/Claude 语料统计、作者明确修订过的文字和真实改写对照。只在以该作者本人声音写作时使用；更具体、更新的作者正样本优先。
+Use for the current user's voice when a newer, closer approved sample is unavailable.
 
-## 核心判断
+## Core
 
-作者的核心风格不是“口语化”，而是对话式推演：从一个真实的不对劲开始，提出当前直觉，很快用副作用、反例或用户场景检验它，再把问题移到更合适的层级，最后给出有边界的判断。
+The voice is conversational reasoning: start from a real mismatch, test the first intuition with a side effect or user scenario, move the problem to the right abstraction level, show the evidence that changed the judgment, and stop at a bounded conclusion.
 
-文字像在和熟悉技术的人一起把事情想清楚，不像研究完成后的公告。
+Write as if thinking with a technically fluent peer, rather than announcing a finished study.
 
-## 稳定写作决策
+## Stable decisions
 
-- 优先直接写实际发现、具体问题或不自然的体验；能说清事实时，不先用“有个问题”预告正文。
-- 作者本人要在场，可以写“我刚知道”“我觉得”“我开始研究”，但不要机械添加口头禅。
-- 只有原文或上下文确实包含作者经历时，作者本人才能以经历主体出现。不要为了贴近声音虚构“最近配置了一台机器”“我一般这样做”“我之前踩过坑”。
-- 时间词服从文章当前的叙述位置。即时发现可以写“刚刚才知道”，事后复盘不要保留“最近碰到”来假装仍在现场。
-- 重要的不是展示调查过程，而是写出哪条证据改变了判断。
-- 方案刚刚成立时，主动寻找它限制了什么、对谁有副作用、是否放错抽象层。
-- 把读者当成有基本技术背景的同行，不解释所有常识。
-- 对体验和方向的反馈可以直接，对原因和实现结论保留可修正空间。
-- 观点讲清楚之后停止，不为完整继续补背景、风险、总结和金句。
+- Start with the concrete fact, mechanism, or consequence. Use first person when the source genuinely contains the author's action or discovery.
+- Align relative time with the final narrative moment: immediate notes may say “刚刚/今天”; retrospectives use the event or prior mechanism.
+- Keep the evidence that changed the judgment; compress investigation steps that add no change.
+- Test a plausible solution against ownership, capability boundaries, and side effects.
+- Assume technical basics and preserve necessary names, commands, logs, numbers, and limits.
+- State experience/direction directly; keep causal claims proportionate to evidence.
+- End when the personal decision or bounded conclusion is clear.
+- Preserve natural lowercase/mixed technical terms (`windows`, `agent`, `docker`, `worktree`, `review`) while keeping APIs, commands, and paths exact.
 
-常见的自然推进是：具体异常 → 第一反应 → 发现副作用 → 重新判断问题层级 → 实测证据 → 暂时结论。只在材料真的经历了这条变化时使用。
+Common progression: concrete anomaly -> first reaction -> side effect/counterexample -> better problem level -> measured evidence -> current decision. Use it only when the source contains that progression.
 
-## 不同场景
+## Scene choices
 
-### 推进任务
+- Task instruction: short, shared-context, verb-first (`新开worktree提pr`, `修复问题`).
+- Technical discussion: preserve the moment an intuition meets a counterexample (`这个问题不应该在正则层面解决`, `这个方案有副作用吧？`).
+- Public post: enter through a personal finding or a concrete shared need, then explain why it matters and give a restrained judgment.
+- Tutorial/config note: keep task-oriented structure and exact commands; voice affects ordering and density rather than inventing experience.
 
-短、直接、动词优先，默认共享上下文。例如：
+## Approved contrasts
 
-> 新开worktree提pr
+1. A cron/session retrospective opens with the mechanism — `之前 nanobot 的 cron 把结果发到聊天窗口后，这条消息并不会进入这个窗口的上下文。` — instead of announcing “最近碰到一个问题”.
+2. A style-learning post starts from the shared “去 AI 味” behavior and its thin samples, then introduces the author's experiment when first-person action actually begins.
+3. A gigatoken evaluation keeps `今天看到了`, `我做了下替换评估`, the causal sequence of configuration then 2,159-file comparison, and ends with `遂放弃替换`; it presents fit for the author's use case rather than judging the library universally.
+4. A Windows sandbox post starts with the named API and capability boundary, contrasts it with the real VM/Docker burden, and ends at the Experimental-status direction rather than a broad industry forecast.
 
-> 修复问题
+## Surface habits
 
-> 不用限制字数
+Use natural Chinese with canonical English technical terms. Spacing, casing, and punctuation can stay slightly loose when readability holds. A small amount of repetition is fine; manufactured typos and random spacing are not voice.
 
-不要把这类指令扩写成正式需求文档。
-
-### 讨论技术方案
-
-保留直觉被反例修正的过程。例如：
-
-> 我突然觉得，这个问题不应该在正则层面解决
-
-> 你现在提出的这个方案有副作用吧？比如我就是想让agent操作特定的目录
-
-问题不是为了制造互动，而是在检验前提、复杂度、所有权和能力边界。
-
-### 公开技术写作
-
-从个人发现和真实工程麻烦进入，快速解释为什么值得关心，再给出克制判断。不要改成新闻稿、产品公告、竞品横评或假装客观的行业报告。
-
-公开短帖不一定要从个人异常开始。当主题对应读者已经熟悉的共同需求时，可以先用一句具体的公共现象建立关联，再迅速进入个人实践。不要为了“像作者”而强行从“我发现”“我觉得”开头。
-
-### 教程和配置笔记
-
-保留任务导向和可查询结构。可以删掉“全指南”“银弹”“第一性原理”这类浮夸包装，直接说明边界、步骤和容易出错的地方，但不要为了自然感编造个人故事。原文没有提供实践经历时，用中性但直接的表达。
-
-默认原样保留代码块和命令。作者声音主要影响标题、说明顺序、信息密度和判断分寸，不能用来补全原文没有的操作步骤。
-
-作者认可的正样本：
-
-> 刚刚才知道微软公开了 Windows 的进程级沙箱 API，   新 API 叫 Experimental_CreateProcessInSandbox，底层基于 AppContainer。开发者可以明确告诉系统，这个进程能只读哪些目录、能写哪些目录，其他文件和 网络默认隔离。
->
-> 过去在windows上用agent如果想安心一点往往需要弄虚拟机、docker之类的东西很麻烦，现在终于 有机会把权限边界交给 OS 强制执行。
->
-> 当然，它目前还是 Experimental，  但方向已经很明确了， Windows 上的 Agent，终于有了一条微软官方支持的进程级沙箱路线。
-
-这个样本值得学习的是入口、信息取舍和判断分寸，不是重复空格或同一套句子。
-
-## 一个结构性改写对照
-
-报告式原文先写：
-
-> 这次调查始于 nanobot 的 exec deny-pattern，说明真正的权限边界不应建立在 Shell 字符串判断上。
-
-更接近作者声音的版本从实际阻断开始：测试脚本里的 `rm -rf` 只是清理受控临时目录，代码没有失败，但验证命令跑不起来。第一反应是给 `/tmp` 开口子，真正开始改正则后却发现问题越来越像在写半个 shell parser。
-
-这里发生的关键变化是：
-
-- 抽象结论没有被删掉，而是延后到读者看见问题之后；
-- 作者的第一反应和判断变化被保留；
-- 事件只保留能推动结论变化的部分；
-- 正则的局限通过真实后果出现，不靠概念宣告。
-
-不要把“这次调查最开始”变成固定开头。下一篇文章应寻找它自己的真实入口。
-
-## 一个作者认可的开头取舍
-
-事后复盘 `cron` 与 `session` 的关系时，初版开头写：
-
-> 最近在 nanobot 里碰到一个很出戏的问题。
-
-“最近”把已经结束的旧问题写成刚刚发生，叙述时点不成立。把它换成“在 `cron` 绑定到 `session` 之前，nanobot 里有个很出戏的问题”或“我最开始注意到……”仍然没有解决开头的问题：这些句子只说接下来要讲一个问题，却不告诉读者问题是什么，作者认为这种铺垫有故作玄虚的感觉。
-
-作者认可的版本直接写机制：
-
-> 之前 nanobot 的 `cron` 把结果发到聊天窗口后，这条消息并不会进入这个窗口的上下文。
-
-这里值得学习的是：
-
-- 先校准文章是即时记录还是事后复盘；
-- 能直接给出事实时，删除元开场，不用另一种铺垫替换；
-- “很出戏”的判断交给后面的天气对话例子证明，不在事实之前宣告；
-- 不要因此禁用“最近”“刚刚”或第一人称，它们在叙述时点真实时仍然自然。
-
-## 一个短帖开头取舍
-
-分享从 session 日志学习文风的方法时，初版开头写：
-
-> 我一直觉得，让 AI 模仿自己的文风写文案有点怪。
-
-作者改成了：
-
-> 大家其实都挺热衷于做“去 AI 味”。通常我们让 agent 模仿自己的文风时，只会给它几篇成稿，样本很少，最后学到的往往只是几个口头禅。
-
-关键变化：
-
-- 从个人异常（“我觉得怪”）换成公共现象（“大家都挺热衷”），让目标读者在第一句就代入；
-- 第一人称判断没有被禁用，而是推迟到个人实践出现时再使用（“今天突然想到”“我让 nanobot”）；
-- 开头的公共现象必须是具体的、与主题直接相关的，不是泛泛的感慨。
-
-## 一个替换评估短帖的前后对照
-
-评估是否把 gigatoken 换进 nanobot 时，AI 版写得像第三方技术报告：
-
-> 后来看到 gigatoken……所以做了次替换评估。
->
-> ……手动对齐之后，2,159 份文本、合计 2,429,877 个字符才确认两边输出一致。
->
-> 这不一定说明 gigatoken 本身差。……
->
-> 所以 nanobot 现阶段不会引入它。文件批处理里的峰值吞吐，不能直接当成 agent 的端到端收益。
-
-作者改成了：
-
-> 今天看到了 gigatoken……所以我做了下替换评估。
->
-> ……得把 gigatoken 的配置手动调到和 cl100k_base 一致；调完之后，再用 2,159 份文本、合计 2,429,877 个字符做对照，两边输出就完全一样了。
->
-> 我不是说 gigatoken 有问题，而是它的速度主要来自预分词缓存……并且 gigatoken 现在有个已知问题……
->
-> 遂放弃替换
-
-关键变化：
-
-- 叙述时点从“后来”改成“今天”，作者站在当天评估的现场，不是事后复盘；
-- 行动主语回到作者本人：“我做了下替换评估”“我不是说……”，不是匿名报告口吻；
-- 正确性段落拆成因果链：先要手动调配置，再用大批文本验证，而不是把验证规模写成一句含糊的“对齐之后”；
-- 结尾停在个人决策“遂放弃替换”，删掉可复用金句式 takeaway；读者能从证据自己推出“批处理峰值 ≠ agent 收益”，不必作者再教一遍；
-- 第三方库评估写成调用形态是否匹配，不写成给库下判决，也不写成蹭热度。
-
-## 表面习惯
-
-- 普通技术词自然混入中文，常写 `windows`、`agent`、`docker`、`worktree`、`review`。
-- API、函数、配置、命令和路径保持精确拼写。
-- 中英文之间不必强制加空格，也不必统一品牌大小写。
-- 句末标点可以少，问句常用中文问号；长文仍要以可读性为准。
-- 允许少量松弛和重复，不要故意制造错字、随机空格或碎句。
-
-## 常见失败
-
-- 把一个真实发现扩写成背景、机制、风险、意义和展望俱全的报告。
-- 用“微软近日推出”“这标志着”“值得注意的是”替换作者视角。
-- 为了自然机械加入“其实”“当然”“我觉得”。
-- 为了有力制造宏大结论、对称句和总结金句。
-- 用“以前”“在……之前”“我最开始……”替换失效的“最近”，却仍然只预告问题、不提供事实。
-- 统一大小写、空格和标点后，再用几个口头词假装恢复声音。
-- 把所有技术调查写成相同的故事模板。
-- 把中性教程改成作者亲历叙事，并顺手补入原文没有的操作步骤。
-- 把作者亲自做过的替换评估写成第三方技术报告：删掉“我”，用“这不一定说明……本身差”“现阶段不会引入它”代替个人决策。
-- 证据已经能推出结论时，仍补一句可复用金句式 takeaway；作者更常停在“遂放弃替换”这类个人决定上。
+Typical drift to remove: news-release framing, third-party report voice for first-person work, generic “意义/展望” sections, forced口语词, symmetric slogans, repeated template openings, and factual steps added for tutorial completeness.

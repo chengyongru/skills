@@ -1,63 +1,13 @@
-# Capture Guidance
+# Idea capture judgment
 
-Use this reference for model judgment while capturing an idea.
+Compress the source into the actual idea, a human title, enough evidence for later comparison, and genuine relationships. Keep mechanics in `idea_store.py`.
 
-## What The Model Should Do
+Link ideas when they share a source/incident/goal, have an explicit duplicate/supersedes/follow-up/blocked-by relation, touch the same project boundary, or materially affect each other's selection.
 
-Use the model to understand and compress the source:
+Use metadata consistently:
 
-- Decide what the idea really is, not just where it came from.
-- Choose a concise human title and filename.
-- Match the user's language for the visible note.
-- Separate human meaning from machine metadata.
-- Extract enough evidence that a future agent can compare ideas without rereading the whole source.
-- Decide whether existing ideas are genuinely related.
+- cost: `low` one probe; `medium` one focused work block; `high` cross-module or roughly half-day; `unknown` insufficient evidence;
+- impact: `low` local polish; `medium` meaningful workflow/maintenance improvement; `high` user capability, core reliability, data/security risk, or unblocker;
+- confidence: `high` concrete/current evidence; `medium` plausible but incomplete/stale; `low` speculative or ambiguous.
 
-Use `scripts/idea_store.py` for mechanical actions:
-
-- Resolve the store.
-- Search relevant notes with `find "<query>"`.
-- Read, mark, or delete only by exact `id`, `source_id`, `source_url`, or file path.
-- List existing notes for status/project scans.
-- Write or update notes.
-- Mark lifecycle status.
-- Delete exactly matched notes.
-
-## Relation Rules
-
-Add `related` links only when there is a concrete relationship:
-
-- Same source issue, incident, discussion, or user goal.
-- Explicit duplicate, supersedes, follow-up, or blocked-by relationship.
-- Same project plus same component, changed-file surface, or workflow boundary.
-- One idea materially affects the selection or completion of another.
-
-Do not link only because two ideas share a broad project, vague theme, similar priority, or similar cost.
-
-## Cost
-
-- `low`: a useful probe is one small step.
-- `medium`: needs one focused work block.
-- `high`: likely needs half a day or cross-module work.
-- `unknown`: evidence is insufficient.
-
-## Impact
-
-- `low`: local cleanup or optional polish.
-- `medium`: meaningful workflow, review, or maintainability improvement.
-- `high`: user-visible capability, core reliability, data-loss/security risk, or unblocker for other work.
-- `unknown`: evidence is insufficient.
-
-## Confidence
-
-- `high`: source evidence is concrete and current.
-- `medium`: source evidence is plausible but incomplete or stale.
-- `low`: idea is speculative, ambiguous, or missing key context.
-
-## Source-Specific Evidence
-
-For PRs and issues, capture useful facts such as status, checks, mergeability, conflicts, changed-file scope, linked issues, and main blocker. Keep tracker identifiers and URLs in metadata, not the body.
-
-For conversation ideas, capture the user's motivation, the current design pressure, and the smallest next probe.
-
-For file or URL ideas, capture the source path or URL in metadata and summarize only the relevant claim or opportunity in the body.
+Capture PR/issue state, checks, conflicts, scope, links, and blocker; conversation motivation and smallest probe; or the relevant claim from a file/URL. Keep source identifiers in metadata.

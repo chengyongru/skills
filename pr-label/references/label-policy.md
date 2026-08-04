@@ -1,88 +1,26 @@
-# Label Policy
+# PR label policy
 
-Read this reference when the requested label is not already explicit or when labels may be mutually exclusive.
+Establish label meaning from user/repository policy, contribution docs, automation/config, label descriptions, consistent maintainer use, and current PR evidence—in that order.
 
-## Evidence hierarchy
+An exact user request controls the authorized mutation. Describe evidence conflicts as a directive rather than a confirmed classification.
 
-A label name is not a policy, and a mutation instruction is not factual evidence. Establish meaning and eligibility from:
+## Impact labels
 
-1. an explicit user-provided or repository-local policy definition;
-2. contribution documentation;
-3. labeler workflows/configuration and repository label descriptions;
-4. recent, consistent maintainer usage on comparable PRs;
-5. current PR evidence that satisfies the discovered rule.
+Trace `supported entrypoint/actor -> repository caller -> boundary -> consequence`.
 
-Treat conventions inferred only from historical usage as provisional. A few examples can reflect mistakes or a policy transition.
+- bug/fix: current supported behavior violates a contract;
+- security: current trust boundary, reachable actor/capability, and concrete consequence;
+- severity/priority: present user, operator, data, security, or maintenance impact matching repository definitions;
+- area/component/test: ownership or file scope when repository policy defines it.
 
-An exact user request controls authorization and requested outcome. If it conflicts with the evidence, follow the authorized instruction but describe it as a directive, not a confirmed classification.
+A documented public API or extension contract can establish external reachability. Internal-helper tests, synthetic states, author claims, existing labels, and hypothetical consumers remain supporting context.
 
-## Reachability and impact evidence
+## Dimensions and exclusivity
 
-Impact-bearing labels must describe current repository behavior, not the theme of a diff.
+Keep change type, area, priority/severity, workflow, release/backport, and governance dimensions separate.
 
-- **Bug/fix**: require a supported path whose current behavior violates an existing contract. Odd behavior in an unreachable helper is not a product bug.
-- **Security**: require a current trust boundary, reachable actor or capability, and concrete consequence. Permission-related code or generic hardening is insufficient unless repository policy explicitly includes hardening.
-- **Severity/priority**: require present-day user, operator, data, security, or maintenance impact at the level defined by the repository. A theoretically serious consequence on an impossible path has no current severity.
-- **Area/component/test**: may follow changed ownership or file content when repository policy defines them that way; they do not prove impact.
+Use `--exclusive-prefix` when the repository defines one exclusive family, one target matches, every current match conflicts, and the prefix contains no unrelated labels. Otherwise use exact `--remove` values.
 
-Trace `supported entrypoint/actor → repository-owned caller → affected boundary → consequence`. A direct internal-helper call, synthetic state, speculative future consumer, arbitrary in-process plugin, PR-body assertion, or existing label does not complete that trace.
+For each substantive label, record the PR fact, repository rule/precedent, supported path/consequence for impact labels, nearby alternatives, and uncertainty.
 
-A documented public API, package, or supported extension contract can establish reachability when consumers live elsewhere. Mere importability cannot.
-
-If repository design explicitly forbids the claimed state or no supported consumer can reach it, treat corresponding bug, security, severity, and priority labels as contradicted. Remove them only when the requested mutation scope authorizes synchronization or reclassification.
-
-## Separate dimensions
-
-Repositories often encode different dimensions:
-
-- change type;
-- affected area/component;
-- priority or severity;
-- workflow/status;
-- release or backport intent;
-- contributor or governance state.
-
-Do not replace labels across different dimensions. Area labels are often additive; priority or workflow labels are often exclusive, but only repository evidence can establish that.
-
-## Exclusive families
-
-Use `--exclusive-prefix` only when all of these are true:
-
-- the repository defines the matching labels as one family;
-- exactly one proposed target matches the prefix;
-- every current matching label conflicts with that target;
-- no unrelated label shares the prefix.
-
-Otherwise pass exact `--remove` values. Never use a broad prefix such as `status` when it may match unrelated labels.
-
-Examples are mechanical, not universal policy:
-
-```bash
-# Repository documents priority:* as exclusive.
-python3 scripts/pr_label.py update 42 --repo owner/repo \
-  --add "priority: high" --exclusive-prefix "priority:"
-
-# Repository allows multiple component labels.
-python3 scripts/pr_label.py update 42 --repo owner/repo \
-  --add "area: api" --add "area: cli"
-
-# Family has no safe shared prefix; remove the exact conflict.
-python3 scripts/pr_label.py update 42 --repo owner/repo \
-  --add "P1" --remove "P2"
-```
-
-## Classification standard
-
-For each substantive label, record:
-
-- the relevant PR fact;
-- the repository rule or precedent;
-- the supported path and concrete consequence for impact-bearing labels;
-- why nearby alternatives do not apply;
-- any remaining uncertainty.
-
-Do not translate review uncertainty into a bug, security, severity, or priority label. If a finding is not yet confirmed, label it only when the repository explicitly has a workflow label for that uncertainty.
-
-## Missing labels
-
-The helper deliberately refuses to add a label absent from the repository taxonomy. Creating a repository label changes shared project policy and requires an explicit name, meaning, color, description, and authorization. Handle that as a separate task before labeling the PR.
+The helper accepts labels already present in the repository taxonomy. Treat new repository labels as a separate policy task specifying name, meaning, color, description, and authorization.
