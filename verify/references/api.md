@@ -38,7 +38,7 @@ PASS requires all applicable evidence:
 - Body parses when JSON is expected.
 - Required fields, headers, or content are present.
 - Error responses expose the expected user-facing error, not a stack trace.
-- Server logs do not show errors related to the request.
+- Server logs remain clear of request-related errors.
 
 ## Common Cases
 
@@ -48,4 +48,4 @@ PASS requires all applicable evidence:
 - Pagination/filtering/sorting: verify the response contract, not exact fixture-dependent totals unless controlled.
 - Streaming/realtime: connect through the documented endpoint and capture at least one expected message or event.
 
-Do not query databases, import route handlers, or call internal test helpers as the proof.
+Use the public network request as proof. Database queries, route imports, and internal test helpers can support diagnosis.

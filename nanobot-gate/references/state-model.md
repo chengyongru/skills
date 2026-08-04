@@ -10,7 +10,7 @@ Use this model to keep results current, resumable, and auditable.
 - `git diff --binary <base>` against the materialized candidate worktree;
 - every non-ignored untracked file path and content.
 
-Ignored evidence/runtime files do not affect the ID. A commit that preserves the same base-relative
+Ignored evidence/runtime files leave the ID unchanged. A commit that preserves the same base-relative
 content keeps the ID, even though HEAD changes. A base advance, source edit, test edit, dependency
 change, or newly added non-ignored file changes the ID.
 
@@ -33,8 +33,8 @@ PREPARED
   -> READY             requested terminal state proven
 ~~~
 
-At any point, a content change moves the run back to `FROZEN` with a new ID. Never report `READY`
-from evidence attached to a previous ID.
+At any point, a content change moves the run back to `FROZEN` with a new ID. Report `READY` only
+from evidence attached to the current ID.
 
 ## Gate statuses
 
@@ -43,9 +43,9 @@ from evidence attached to a previous ID.
 | `PASS` | Contract proven for current candidate | Supports readiness |
 | `WARN` | Main contract passes with a material non-blocking limitation | Degrades overall result |
 | `FAIL` | Current candidate violates a required contract | Blocks readiness |
-| `BLOCKED` | Authority, environment, or infrastructure prevents required proof | Blocks completion without asserting a code defect |
+| `BLOCKED` | Authority, environment, or infrastructure prevents required proof | Blocks completion while leaving code-defect status unresolved |
 | `NOT_RUN` | Optional/not applicable, or not yet executed | Harmless only when optional |
-| `STALE` | Result belongs to another candidate | Never supports readiness |
+| `STALE` | Result belongs to another candidate | Excluded from readiness |
 
 ## Invalidation policy
 
@@ -65,17 +65,16 @@ Examples:
 | Source, runtime config, dependency, schema, or migration | Invalidate simplify, verify, and review |
 | Test-only change | Invalidate simplify/candidate review/formal review/CI and any verification that relied on those tests |
 | Public copy, locale, accessibility, route, or UI state | Invalidate verify, review, and CI; rerun simplify unless explicitly carried |
-| Ignored evidence/report file | Candidate ID unchanged; no invalidation |
+| Ignored evidence artifact | Candidate ID unchanged; no invalidation |
 | Content-preserving commit | Candidate ID unchanged; keep local gates, refresh remote SHA-bound gates |
 | Base commit advances | Invalidate all gates |
-| CI status changes without candidate change | Refresh CI/review remote state only |
+| CI status changes while candidate stays unchanged | Refresh CI/review remote state only |
 
-Do not carry a `FAIL` or `BLOCKED` result. A repair must make the old conclusion stale and rerun the
-relevant proof.
+Carry only current PASS/WARN evidence whose protected contract remains unaffected. A repair makes
+the old FAIL/BLOCKED conclusion stale and reruns the relevant proof.
 
-Never carry `candidate-review`, formal `pr-review`, or `remote-ci`, and never carry any gate across
-a base commit change. These alter or bind to the complete candidate/review object, so their results
-must be regenerated.
+Regenerate `candidate-review`, formal `pr-review`, and `remote-ci` for each candidate, and regenerate
+every gate after a base commit change. These results bind to the complete candidate/review object.
 
 ## Parallel execution
 
@@ -83,7 +82,7 @@ After `FROZEN`, read-only tasks may overlap when they use independent resources:
 
 - focused tests, static checks, PR metadata, and detached review;
 - WebUI build and non-WebUI static checks;
-- CI polling and local evidence/report preparation.
+- CI polling and local raw-evidence preparation.
 
 Serialize:
 
@@ -98,8 +97,8 @@ even if it later exits successfully.
 ## Candidate review versus formal PR review
 
 Candidate review is a local, read-only pre-publication check. It proves value, reachability, scope,
-contracts, and absence of confirmed blockers. Record it as `candidate-review`, never as formal
-`pr-review`.
+contracts, and absence of confirmed blockers. Record it as `candidate-review`; reserve formal
+`pr-review` for the PR workflow below.
 
 Formal PR review requires:
 
@@ -130,7 +129,7 @@ Use the exact command, environment, inputs, and public action where practical.
 | fail | pass | Regression; `FAIL` |
 | fail | same failure | Baseline limitation; `WARN` only if changed contract is still independently proven |
 | fail | unavailable | `BLOCKED` when proof is required, otherwise explicit `WARN` |
-| different failures | fail | Investigate; do not classify as baseline-equivalent |
+| different failures | fail | Investigate and classify after establishing their relationship |
 
 Record both candidate IDs/SHAs and evidence paths.
 
@@ -151,7 +150,7 @@ python scripts/gate_state.py snapshot --repo <worktree> --base <base-ref> --stat
 Record:
 
 ~~~powershell
-python scripts/gate_state.py record --state <state> --gate verify --status PASS --required --evidence <report> --judgment "Public pass rule proven"
+python scripts/gate_state.py record --state <state> --gate verify --status PASS --required --evidence <log-or-artifact> --judgment "Public pass rule proven"
 ~~~
 
 Check readiness:

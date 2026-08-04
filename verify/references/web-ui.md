@@ -28,10 +28,10 @@ Pick checks that match the diff:
 
 PASS requires:
 
-- Page loads without a relevant console/runtime error.
+- Page loads with a clean relevant console/runtime state.
 - The changed element, text, route, or interaction is visible to the user.
 - The expected state change occurs after interaction.
 - Reload, navigation, or persistence behavior is checked when the change touches routing or stored state.
-- Screenshots or snapshots do not show obvious overlap, blank content, or missing assets for the changed area.
+- Screenshots or snapshots show the changed area rendered with complete content, assets, and intended layout.
 
-Build success alone is never enough for a UI PASS.
+Pair build success with a browser action through the changed UI before assigning PASS.

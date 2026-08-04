@@ -38,4 +38,4 @@ When the diff is large, choose at most five tests:
 4. Integration boundary: auth, network, filesystem, database, external service.
 5. Regression smoke test for the most important unchanged public flow.
 
-Do not add low-signal tests just to increase count. One deep browser/API/CLI check with strong evidence beats several shallow checks.
+Choose one deep browser/API/CLI check with strong evidence over several low-signal checks.

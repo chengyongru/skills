@@ -8,7 +8,7 @@ Create a minimal consumer outside the package internals:
 
 - Use the documented package name or public import path.
 - Use installed, linked, packed, or editable package setup according to project norms.
-- Avoid importing `src/internal`, private modules, test helpers, or files by relative path unless that is the documented public API.
+- Import through the documented public package path. Use internal modules, test helpers, or relative source paths only when they are the documented public API.
 
 Examples:
 
@@ -32,4 +32,4 @@ PASS requires:
 - Changed API returns expected value, throws expected public error, or performs expected observable effect.
 - Packaging metadata is valid when exports, entrypoints, or package files changed.
 
-Do not use in-repo unit tests as the only proof. They can support the result, but the evidence must include a public consumer action.
+Include a public consumer action as the primary proof and use in-repo unit tests as supporting evidence.

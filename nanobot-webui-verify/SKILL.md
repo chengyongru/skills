@@ -1,6 +1,6 @@
 ---
 name: nanobot-webui-verify
-description: Verify nanobot WebUI changes from a user perspective. Use when working in the nanobot repository after WebUI routing, settings, chat, sidebar, or gateway-facing changes; when the user mentions validating nanobot WebUI with $verify, Playwright, headless browser, gateway, websocket port, refresh persistence, or black-box UI checks; or when a PR needs evidence that the built WebUI works through the real gateway.
+description: Verify nanobot WebUI changes from a user perspective. Use as the primary verification workflow for nanobot WebUI routing, settings, chat, sidebar, gateway, websocket, refresh persistence, Playwright, headless-browser, and other browser-visible checks, including $verify requests and PR readiness checks involving these surfaces.
 ---
 
 # Nanobot WebUI Verify
@@ -57,15 +57,15 @@ python $helper status --manifest $manifest
 
 8. Report exact commands, pass/fail status, evidence paths, and any warnings that matter.
 
-## Lifecycle Rules
+## Lifecycle Pattern
 
-- Treat `scripts/webui_runtime.py` as the only normal owner of gateway startup, status, and cleanup. Do not reconstruct its PowerShell/Python logic inline.
-- Do not infer gateway shutdown from termination of the shell or tool cell that launched it. The helper records and checks the actual child PID.
-- Do not create `.verify-webui-*` runtime directories in the repository and do not delete runtime files one by one. Runtime state belongs under the helper's fixed system-temp root.
-- Do not stop a PID unless it matches the manifest's exact gateway config. The helper enforces this before killing the process tree.
-- Do not probe the WebSocket server with a raw TCP connection. The helper uses `/webui/bootstrap` for readiness and non-traffic port ownership checks for cleanup.
-- Keep screenshots and snapshots in the repo-local `.verify-evidence-*` directory. Do not stage it.
-- If the user explicitly approves deletion of retained evidence, use the helper instead of deleting files individually:
+- Route gateway startup, status, and cleanup through `scripts/webui_runtime.py`.
+- Confirm shutdown with the actual child PID and port state recorded by the helper.
+- Keep runtime state under the helper's fixed system-temp root and remove it with one `cleanup` command.
+- Stop a gateway process tree only after the manifest's exact config matches its command line.
+- Use `/webui/bootstrap` for readiness and the helper's non-traffic port ownership checks for cleanup.
+- Keep screenshots and snapshots in the repo-local `.verify-evidence-*` directory and stage source paths explicitly.
+- After the user approves deletion of retained evidence, remove the exact directory through the helper:
 
 ```powershell
 python $helper purge-evidence --manifest $manifest
@@ -117,10 +117,10 @@ For route-persistence checks, verify both:
 
 When verifying persisted chat refresh specifically:
 
-- Prefer a built-in command such as `/model` for a deterministic assistant response without external LLM calls.
-- Prove the replay through the public `GET /api/sessions/<encoded-key>/webui-thread` route using the bootstrap API token; do not call transcript helpers directly.
-- For legacy transcript backfill, seed isolated `workspace/sessions/*.jsonl` and `webui/*.jsonl` files as UTF-8 without BOM, then fetch the public route.
-- For transcript append failure behavior, make the target transcript JSONL path a directory to trigger an append `OSError` for that chat only. Do not replace the entire `webui` runtime directory with a file; that can break unrelated bootstrap/hydration paths and weakens the evidence.
+- Prefer a built-in command such as `/model` for a deterministic assistant response using only local gateway behavior.
+- Prove replay through the public `GET /api/sessions/<encoded-key>/webui-thread` route using the bootstrap API token. Use transcript helpers only for diagnosis.
+- For legacy transcript backfill, seed isolated `workspace/sessions/*.jsonl` and `webui/*.jsonl` files as UTF-8 with no BOM, then fetch the public route.
+- For transcript append failure behavior, make only the target transcript JSONL path a directory to trigger an append `OSError` for that chat while preserving the rest of the runtime tree.
 
 The helper closes and deletes the named browser session during cleanup.
 
@@ -130,6 +130,6 @@ Use this only when `playwright-cli` is too awkward for the needed assertions, po
 
 ## Cleanup
 
-Cleanup is complete only when the helper reports `runtime_removed: true` and `ports_released: true`. Do not delete screenshots or snapshots automatically. Keep them in `$evidenceDir`, report the path, then ask: "要不要删除保留的验证截图/快照目录 `$evidenceDir`？" Run `purge-evidence` only after explicit confirmation.
+Cleanup is complete when the helper reports `runtime_removed: true` and `ports_released: true`. Preserve screenshots and snapshots in `$evidenceDir`, report the path, then ask: "是否删除保留的验证截图/快照目录 `$evidenceDir`？" Run `purge-evidence` after explicit confirmation.
 
-Before committing, check `git status --short` and restore accidental generated files such as `webui/bun.lock` if they were only touched by verification tooling. Do not stage `webui\.verify-evidence-*` directories.
+Before committing, check `git status --short`, restore generated files such as `webui/bun.lock` when verification tooling alone changed them, and stage intended source paths explicitly so `.verify-evidence-*` stays outside the commit.

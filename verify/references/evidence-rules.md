@@ -11,17 +11,17 @@ Judge only from captured evidence.
 | FAIL | The action errors, crashes, returns wrong status/content, misses expected UI, or violates the pass rule. |
 | NOT RUN | The test could not be executed. Include the blocker and what resource or state is needed. |
 
-## Invalid PASS
+## Supporting Evidence
 
-Reclassify as WARN or FAIL if the only evidence is:
+Pair these forms of supporting evidence with a public user action before assigning PASS:
 
 - Source code inspection.
 - Build, lint, typecheck, or unit test success.
-- Server startup without a user action.
-- Import success without a public consumer.
-- A screenshot or snapshot that does not include the changed area.
+- Server startup by itself.
+- Import success by itself.
+- A screenshot or snapshot outside the changed area.
 - A command with unread output.
-- A browser page that loaded but did not exercise the changed interaction.
+- A browser page load before exercising the changed interaction.
 
 ## Evidence Checklist
 
@@ -36,8 +36,8 @@ Each test should include:
 
 Overall conclusion:
 
-- PASS only when every required test is PASS and limitations do not affect the changed behavior.
+- PASS when every required test is PASS and the changed behavior remains fully proven after considering limitations.
 - WARN when core behavior passed but coverage has meaningful caveats.
 - FAIL when any required changed behavior fails.
 
-Mention limitations explicitly. Do not bury failed or unrun checks behind a positive summary.
+Lead with failed or unrun checks and state every limitation explicitly.

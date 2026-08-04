@@ -1,6 +1,6 @@
 # Safety
 
-Verification should be realistic without being reckless.
+Keep verification realistic, isolated, and proportionate to its risk.
 
 ## Resource Policy
 
@@ -11,7 +11,7 @@ Prefer resources in this order:
 3. User-provided staging credentials or accounts.
 4. Real external services only after the user clearly authorizes their use.
 
-Do not assume production resources are allowed.
+Treat production resources as requiring explicit user authorization.
 
 ## Destructive or Costly Actions
 
@@ -26,9 +26,9 @@ If a write is needed, prefer creating a unique test record and reading it back. 
 
 ## Secrets
 
-- Do not print secrets in the final report.
+- Keep secrets out of the direct response.
 - Redact tokens, cookies, API keys, passwords, and authorization headers.
-- Keep evidence files local unless the user asks to publish them.
+- Keep evidence files local and publish them when the user asks.
 
 ## When Blocked
 

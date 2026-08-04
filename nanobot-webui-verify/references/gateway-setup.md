@@ -24,12 +24,12 @@ The helper:
 
 - creates the runtime only under `%TEMP%\nanobot-webui-verify\<run-id>`;
 - creates a minimal config with a non-routable dummy provider, isolated workspace, disabled heartbeat, and fresh websocket/gateway ports;
-- writes JSON as UTF-8 without BOM;
+- writes JSON as UTF-8 with no BOM;
 - launches the real gateway as a hidden child process and records its actual PID;
 - bypasses proxies and waits for `GET /webui/bootstrap` to return HTTP 200;
 - removes failed-start runtimes after preserving their logs.
 
-It never copies the user's `~/.nanobot/config.json`, so verification cannot inherit real provider secrets or call an external model accidentally.
+The minimal config leaves the user's `~/.nanobot/config.json` untouched and keeps real provider secrets and external model calls outside the verification run.
 
 ## Status
 
@@ -37,7 +37,7 @@ It never copies the user's `~/.nanobot/config.json`, so verification cannot inhe
 python $helper status --manifest $started.manifest
 ```
 
-Status reports whether the PID is alive, whether its command line still matches the exact manifest config, whether both ports are owned, and whether the runtime directory exists. Port checks do not connect to the server and therefore do not produce invalid HTTP noise.
+Status reports whether the PID is alive, whether its command line still matches the exact manifest config, whether both ports are owned, and whether the runtime directory exists. Port checks use local bind ownership checks that send zero traffic to the server.
 
 ## Cleanup
 
@@ -48,13 +48,13 @@ python $helper cleanup --manifest $started.manifest
 Cleanup is idempotent. It:
 
 1. closes and deletes the named `playwright-cli` session when available;
-2. refuses to kill a live PID whose command line does not match the exact config path;
+2. matches the live PID command line to the exact config path before stopping it;
 3. stops the matching process tree, then verifies the PID and both ports are gone;
 4. copies gateway stdout/stderr into the evidence directory;
 5. validates that the runtime is below the fixed temp root and deletes it recursively;
 6. updates the retained manifest with `runtime_removed`, `ports_released`, logs, and warnings.
 
-Do not replace cleanup with per-file edits, shell-cell termination, or broad process-name kills.
+Use this command as the complete lifecycle cleanup path; it replaces per-file cleanup and shell/process-name heuristics.
 
 ## Evidence Deletion
 
@@ -68,10 +68,10 @@ The helper requires a successfully cleaned manifest stored directly in a `.verif
 
 ## Seeded JSONL
 
-If a verification seeds session or transcript JSONL files directly, write them without a UTF-8 BOM. Store them in the isolated workspace path from the manifest/runtime while the gateway is active. Avoid PowerShell `Set-Content -Encoding UTF8` on Windows when it may emit a BOM.
+If a verification seeds session or transcript JSONL files directly, write them as UTF-8 with no BOM and store them in the isolated workspace path while the gateway is active. Use `[System.IO.File]` with `UTF8Encoding($false)` on Windows for deterministic encoding.
 
 ## Failure Recovery
 
 - If `start` returns `ok: false`, inspect `gateway.stdout.log`, `gateway.stderr.log`, and `runtime-manifest.json` in the evidence directory. The process and runtime have already been cleaned.
-- If `cleanup` refuses a PID mismatch, do not force-kill it. Run `status`, inspect the process externally, and report the ownership conflict.
-- If cleanup reports a port still owned, do not delete evidence or claim PASS. Run `status` and report the exact PID/ports.
+- If `cleanup` reports a PID mismatch, run `status`, leave that process untouched, inspect its ownership, and report the conflict.
+- If cleanup reports a port still owned, retain the evidence, run `status`, and report WARN or BLOCKED with the exact PID/ports.

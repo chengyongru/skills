@@ -30,4 +30,4 @@ $env:NANOBOT_WEBUI_URL = "http://127.0.0.1:$websocketPort"
 npx playwright test $specPath --browser=chromium --reporter=line
 ```
 
-If Playwright is missing, install only what is needed and avoid committing generated dependency lockfile churn unless the project intentionally changes dependencies.
+If Playwright is missing, install the minimum required package. Keep generated dependency lockfile changes only when the project intentionally changes dependencies.

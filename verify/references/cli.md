@@ -36,4 +36,4 @@ PASS requires:
 - No unexpected stack traces, unhandled exceptions, or unrelated warnings.
 - For write commands, a read-back or observable output proving the write happened.
 
-Do not call command handler functions directly. Do not treat import success as CLI proof.
+Use the installed or documented command as proof. Direct handler calls and import success can support diagnosis.
