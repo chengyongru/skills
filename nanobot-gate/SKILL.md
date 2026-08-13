@@ -1,9 +1,11 @@
 ---
 name: nanobot-gate
-description: Coordinate snapshot-bound simplify, public verification, candidate review, formal PR review, and CI readiness for nanobot changes. Use for $nanobot-gate, all-gates requests, pre-push, PR, merge, or release readiness, and resumable remediation loops.
+description: Explicit-invocation-only workflow for snapshot-bound simplify, verification, candidate review, formal PR review, and CI readiness for nanobot changes. Use only when the user explicitly writes `$nanobot-gate`. Never infer or auto-trigger this skill from push, PR, merge, release, readiness, review, verification, or CI requests.
 ---
 
 # Nanobot Gate
+
+Run this workflow only after the user explicitly invokes `$nanobot-gate`. Do not activate it automatically for adjacent publication or readiness work.
 
 Bind every conclusion to one candidate snapshot with `scripts/gate_state.py`. Keep prose in the conversation and raw evidence in an ignored evidence directory.
 
