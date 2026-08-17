@@ -113,6 +113,48 @@ def pr_metadata(pr: str, repo: str | None, root: Path) -> dict[str, Any]:
     return data
 
 
+def load_context_metadata(path_value: str, pr: str, repo: str | None) -> dict[str, Any]:
+    path = Path(path_value).expanduser().resolve()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"cannot read PR context JSON {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise RuntimeError(f"PR context JSON must contain an object: {path}")
+
+    required = ("number", "url", "baseRefName", "headRefName", "headRefOid")
+    missing = [key for key in required if not data.get(key)]
+    if missing:
+        raise RuntimeError(
+            f"PR context JSON is missing required fields: {', '.join(missing)}"
+        )
+    try:
+        number = int(data["number"])
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("PR context JSON has an invalid PR number") from exc
+
+    requested_number: int | None = None
+    if pr.isdigit():
+        requested_number = int(pr)
+    else:
+        match = re.search(r"/pull/(\d+)(?:/|$)", pr)
+        if match:
+            requested_number = int(match.group(1))
+    if requested_number is not None and requested_number != number:
+        raise RuntimeError(
+            f"PR context JSON is for PR {number}, but the requested PR is {requested_number}"
+        )
+
+    base_repo = parse_repo_from_pr_url(str(data["url"]))
+    if repo and repo.casefold() != base_repo.casefold():
+        raise RuntimeError(
+            f"PR context JSON repository {base_repo} conflicts with --repo {repo}"
+        )
+    data["number"] = number
+    data["baseRepository"] = base_repo
+    return data
+
+
 def infer_base_repo(root: Path, requested: str | None) -> str:
     if requested:
         return requested
@@ -356,27 +398,7 @@ def fetch_base_ref(root: Path, remote: str, base: str) -> str:
     return base_ref
 
 
-def fetch_refs(root: Path, remote: str, metadata: dict[str, Any]) -> tuple[str, str]:
-    number = int(metadata["number"])
-    base = str(metadata["baseRefName"])
-    base_ref = fetch_base_ref(root, remote, base)
-    pr_ref = f"refs/remotes/{remote}/pr/{number}"
-    output(
-        ["git", "fetch", remote, f"+refs/pull/{number}/head:{pr_ref}"],
-        cwd=root,
-    )
-    return base_ref, pr_ref
-
-
-def prepare_review_worktree(root: Path, path: Path, pr_ref: str) -> None:
-    if path.exists():
-        output(["git", "checkout", "--detach", pr_ref], cwd=path)
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    output(["git", "worktree", "add", "--detach", str(path), pr_ref], cwd=root)
-
-
-def prepare_fix_worktree(
+def prepare_pr_branch_worktree(
     root: Path,
     path: Path,
     base_ref: str,
@@ -606,7 +628,11 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
 
 def prepare(args: argparse.Namespace) -> dict[str, Any]:
     root = repo_root(args.repo_dir)
-    metadata = pr_metadata(args.pr, args.repo, root)
+    metadata = (
+        load_context_metadata(args.context_json, args.pr, args.repo)
+        if args.context_json
+        else pr_metadata(args.pr, args.repo, root)
+    )
     remote = select_remote(root, str(metadata["baseRepository"]), args.remote)
     path = resolve_worktree_path(root, args.path, int(metadata["number"]), args.mode)
     if path == root:
@@ -616,38 +642,25 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     ensure_reusable_worktree(root, path)
     if path.exists():
         existing = worktree_status(path)
-        if args.mode == "review" and existing["branch"]:
-            raise RuntimeError(
-                f"refusing to detach an existing attached worktree branch: {existing['branch']}"
-            )
         if (
-            args.mode == "fix"
-            and existing["branch"]
+            existing["branch"]
             and existing["branch"] != metadata.get("headRefName")
         ):
             raise RuntimeError(
                 "refusing to switch an existing worktree from unrelated branch "
                 f"{existing['branch']} to {metadata.get('headRefName')}"
             )
-    base_ref, pr_ref = fetch_refs(root, remote, metadata)
-
-    if args.mode == "review":
-        prepare_review_worktree(root, path, pr_ref)
-    else:
-        prepare_fix_worktree(
-            root, path, base_ref, args.pr, str(metadata["baseRepository"])
-        )
+    base_ref = fetch_base_ref(root, remote, str(metadata["baseRefName"]))
+    prepare_pr_branch_worktree(
+        root, path, base_ref, args.pr, str(metadata["baseRepository"])
+    )
 
     state = worktree_status(path)
     if not state["clean"]:
         raise RuntimeError(f"prepared worktree unexpectedly became dirty: {path}")
-    if args.mode == "review" and not state["detached"]:
+    if state["detached"]:
         raise RuntimeError(
-            f"review worktree must be detached, found branch {state['branch']}"
-        )
-    if args.mode == "fix" and state["detached"]:
-        raise RuntimeError(
-            "fix worktree is detached; gh did not attach the PR head branch"
+            f"{args.mode} worktree is detached; gh pr checkout did not attach the PR head branch"
         )
 
     expected_head = str(metadata.get("headRefOid") or "")
@@ -680,7 +693,6 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "headRelation": relation,
         "remote": remote,
         "baseTrackingRef": base_ref,
-        "prTrackingRef": pr_ref,
         "worktree": state,
         "next": {
             "diff": ["git", "diff", f"{base_ref}...HEAD"],
@@ -867,6 +879,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare_parser.add_argument(
         "--remote", help="base repository remote; auto-detected by URL by default"
+    )
+    prepare_parser.add_argument(
+        "--context-json",
+        help="JSON output from pr_context.py; reuses PR metadata without another gh pr view",
     )
     prepare_parser.add_argument(
         "--format", choices=("markdown", "json"), default="markdown"

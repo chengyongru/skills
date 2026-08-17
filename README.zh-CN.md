@@ -35,7 +35,7 @@ Skill 索引
 ----
 
 - 内容：`material -> draft -> rewrite`。
-- PR：先用 `pr-worktree`，再按请求加入 `triage`、`pr-review`、`pr-fix`、`pr-rebase` 或 `pr-label`。
+- PR 代码工作：本地 review、测试、修复和 rebase 使用 `pr-worktree`。`triage` 和 `pr-label` 直接操作远端 PR；需要本地 checkout 时再加入 `pr-review`、`pr-fix` 或 `pr-rebase`。
 - 验证：跨项目使用 `verify`；nanobot 浏览器/gateway 场景使用 `nanobot-webui-verify`；完整 nanobot 就绪检查使用 `nanobot-gate`。
 - 实验：迭代改进使用 `autoresearch`；control/treatment 对照使用 `abtest`。
 - 人类可读的计划和结果直接在对话中交付；确定性状态和原始证据按需落盘。

@@ -23,6 +23,9 @@ FIELDS = [
     "author",
     "headRefName",
     "headRefOid",
+    "headRepository",
+    "isCrossRepository",
+    "maintainerCanModify",
     "baseRefName",
     "mergeable",
     "reviewDecision",
@@ -158,6 +161,12 @@ def local_guidance(ci: dict[str, Any], is_merged: bool) -> str:
 def summarize(data: dict[str, Any]) -> dict[str, Any]:
     is_merged = bool(data.get("mergedAt") or str(data.get("state", "")).upper() == "MERGED")
     ci = summarize_ci(data.get("statusCheckRollup") or [])
+    head_repository = data.get("headRepository") or {}
+    head_repository_name = (
+        head_repository.get("nameWithOwner")
+        if isinstance(head_repository, dict)
+        else None
+    )
     return {
         "number": data.get("number"),
         "title": data.get("title"),
@@ -171,6 +180,9 @@ def summarize(data: dict[str, Any]) -> dict[str, Any]:
         "baseRefName": data.get("baseRefName"),
         "headRefName": data.get("headRefName"),
         "headRefOid": data.get("headRefOid"),
+        "headRepositoryNameWithOwner": head_repository_name,
+        "isCrossRepository": data.get("isCrossRepository"),
+        "maintainerCanModify": data.get("maintainerCanModify"),
         "mergeable": data.get("mergeable"),
         "reviewDecision": data.get("reviewDecision"),
         "labels": label_names(data.get("labels") or []),

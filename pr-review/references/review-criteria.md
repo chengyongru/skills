@@ -1,6 +1,6 @@
 # PR review criteria
 
-Use for non-trivial, cross-boundary, or severity-sensitive PRs.
+Use for non-trivial, cross-boundary, or severity-sensitive PRs. Focused docs, test, config, and isolated code reviews need only the changed contract and closest decisive proof unless their premise is unclear.
 
 ## SCOPE
 

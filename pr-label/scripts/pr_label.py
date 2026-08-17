@@ -332,9 +332,16 @@ def update_command(args: argparse.Namespace) -> dict[str, Any]:
     repo, pr = resolve_target(args.pr, args.repo, args.repo_dir)
     simulated = parse_simulated(args)
     if simulated is None:
-        context = inspect_pr(repo, pr)
-        before = context["currentLabels"]
-        available = context["availableLabels"]
+        before = issue_labels(repo, pr)
+        available = repository_labels(repo) if args.add else []
+        context = {
+            "repo": repo,
+            "pr": pr,
+            "title": None,
+            "url": None,
+            "state": "remote",
+            "draft": None,
+        }
     else:
         before, available = simulated
         context = {

@@ -4,6 +4,8 @@ Treat current green CI as evidence for its configured matrix. Add focused local 
 
 Choose the smallest decisive check:
 
+Select only the rows that match the changed surface. Do not run migration, concurrency, restart, packaging, or authority checks for an unrelated docs, test, or isolated code change.
+
 1. reproduce the base behavior when practical;
 2. run the closest PR regression;
 3. probe denial/bypass for authority changes;

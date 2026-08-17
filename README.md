@@ -35,7 +35,7 @@ Routing
 -------
 
 - Content: `material -> draft -> rewrite`.
-- PR work: start with `pr-worktree`; add `triage`, `pr-review`, `pr-fix`, `pr-rebase`, or `pr-label` for the requested operation.
+- PR code work: use `pr-worktree` for local review, testing, fixes, and rebases. Use `triage` and `pr-label` directly against the remote PR; add `pr-review`, `pr-fix`, or `pr-rebase` when the requested operation needs a local checkout.
 - Verification: use generic `verify` across projects, `nanobot-webui-verify` for nanobot browser/gateway surfaces, and `nanobot-gate` for full nanobot readiness.
 - Experiments: choose `autoresearch` for iterative improvement or `abtest` for control/treatment comparison.
 - Human-readable plans and results stay in the conversation; skills persist deterministic state and raw evidence when useful.

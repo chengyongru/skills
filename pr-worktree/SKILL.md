@@ -1,6 +1,6 @@
 ---
 name: pr-worktree
-description: Prepare and manage isolated worktrees for new or existing GitHub PR workflows. Use before PR implementation, triage, review, testing, fixes, rebase, or cleanup. Drive lifecycle and safety checks through the bundled deterministic helper.
+description: Prepare and manage isolated worktrees for GitHub PR workflows that need local checkout, testing, editing, or history changes. Use for implementation, review, testing, fixes, rebase, or cleanup; remote-only triage and label operations do not need a worktree.
 ---
 
 # PR Worktree
@@ -11,7 +11,7 @@ Use `scripts/pr_worktree.py` as the lifecycle source of truth and set every late
 
 - Reuse the current worktree when its repository, branch/HEAD, and changes belong to the task.
 - New PR: create or reuse an attached topic branch with `start`.
-- Existing PR read/test/review: use detached `prepare --mode review` at the fetched PR head.
+- Existing PR read/test/review: use `prepare --mode review`, which checks out the PR branch with `gh pr checkout` in the isolated worktree.
 - Existing PR authorized edits/rebase: use attached `prepare --mode fix` on the PR head branch.
 
 ```powershell
@@ -23,10 +23,12 @@ python <skill>\scripts\pr_worktree.py status --path <worktree> --format markdown
 
 The manifest provides repository/ref identity, selected remote, worktree path, attached/detached state, cleanliness, upstream, PR-head relation, and ready commands. Read it once.
 
+When a review already has JSON metadata from `pr_context.py`, pass it with `--context-json` so the helper does not reread the same PR metadata.
+
 ## Safety contract
 
 - Preserve the user's current workspace and unrelated tracked/untracked files.
-- Accept review reuse only when clean and detached at the PR head; accept fix reuse only when attached to the intended tracked branch.
+- Accept review or fix reuse only when clean and attached to the intended PR head branch.
 - Treat locally ahead fix branches as intentional maintainer work; resolve behind/diverged state before editing.
 - Let `start` attach a safe existing local branch or create a new branch from the fetched base. Use `--source head` only for a clean committed local starting point.
 - Use normal pushes for new/fix branches. Force operations and PR creation require their own explicit authorization.
