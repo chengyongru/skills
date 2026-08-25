@@ -37,8 +37,9 @@ Treat the gates, classifications, and review criteria above as internal analysis
 - In conversation, follow the user's language. For Chinese, use natural Simplified Chinese and short direct sentences. Describe concrete behavior and consequence instead of literally translating review jargon; keep identifiers, paths, commands, and quoted errors unchanged.
 - For a published GitHub review, use the repository/PR language unless the user requests another language.
 - With findings, report only actionable findings in impact order. Give the location, concrete trigger, consequence, and required change, then one merge recommendation.
+- Prefer one substantiated blocker over a list of marginal nits.
 - Without findings, state that no blocking findings were found and give the recommendation in one or two sentences. Add only an unverified risk that could change that recommendation.
-- Mention CI or verification briefly when green. Expand only failures, pending checks, or missing evidence that affects the decision.
+- Treat green deterministic gates as evidence instead of restating the rules they enforce. Expand only failures, pending checks, missing evidence, or gate gaps that affect the decision.
 - Omit empty sections, generic praise, repeated summaries, confidence labels, and narration of the value gate, change cone, classifications, or completed review process unless the user asks for a full audit report.
 
 ## Optional publication

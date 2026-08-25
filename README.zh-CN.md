@@ -18,6 +18,7 @@ Skill 索引
 | [`material`](material/SKILL.md) | 保存值得分享的已验证素材。 |
 | [`draft`](draft/SKILL.md) | 把素材或原始输入写成可发布内容。 |
 | [`rewrite`](rewrite/SKILL.md) | 在保护事实和声音的前提下润色中文技术写作。 |
+| [`repo-prose`](repo-prose/SKILL.md) | 让仓库文字保持当前、具体，并清除创作过程残留。 |
 | [`autoresearch`](autoresearch/SKILL.md) | 准备单目标的可量化改进实验。 |
 | [`abtest`](abtest/SKILL.md) | 准备隔离的 control/treatment 实验。 |
 | [`simplify`](simplify/SKILL.md) | 执行行为保持型代码清理。 |
@@ -37,6 +38,7 @@ Skill 索引
 ----
 
 - 内容：`material -> draft -> rewrite`。
+- 仓库文字：文档、注释和贡献者说明使用 `repo-prose`；有作者声音的公开写作继续使用 `rewrite`。
 - Agent 委派：使用 `herdr-scode-delegate` 把边界明确的后台任务交给另一个 `scode` 会话，无需持续盯住其 pane。
 - PR 代码工作：本地 review、测试、修复和 rebase 使用 `pr-worktree`。`triage`、`pr-label` 和 `pr-metadata` 直接操作远端 PR；`pr-fix` 在授权推送后组合调用 `pr-metadata`。
 - 验证：跨项目使用 `verify`；nanobot 浏览器/gateway 场景使用 `nanobot-webui-verify`；完整 nanobot 就绪检查使用 `nanobot-gate`。

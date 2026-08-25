@@ -18,6 +18,7 @@ Skill index
 | [`material`](material/SKILL.md) | Capture verified fragments worth sharing. |
 | [`draft`](draft/SKILL.md) | Turn fragments or raw input into publishable copy. |
 | [`rewrite`](rewrite/SKILL.md) | Polish Chinese technical writing while preserving facts and voice. |
+| [`repo-prose`](repo-prose/SKILL.md) | Keep repository prose current, concrete, and free of authoring residue. |
 | [`autoresearch`](autoresearch/SKILL.md) | Prepare one measurable improvement experiment. |
 | [`abtest`](abtest/SKILL.md) | Prepare isolated control/treatment experiments. |
 | [`simplify`](simplify/SKILL.md) | Apply behavior-preserving cleanup. |
@@ -37,6 +38,7 @@ Routing
 -------
 
 - Content: `material -> draft -> rewrite`.
+- Repository prose: use `repo-prose` for documentation, comments, and contributor instructions; keep authorial publishing in `rewrite`.
 - Agent delegation: use `herdr-scode-delegate` to assign a bounded background task to another `scode` session without supervising its pane.
 - PR code work: use `pr-worktree` for local review, testing, fixes, and rebases. Use `triage`, `pr-label`, and `pr-metadata` directly against the remote PR; `pr-fix` composes `pr-metadata` after an authorized push.
 - Verification: use generic `verify` across projects, `nanobot-webui-verify` for nanobot browser/gateway surfaces, and `nanobot-gate` for full nanobot readiness.
