@@ -5,9 +5,7 @@ description: Inspect, classify, add, remove, replace, synchronize, or verify Git
 
 # PR Label
 
-Label operations are remote-only; do not prepare a `pr-worktree`.
-
-Separate classification evidence from mutation authority. Exact requested PR label changes are authorized by the request; repository-level label creation/deletion and other PR state changes require separate authorization.
+Manage existing PR labels only through the remote API; do not prepare a `pr-worktree`. Exact requested PR label changes are authorized by the request. Do not create/delete repository labels or change code, branches, PR text, review, merge, or closure state.
 
 1. For an exact request naming an existing label, validate the target label and current labels with the helper. Apply directly when the request authorizes the mutation; use a dry run only when the user asks for a plan or the update is ambiguous.
 2. For inferred, impact-sensitive, multi-label, or exclusive-family updates, establish policy from the user's instruction, repository docs/automation/descriptions, and consistent maintainer use. Read `references/label-policy.md` for classification or exclusive families.

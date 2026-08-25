@@ -11,4 +11,4 @@ The helper verifies changed-line eligibility and emits `{path,line,side}`. Use `
 
 When a line is outside the diff, anchor to the changed line that creates the effect or keep the concern in the review body. Read only the narrow surrounding range needed to disambiguate the target.
 
-State trigger, affected contract, consequence, and evidence in the repository's normal language. Use the legacy `position` fallback from `github-submission.md` when GitHub rejects a valid line/side anchor.
+State the concrete trigger and consequence in the repository's normal language, cite the evidence, and say what must change when it is not obvious. Avoid restating the code or the review framework. Use the legacy `position` fallback from `github-submission.md` when GitHub rejects a valid line/side anchor.

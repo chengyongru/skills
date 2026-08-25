@@ -1,0 +1,4 @@
+interface:
+  display_name: "Herdr scode Delegate"
+  short_description: "Delegate background work to another scode session"
+  default_prompt: "Use $herdr-scode-delegate to open a background tab and delegate this task without waiting."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Metadata"
+  short_description: "Keep GitHub PR titles and descriptions accurate"
+  default_prompt: "Use $pr-metadata to inspect and update this PR title and description."

@@ -16,4 +16,4 @@ Select only the rows that match the changed surface. Do not run migration, concu
 
 For side effects, cover timeout, cancellation, retry, duplicate delivery, restart, and cleanup according to the contract. For authority, cover applicable anonymous, malformed, expired, out-of-scope, delegated, redirect/alias, and alternate entrypoints.
 
-Report CI coverage, focused actions/results, base comparison, remaining proof gaps, and PASS/WARN/FAIL for the claimed contract. Use `verify` for structured black-box checks.
+Keep the full matrix and actions as review evidence. Surface non-green CI and proof gaps that could change the recommendation; summarize green CI or successful focused checks in one short clause. Use `verify` when a structured black-box check is needed.

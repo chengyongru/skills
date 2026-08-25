@@ -2,7 +2,7 @@
 
 Use after explicit publication authorization and an evidence-backed finding or closure recommendation.
 
-Submit one review using the exact authorized event: `COMMENT` or explicitly authorized `REQUEST_CHANGES`. Never submit `APPROVE`. Include truthful automation disclosure, use the repository/PR language, put line-specific findings inline, and keep cross-cutting findings in the body.
+Submit one review using the exact authorized event: `COMMENT` or explicitly authorized `REQUEST_CHANGES`. Never submit `APPROVE`. Include truthful automation disclosure, use the repository/PR language, put line-specific findings inline, and keep a cross-cutting finding in the body only when it affects the decision. Do not publish the internal review framework, empty sections, generic praise, or a process summary.
 
 Build a temporary JSON payload:
 

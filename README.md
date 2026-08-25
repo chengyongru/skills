@@ -25,17 +25,20 @@ Skill index
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | Verify nanobot WebUI through the real gateway and browser. |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | Coordinate nanobot simplify, verification, review, and CI gates. |
 | [`triage`](triage/SKILL.md) | Produce a short decision brief for complex artifacts. |
-| [`pr-worktree`](pr-worktree/SKILL.md) | Prepare isolated worktrees for PR workflows. |
+| [`herdr-scode-delegate`](herdr-scode-delegate/SKILL.md) | Delegate a background task to another `scode` session in Herdr. |
+| [`pr-worktree`](pr-worktree/SKILL.md) | Maintain one attached worktree per branch. |
 | [`pr-review`](pr-review/SKILL.md) | Review PR correctness, reachability, and merge value. |
 | [`pr-fix`](pr-fix/SKILL.md) | Apply an authorized focused fix to a PR branch. |
 | [`pr-rebase`](pr-rebase/SKILL.md) | Rebase and verify a PR branch safely. |
 | [`pr-label`](pr-label/SKILL.md) | Classify and update PR labels from repository evidence. |
+| [`pr-metadata`](pr-metadata/SKILL.md) | Keep a PR title and description aligned with its pushed scope. |
 
 Routing
 -------
 
 - Content: `material -> draft -> rewrite`.
-- PR code work: use `pr-worktree` for local review, testing, fixes, and rebases. Use `triage` and `pr-label` directly against the remote PR; add `pr-review`, `pr-fix`, or `pr-rebase` when the requested operation needs a local checkout.
+- Agent delegation: use `herdr-scode-delegate` to assign a bounded background task to another `scode` session without supervising its pane.
+- PR code work: use `pr-worktree` for local review, testing, fixes, and rebases. Use `triage`, `pr-label`, and `pr-metadata` directly against the remote PR; `pr-fix` composes `pr-metadata` after an authorized push.
 - Verification: use generic `verify` across projects, `nanobot-webui-verify` for nanobot browser/gateway surfaces, and `nanobot-gate` for full nanobot readiness.
 - Experiments: choose `autoresearch` for iterative improvement or `abtest` for control/treatment comparison.
 - Human-readable plans and results stay in the conversation; skills persist deterministic state and raw evidence when useful.

@@ -12,10 +12,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PR_FIELDS = (
-    "number,title,state,isDraft,url,baseRefName,headRefName,headRefOid,"
-    "headRepository,headRepositoryOwner,isCrossRepository,maintainerCanModify"
-)
+PR_FIELDS = "number,url,baseRefName,headRefName,headRefOid"
 
 
 class CommandError(RuntimeError):
@@ -63,6 +60,17 @@ def repo_root(repo_dir: str) -> Path:
     return Path(output(["git", "rev-parse", "--show-toplevel"], cwd=start)).resolve()
 
 
+def primary_worktree_root(current: Path) -> Path:
+    common = git_common_dir(current)
+    if common.name == ".git":
+        return common.parent.resolve()
+    raw = output(["git", "worktree", "list", "--porcelain"], cwd=current)
+    for line in raw.splitlines():
+        if line.startswith("worktree "):
+            return Path(line.removeprefix("worktree ")).resolve()
+    raise RuntimeError(f"cannot determine primary worktree for repository at {current}")
+
+
 def git_common_dir(worktree: Path) -> Path:
     raw = output(["git", "rev-parse", "--git-common-dir"], cwd=worktree)
     path = Path(raw)
@@ -101,57 +109,6 @@ def pr_metadata(pr: str, repo: str | None, root: Path) -> dict[str, Any]:
         args.extend(["--repo", repo])
     data = json.loads(output(args, cwd=root))
     data["baseRepository"] = parse_repo_from_pr_url(str(data["url"]))
-    head_repo = data.get("headRepository") or {}
-    if isinstance(head_repo, dict):
-        name_with_owner = head_repo.get("nameWithOwner")
-        if not name_with_owner and head_repo.get("name"):
-            owner = (data.get("headRepositoryOwner") or {}).get("login")
-            name_with_owner = (
-                f"{owner}/{head_repo['name']}" if owner else head_repo["name"]
-            )
-        data["headRepositoryNameWithOwner"] = name_with_owner
-    return data
-
-
-def load_context_metadata(path_value: str, pr: str, repo: str | None) -> dict[str, Any]:
-    path = Path(path_value).expanduser().resolve()
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"cannot read PR context JSON {path}: {exc}") from exc
-    if not isinstance(data, dict):
-        raise RuntimeError(f"PR context JSON must contain an object: {path}")
-
-    required = ("number", "url", "baseRefName", "headRefName", "headRefOid")
-    missing = [key for key in required if not data.get(key)]
-    if missing:
-        raise RuntimeError(
-            f"PR context JSON is missing required fields: {', '.join(missing)}"
-        )
-    try:
-        number = int(data["number"])
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError("PR context JSON has an invalid PR number") from exc
-
-    requested_number: int | None = None
-    if pr.isdigit():
-        requested_number = int(pr)
-    else:
-        match = re.search(r"/pull/(\d+)(?:/|$)", pr)
-        if match:
-            requested_number = int(match.group(1))
-    if requested_number is not None and requested_number != number:
-        raise RuntimeError(
-            f"PR context JSON is for PR {number}, but the requested PR is {requested_number}"
-        )
-
-    base_repo = parse_repo_from_pr_url(str(data["url"]))
-    if repo and repo.casefold() != base_repo.casefold():
-        raise RuntimeError(
-            f"PR context JSON repository {base_repo} conflicts with --repo {repo}"
-        )
-    data["number"] = number
-    data["baseRepository"] = base_repo
     return data
 
 
@@ -201,31 +158,6 @@ def select_remote(root: Path, base_repo: str, requested: str | None) -> str:
     return remotes[0]
 
 
-def select_push_remote(root: Path, base_repo: str, preferred: str | None) -> str:
-    remotes = [
-        line for line in output(["git", "remote"], cwd=root).splitlines() if line
-    ]
-    if preferred:
-        if preferred not in remotes:
-            raise RuntimeError(
-                f"push remote {preferred!r} does not exist; available: {', '.join(remotes)}"
-            )
-        return preferred
-
-    fork_remotes = []
-    for remote in remotes:
-        url = output(["git", "remote", "get-url", remote], cwd=root)
-        if remote_repo_slug(url) != base_repo.lower():
-            fork_remotes.append(remote)
-    if "origin" in fork_remotes:
-        return "origin"
-    if fork_remotes:
-        return fork_remotes[0]
-    if "origin" in remotes:
-        return "origin"
-    return remotes[0]
-
-
 def is_ignored(root: Path, path: Path) -> bool:
     try:
         relative = path.relative_to(root)
@@ -237,17 +169,22 @@ def is_ignored(root: Path, path: Path) -> bool:
     return proc.returncode == 0
 
 
-def default_worktree_path(root: Path, number: int, mode: str) -> Path:
+def default_worktree_path(root: Path, number: int) -> Path:
     local_root = root / ".worktrees"
-    suffix = f"pr-{number}" if mode == "review" else f"pr-{number}-fix"
+    suffix = f"pr-{number}"
     if local_root.is_dir() or is_ignored(root, local_root):
         return (local_root / suffix).resolve()
-    sibling = (
-        f"{root.name}-pr-{number}"
-        if mode == "review"
-        else f"{root.name}-pr-{number}-fix"
-    )
+    sibling = f"{root.name}-pr-{number}"
     return (root.parent / sibling).resolve()
+
+
+def known_pr_worktree_paths(root: Path, number: int) -> set[Path]:
+    return {
+        (root / ".worktrees" / f"pr-{number}").resolve(),
+        (root / ".worktrees" / f"pr-{number}-fix").resolve(),
+        (root.parent / f"{root.name}-pr-{number}").resolve(),
+        (root.parent / f"{root.name}-pr-{number}-fix").resolve(),
+    }
 
 
 def branch_path_label(branch: str) -> str:
@@ -263,9 +200,9 @@ def default_new_worktree_path(root: Path, branch: str) -> Path:
     return (root.parent / f"{root.name}-{suffix}").resolve()
 
 
-def resolve_worktree_path(root: Path, raw: str | None, number: int, mode: str) -> Path:
+def resolve_worktree_path(root: Path, raw: str | None, number: int) -> Path:
     if not raw:
-        return default_worktree_path(root, number, mode)
+        return default_worktree_path(root, number)
     path = Path(raw).expanduser()
     if not path.is_absolute():
         path = root / path
@@ -354,23 +291,105 @@ def remote_branch_locations(root: Path, branch: str) -> list[str]:
     return locations
 
 
-def worktree_for_branch(root: Path, branch: str) -> Path | None:
+def registered_worktrees(root: Path) -> list[dict[str, str | Path | None]]:
     raw = output(["git", "worktree", "list", "--porcelain"], cwd=root)
-    wanted = f"refs/heads/{branch}"
+    entries: list[dict[str, str | Path | None]] = []
     for block in raw.split("\n\n"):
         path_value: str | None = None
+        head_value: str | None = None
         branch_value: str | None = None
         for line in block.splitlines():
             if line.startswith("worktree "):
                 path_value = line.removeprefix("worktree ")
+            elif line.startswith("HEAD "):
+                head_value = line.removeprefix("HEAD ")
             elif line.startswith("branch "):
                 branch_value = line.removeprefix("branch ")
-        if path_value and branch_value == wanted:
-            return Path(path_value).resolve()
+        if path_value:
+            branch = None
+            if branch_value and branch_value.startswith("refs/heads/"):
+                branch = branch_value.removeprefix("refs/heads/")
+            entries.append(
+                {
+                    "path": Path(path_value).resolve(),
+                    "head": head_value,
+                    "branch": branch,
+                }
+            )
+    return entries
+
+
+def worktree_for_branch(root: Path, branch: str) -> Path | None:
+    for entry in registered_worktrees(root):
+        if entry["branch"] == branch:
+            return Path(entry["path"])
     return None
 
 
-def ensure_reusable_worktree(root: Path, path: Path) -> None:
+def select_pr_worktree_path(
+    root: Path,
+    raw: str | None,
+    number: int,
+    head_branch: str,
+    expected_head: str,
+) -> tuple[Path, bool]:
+    requested = resolve_worktree_path(root, raw, number)
+    conventional = known_pr_worktree_paths(root, number)
+    matches: list[tuple[Path, bool]] = []
+    conflicting_branch_paths: list[Path] = []
+
+    for entry in registered_worktrees(root):
+        path = Path(entry["path"])
+        branch = entry["branch"]
+        head = str(entry["head"] or "")
+        is_attached_head = False
+        if branch == head_branch:
+            relation = head_relation(path, expected_head, head)
+            if relation == "diverged-from-metadata":
+                conflicting_branch_paths.append(path)
+                continue
+            is_attached_head = True
+        if path in conventional or is_attached_head:
+            matches.append((path, is_attached_head))
+
+    if conflicting_branch_paths:
+        paths = ", ".join(str(path) for path in conflicting_branch_paths)
+        raise RuntimeError(
+            f"PR head branch {head_branch!r} is checked out with divergent history at: {paths}"
+        )
+
+    unique_matches = {path: attached for path, attached in matches}
+    if raw:
+        other_paths = [path for path in unique_matches if path != requested]
+        if other_paths:
+            paths = ", ".join(str(path) for path in other_paths)
+            raise RuntimeError(
+                f"PR #{number} already has a matching worktree at {paths}; "
+                f"reuse it instead of creating {requested}"
+            )
+        return requested, requested in unique_matches
+
+    attached_paths = [path for path, attached in unique_matches.items() if attached]
+    if len(attached_paths) == 1:
+        return attached_paths[0], True
+    if len(attached_paths) > 1:
+        paths = ", ".join(str(path) for path in attached_paths)
+        raise RuntimeError(
+            f"PR #{number} has multiple attached matching worktrees: {paths}"
+        )
+
+    existing_paths = list(unique_matches)
+    if len(existing_paths) == 1:
+        return existing_paths[0], True
+    if len(existing_paths) > 1:
+        paths = ", ".join(str(path) for path in existing_paths)
+        raise RuntimeError(
+            f"PR #{number} has multiple matching worktrees: {paths}; clean up the duplicate explicitly"
+        )
+    return requested, False
+
+
+def ensure_registered_worktree(root: Path, path: Path) -> None:
     if not path.exists():
         return
     if not path.is_dir():
@@ -383,6 +402,12 @@ def ensure_reusable_worktree(root: Path, path: Path) -> None:
         ) from exc
     if not same_repo:
         raise RuntimeError(f"existing worktree belongs to another repository: {path}")
+
+
+def ensure_reusable_worktree(root: Path, path: Path) -> None:
+    ensure_registered_worktree(root, path)
+    if not path.exists():
+        return
     dirty = status_lines(path)
     if dirty:
         preview = "\n".join(dirty[:20])
@@ -398,18 +423,88 @@ def fetch_base_ref(root: Path, remote: str, base: str) -> str:
     return base_ref
 
 
-def prepare_pr_branch_worktree(
+def fetch_refs(root: Path, remote: str, metadata: dict[str, Any]) -> tuple[str, str]:
+    number = int(metadata["number"])
+    base = str(metadata["baseRefName"])
+    base_ref = fetch_base_ref(root, remote, base)
+    pr_ref = f"refs/remotes/{remote}/pr/{number}"
+    output(
+        ["git", "fetch", remote, f"+refs/pull/{number}/head:{pr_ref}"],
+        cwd=root,
+    )
+    return base_ref, pr_ref
+
+
+def prepare_attached_worktree(
     root: Path,
     path: Path,
-    base_ref: str,
+    pr_ref: str,
     pr: str,
     base_repo: str,
-) -> None:
+    head_branch: str,
+    expected_head: str,
+) -> str:
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        output(["git", "worktree", "add", "--detach", str(path), base_ref], cwd=root)
-    args = ["gh", "pr", "checkout", pr, "--repo", base_repo]
-    output(args, cwd=path)
+        if branch_exists(root, head_branch):
+            output(["git", "worktree", "add", str(path), head_branch], cwd=root)
+            action = "attached-existing-branch"
+        else:
+            output(
+                ["git", "worktree", "add", "-b", head_branch, str(path), pr_ref],
+                cwd=root,
+            )
+            action = "created-attached"
+        args = [
+            "gh",
+            "pr",
+            "checkout",
+            pr,
+            "--repo",
+            base_repo,
+            "--branch",
+            head_branch,
+        ]
+        output(args, cwd=path)
+        return action
+
+    state = worktree_status(path)
+    if state["detached"]:
+        if not state["clean"]:
+            raise RuntimeError(
+                f"cannot attach dirty detached worktree for PR branch {head_branch!r}: {path}"
+            )
+        args = [
+            "gh",
+            "pr",
+            "checkout",
+            pr,
+            "--repo",
+            base_repo,
+            "--branch",
+            head_branch,
+        ]
+        output(args, cwd=path)
+        return "attached-existing"
+    if state["branch"] != head_branch:
+        raise RuntimeError(
+            f"existing PR worktree is on unrelated branch {state['branch']!r}; "
+            f"expected {head_branch!r}: {path}"
+        )
+
+    relation = head_relation(path, expected_head, str(state["headOid"]))
+    if relation == "behind-metadata":
+        if not state["clean"]:
+            raise RuntimeError(
+                f"matching worktree is behind the PR head and has local changes: {path}"
+            )
+        output(["git", "merge", "--ff-only", pr_ref], cwd=path)
+        return "fast-forwarded"
+    if relation == "diverged-from-metadata":
+        raise RuntimeError(
+            f"attached PR worktree has diverged from GitHub metadata: {path}"
+        )
+    return "reused-attached" if state["clean"] else "reused-with-changes"
 
 
 def prepare_new_worktree(
@@ -491,18 +586,34 @@ def head_relation(path: Path, expected: str, actual: str) -> str:
 
 
 def start(args: argparse.Namespace) -> dict[str, Any]:
-    root = repo_root(args.repo_dir)
+    current_root = repo_root(args.repo_dir)
+    root = primary_worktree_root(current_root)
     base_repo = infer_base_repo(root, args.repo)
     remote = select_remote(root, base_repo, args.remote)
     validate_branch_name(root, args.branch)
     validate_branch_name(root, args.base)
 
-    path = resolve_new_worktree_path(root, args.path, args.branch)
-    if path == root:
-        raise RuntimeError(
-            "refusing to use the base repository worktree as a new PR worktree"
-        )
-    ensure_clean_start_target(root, path)
+    requested_path = resolve_new_worktree_path(root, args.path, args.branch)
+    local_branch = branch_exists(root, args.branch)
+    existing_branch_path = (
+        worktree_for_branch(root, args.branch) if local_branch else None
+    )
+    if existing_branch_path:
+        if args.path and requested_path != existing_branch_path:
+            raise RuntimeError(
+                f"branch {args.branch!r} already has worktree {existing_branch_path}; "
+                f"reuse it instead of creating {requested_path}"
+            )
+        path = existing_branch_path
+        ensure_registered_worktree(root, path)
+    else:
+        path = requested_path
+        if path == root:
+            raise RuntimeError(
+                "refusing to use the base repository worktree as a new PR worktree"
+            )
+        ensure_clean_start_target(root, path)
+
     if path.exists():
         existing = worktree_status(path)
         if existing["detached"]:
@@ -515,23 +626,15 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
                 f"expected {args.branch!r}: {path}"
             )
 
-    source_status = status_lines(root, include_untracked=True)
-    if args.source == "head" and source_status:
+    source_status = status_lines(current_root, include_untracked=True)
+    if args.source == "head" and source_status and not existing_branch_path:
         preview = "\n".join(source_status[:20])
         raise RuntimeError(
             "--source head requires a clean source worktree; commit or move these changes first:\n"
             f"{preview}"
         )
 
-    local_branch = branch_exists(root, args.branch)
-    if local_branch:
-        existing_branch_path = worktree_for_branch(root, args.branch)
-        if existing_branch_path and existing_branch_path != path:
-            raise RuntimeError(
-                f"branch {args.branch!r} is already checked out by another worktree: "
-                f"{existing_branch_path}"
-            )
-    else:
+    if not local_branch:
         remote_locations = remote_branch_locations(root, args.branch)
         if remote_locations:
             remotes = ", ".join(remote_locations)
@@ -544,11 +647,15 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
     source_ref = (
         base_ref
         if args.source == "base"
-        else output(["git", "rev-parse", "HEAD"], cwd=root)
+        else output(["git", "rev-parse", "HEAD"], cwd=current_root)
     )
-    action = prepare_new_worktree(root, path, args.branch, source_ref)
+    action = (
+        "reused"
+        if existing_branch_path
+        else prepare_new_worktree(root, path, args.branch, source_ref)
+    )
     state = worktree_status(path)
-    if not state["clean"] or state["untracked"]:
+    if action != "reused" and (not state["clean"] or state["untracked"]):
         raise RuntimeError(f"started worktree unexpectedly became dirty: {path}")
     if state["branch"] != args.branch:
         raise RuntimeError(
@@ -557,9 +664,14 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
 
     warnings: list[str] = []
     if source_status and args.source == "base":
-        warnings.append(
-            f"source worktree has {len(source_status)} uncommitted change(s); none were copied"
-        )
+        if action == "reused" and current_root == path:
+            warnings.append(
+                f"reused branch worktree retains {len(source_status)} existing change(s)"
+            )
+        else:
+            warnings.append(
+                f"source worktree has {len(source_status)} uncommitted change(s); none were copied"
+            )
     if action != "created":
         warnings.append(f"{action} existing branch; fetched base was not applied to it")
 
@@ -571,33 +683,7 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
             "pass --remote explicitly if this is not intentional"
         )
 
-    push_remote = select_push_remote(root, base_repo, args.push_remote)
-    push_url = output(["git", "remote", "get-url", push_remote], cwd=root)
-    push_slug = remote_repo_slug(push_url)
-    next_commands: dict[str, list[str]] = {
-        "status": ["git", "status", "--short", "--branch"],
-        "diff": ["git", "diff", f"{base_ref}...HEAD"],
-        "push": ["git", "push", "-u", push_remote, args.branch],
-    }
-    if push_slug:
-        push_owner = push_slug.rsplit("/", 1)[0]
-        next_commands["createPr"] = [
-            "gh",
-            "pr",
-            "create",
-            "--repo",
-            base_repo,
-            "--base",
-            args.base,
-            "--head",
-            f"{push_owner}:{args.branch}",
-        ]
-    else:
-        warnings.append(
-            f"cannot infer the owner from push remote {push_remote!r}; provide --head OWNER:{args.branch} to gh pr create"
-        )
-
-    source_branch = output(["git", "branch", "--show-current"], cwd=root)
+    source_branch = output(["git", "branch", "--show-current"], cwd=current_root)
     result = {
         "action": "started",
         "worktreeAction": action,
@@ -609,83 +695,84 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
         "sourceRef": source_ref,
         "remote": remote,
         "remoteRepository": remote_slug,
-        "pushRemote": push_remote,
-        "pushRepository": push_slug,
         "branch": args.branch,
         "sourceWorktree": {
-            "path": str(root),
-            "headOid": output(["git", "rev-parse", "HEAD"], cwd=root),
+            "path": str(current_root),
+            "headOid": output(["git", "rev-parse", "HEAD"], cwd=current_root),
             "branch": source_branch or None,
             "clean": not source_status,
             "changeCount": len(source_status),
         },
         "worktree": state,
         "warnings": warnings,
-        "next": next_commands,
     }
     return result
 
 
 def prepare(args: argparse.Namespace) -> dict[str, Any]:
-    root = repo_root(args.repo_dir)
-    metadata = (
-        load_context_metadata(args.context_json, args.pr, args.repo)
-        if args.context_json
-        else pr_metadata(args.pr, args.repo, root)
-    )
+    current_root = repo_root(args.repo_dir)
+    root = primary_worktree_root(current_root)
+    metadata = pr_metadata(args.pr, args.repo, root)
     remote = select_remote(root, str(metadata["baseRepository"]), args.remote)
-    path = resolve_worktree_path(root, args.path, int(metadata["number"]), args.mode)
-    if path == root:
+    base_ref, pr_ref = fetch_refs(root, remote, metadata)
+    expected_head = str(metadata.get("headRefOid") or "")
+    head_branch = str(metadata.get("headRefName") or "")
+    if not head_branch:
+        raise RuntimeError("PR metadata does not include a head branch")
+    path, reused_existing = select_pr_worktree_path(
+        root,
+        args.path,
+        int(metadata["number"]),
+        head_branch,
+        expected_head,
+    )
+    if path == root and not reused_existing:
         raise RuntimeError(
             "refusing to use the base repository worktree as a PR worktree"
         )
-    ensure_reusable_worktree(root, path)
+    ensure_registered_worktree(root, path)
     if path.exists():
         existing = worktree_status(path)
-        if (
-            existing["branch"]
-            and existing["branch"] != metadata.get("headRefName")
-        ):
+        if existing["branch"] and existing["branch"] != head_branch:
             raise RuntimeError(
                 "refusing to switch an existing worktree from unrelated branch "
-                f"{existing['branch']} to {metadata.get('headRefName')}"
+                f"{existing['branch']} to {head_branch}"
             )
-    base_ref = fetch_base_ref(root, remote, str(metadata["baseRefName"]))
-    prepare_pr_branch_worktree(
-        root, path, base_ref, args.pr, str(metadata["baseRepository"])
+
+    worktree_action = prepare_attached_worktree(
+        root,
+        path,
+        pr_ref,
+        args.pr,
+        str(metadata["baseRepository"]),
+        head_branch,
+        expected_head,
     )
 
     state = worktree_status(path)
-    if not state["clean"]:
-        raise RuntimeError(f"prepared worktree unexpectedly became dirty: {path}")
     if state["detached"]:
         raise RuntimeError(
-            f"{args.mode} worktree is detached; gh pr checkout did not attach the PR head branch"
+            "PR worktree is detached; gh did not attach the PR head branch"
+        )
+    if state["branch"] != head_branch:
+        raise RuntimeError(
+            f"PR worktree is on {state['branch']!r}; expected {head_branch!r}"
         )
 
-    expected_head = str(metadata.get("headRefOid") or "")
     relation = head_relation(path, expected_head, str(state["headOid"]))
-    if args.mode == "review" and relation not in {"match", "metadata-unavailable"}:
+    if relation in {"behind-metadata", "diverged-from-metadata"}:
         raise RuntimeError(
-            f"review checkout is stale ({relation}); rerun prepare to fetch the current PR head"
-        )
-    if args.mode == "fix" and relation in {"behind-metadata", "diverged-from-metadata"}:
-        raise RuntimeError(
-            f"fix checkout is unsafe ({relation}); inspect the branch without resetting it"
+            f"PR branch checkout is unsafe ({relation}); inspect it without resetting"
         )
     result = {
         "action": "prepared",
-        "mode": args.mode,
+        "worktreeAction": worktree_action,
+        "reusedExistingWorktree": reused_existing,
         "repoRoot": str(root),
+        "invocationWorktree": str(current_root),
         "baseRepository": metadata["baseRepository"],
-        "headRepository": metadata.get("headRepositoryNameWithOwner"),
         "pr": metadata["number"],
-        "title": metadata.get("title"),
         "url": metadata.get("url"),
-        "state": metadata.get("state"),
-        "isDraft": metadata.get("isDraft"),
-        "isCrossRepository": metadata.get("isCrossRepository"),
-        "maintainerCanModify": metadata.get("maintainerCanModify"),
         "baseRefName": metadata.get("baseRefName"),
         "headRefName": metadata.get("headRefName"),
         "expectedHeadOid": expected_head,
@@ -693,14 +780,9 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "headRelation": relation,
         "remote": remote,
         "baseTrackingRef": base_ref,
+        "prTrackingRef": pr_ref,
         "worktree": state,
-        "next": {
-            "diff": ["git", "diff", f"{base_ref}...HEAD"],
-            "status": ["git", "status", "--short", "--branch"],
-        },
     }
-    if args.mode == "fix":
-        result["next"]["push"] = ["git", "push"]
     return result
 
 
@@ -763,43 +845,32 @@ def render_markdown(result: dict[str, Any]) -> str:
     if action == "started":
         worktree = result["worktree"]
         lines = [
-            "# New PR worktree",
+            "# Branch worktree",
             f"- Action: {result['worktreeAction']}",
             f"- Path: `{worktree['path']}`",
             f"- Branch: `{result['branch']}`",
             f"- Base: `{result['baseRepository']}:{result['baseRefName']}` ({result['baseTrackingRef']})",
             f"- Source: `{result['source']}` ({result['sourceRef']})",
             f"- Clean: {worktree['clean']}",
-            f"- Push remote: `{result['pushRemote']}` ({result.get('pushRepository') or 'unknown repository'})",
         ]
         for warning in result.get("warnings", []):
             lines.append(f"- Warning: {warning}")
-        lines.append("\n## Next commands")
-        for name, command in result["next"].items():
-            lines.append(
-                f"- {name}: `{display_command(command)}` (cwd: `{worktree['path']}`)"
-            )
         return "\n".join(lines)
     if action == "prepared":
         worktree = result["worktree"]
         lines = [
-            f"# PR worktree: {result['mode']}",
-            f"- PR: {result['baseRepository']}#{result['pr']} — {result.get('title')}",
+            "# PR worktree",
+            f"- PR: {result['baseRepository']}#{result['pr']}",
             f"- URL: {result.get('url')}",
             f"- Path: `{worktree['path']}`",
+            f"- Worktree action: `{result['worktreeAction']}`",
             f"- Base: `{result['baseTrackingRef']}`",
             f"- Head: `{worktree['headOid']}` (relation: {result['headRelation']})",
             f"- Branch: `{worktree.get('branch') or '(detached)'}`",
             f"- Upstream: `{worktree.get('upstream') or '(none)'}`",
             f"- Clean: {worktree['clean']}",
             f"- Untracked entries: {len(worktree['untracked'])}",
-            f"- Cross-repository: {result.get('isCrossRepository')}; maintainer can modify: {result.get('maintainerCanModify')}",
-            "\n## Next commands",
         ]
-        for name, command in result["next"].items():
-            lines.append(
-                f"- {name}: `{display_command(command)}` (cwd: `{worktree['path']}`)"
-            )
         return "\n".join(lines)
     if action == "status":
         worktree = result["worktree"]
@@ -856,15 +927,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     start_parser.add_argument("--remote", help="remote used to fetch the base branch")
     start_parser.add_argument(
-        "--push-remote", help="remote suggested for the later branch push"
-    )
-    start_parser.add_argument(
         "--format", choices=("markdown", "json"), default="markdown"
     )
     start_parser.set_defaults(handler=start)
 
     prepare_parser = subparsers.add_parser(
-        "prepare", help="create or safely reuse a PR worktree"
+        "prepare", help="create or reuse the worktree attached to a PR head branch"
     )
     prepare_parser.add_argument("pr", help="PR number or URL accepted by gh")
     prepare_parser.add_argument(
@@ -873,16 +941,11 @@ def build_parser() -> argparse.ArgumentParser:
     prepare_parser.add_argument(
         "--repo-dir", default=".", help="path inside the base repository"
     )
-    prepare_parser.add_argument("--mode", choices=("review", "fix"), default="review")
     prepare_parser.add_argument(
         "--path", help="explicit worktree path; relative paths resolve from repo root"
     )
     prepare_parser.add_argument(
         "--remote", help="base repository remote; auto-detected by URL by default"
-    )
-    prepare_parser.add_argument(
-        "--context-json",
-        help="JSON output from pr_context.py; reuses PR metadata without another gh pr view",
     )
     prepare_parser.add_argument(
         "--format", choices=("markdown", "json"), default="markdown"

@@ -25,17 +25,20 @@ Skill 索引
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | 通过真实 gateway 和浏览器验证 nanobot WebUI。 |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | 协调 nanobot 的 simplify、verify、review 和 CI gate。 |
 | [`triage`](triage/SKILL.md) | 为复杂对象生成简短决策简报。 |
-| [`pr-worktree`](pr-worktree/SKILL.md) | 为 PR 工作流准备隔离 worktree。 |
+| [`herdr-scode-delegate`](herdr-scode-delegate/SKILL.md) | 通过 Herdr 把后台任务委派给另一个 `scode` 会话。 |
+| [`pr-worktree`](pr-worktree/SKILL.md) | 为每个分支维护唯一的 attached worktree。 |
 | [`pr-review`](pr-review/SKILL.md) | 审查 PR 正确性、可达性和合并价值。 |
 | [`pr-fix`](pr-fix/SKILL.md) | 在授权范围内修复 PR 分支。 |
 | [`pr-rebase`](pr-rebase/SKILL.md) | 安全地 rebase 并验证 PR 分支。 |
 | [`pr-label`](pr-label/SKILL.md) | 根据仓库证据分类和更新 PR 标签。 |
+| [`pr-metadata`](pr-metadata/SKILL.md) | 让 PR 标题和描述与已推送内容保持一致。 |
 
 路由
 ----
 
 - 内容：`material -> draft -> rewrite`。
-- PR 代码工作：本地 review、测试、修复和 rebase 使用 `pr-worktree`。`triage` 和 `pr-label` 直接操作远端 PR；需要本地 checkout 时再加入 `pr-review`、`pr-fix` 或 `pr-rebase`。
+- Agent 委派：使用 `herdr-scode-delegate` 把边界明确的后台任务交给另一个 `scode` 会话，无需持续盯住其 pane。
+- PR 代码工作：本地 review、测试、修复和 rebase 使用 `pr-worktree`。`triage`、`pr-label` 和 `pr-metadata` 直接操作远端 PR；`pr-fix` 在授权推送后组合调用 `pr-metadata`。
 - 验证：跨项目使用 `verify`；nanobot 浏览器/gateway 场景使用 `nanobot-webui-verify`；完整 nanobot 就绪检查使用 `nanobot-gate`。
 - 实验：迭代改进使用 `autoresearch`；control/treatment 对照使用 `abtest`。
 - 人类可读的计划和结果直接在对话中交付；确定性状态和原始证据按需落盘。
