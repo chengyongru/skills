@@ -26,9 +26,9 @@ $result = & <helper> -Name "review-api" -Task $task -Placement tab -Cwd $PWD.Pat
     ConvertFrom-Json
 ```
 
-Use `-Placement pane` and optionally `-Direction right|down` when appropriate. The helper creates the target without focusing it, runs `scode`, waits only for Herdr startup detection, assigns a unique agent name, and submits the prompt without `--wait`.
+Use `-Placement pane` and optionally `-Direction right|down` when appropriate. The helper creates the target without focusing it, runs `scode`, waits for startup, and returns only after Herdr observes the submitted task enter `working`. It never waits for task completion. If initial submission stalls, it retries Enter once only when the same task is still present in the active Codex composer; otherwise it fails and leaves the target open for inspection.
 
-4. Report `agent_name`, `tab_id`, `pane_id`, and cwd from `$result`, then stop supervising. Do not poll, wait for completion, or read the worker unless the user asks for status or the worker becomes blocked.
+4. Require `status=delegated` and `submission_confirmed=true`. Report `agent_name`, `tab_id`, `pane_id`, cwd, and submission confirmation from `$result`, then stop supervising. Do not poll, wait for completion, or read the worker unless the user asks for status or the worker becomes blocked.
 
 ## Revisit delegated work
 

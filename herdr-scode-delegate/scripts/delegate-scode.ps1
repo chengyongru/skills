@@ -22,6 +22,9 @@ param(
     [ValidateRange(5000, 120000)]
     [int]$StartupTimeoutMs = 30000,
 
+    [ValidateRange(1000, 30000)]
+    [int]$SubmissionTimeoutMs = 10000,
+
     [switch]$DryRun
 )
 
@@ -58,6 +61,16 @@ function Invoke-HerdrCommand {
     }
 }
 
+function Invoke-HerdrCapture {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    $output = @(& herdr @Arguments 2>&1 | ForEach-Object { "$_" })
+    return [pscustomobject]@{
+        ExitCode = $LASTEXITCODE
+        Output   = $output
+    }
+}
+
 function Get-DetectedAgent {
     param([Parameter(Mandatory)][string]$PaneId)
 
@@ -72,6 +85,85 @@ function Get-DetectedAgent {
     }
 
     return $json | ConvertFrom-Json
+}
+
+function Test-AgentSubmission {
+    param(
+        [Parameter(Mandatory)]$Detected,
+        [Parameter(Mandatory)][long]$BaselineStateChangeSeq
+    )
+
+    $agent = $Detected.result.agent
+    if ($agent.agent_status -in @("working", "blocked")) {
+        return $true
+    }
+
+    return (
+        [long]$agent.state_change_seq -gt $BaselineStateChangeSeq -and
+        $agent.agent_status -in @("idle", "done")
+    )
+}
+
+function Wait-AgentSubmission {
+    param(
+        [Parameter(Mandatory)][string]$AgentName,
+        [Parameter(Mandatory)][long]$BaselineStateChangeSeq,
+        [Parameter(Mandatory)][int]$TimeoutMs
+    )
+
+    $stopwatch = [Diagnostics.Stopwatch]::StartNew()
+    while ($stopwatch.ElapsedMilliseconds -lt $TimeoutMs) {
+        $detected = Get-DetectedAgent -PaneId $AgentName
+        if ($detected -and (Test-AgentSubmission `
+                -Detected $detected `
+                -BaselineStateChangeSeq $BaselineStateChangeSeq)) {
+            return $detected
+        }
+        Start-Sleep -Milliseconds 100
+    }
+
+    return $null
+}
+
+function Get-AgentDetectionText {
+    param([Parameter(Mandatory)][string]$AgentName)
+
+    $read = Invoke-HerdrCapture -Arguments @(
+        "agent", "read", $AgentName, "--source", "detection", "--lines", "120"
+    )
+    if ($read.ExitCode -ne 0) {
+        throw "Could not inspect the active scode composer in ${AgentName}: $($read.Output -join [Environment]::NewLine)"
+    }
+
+    return $read.Output -join [Environment]::NewLine
+}
+
+function Test-TaskInActiveComposer {
+    param(
+        [Parameter(Mandatory)][string]$DetectionText,
+        [Parameter(Mandatory)][string]$Task
+    )
+
+    $lines = $DetectionText -split "`r?`n"
+    $composerStart = -1
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        if ($lines[$index] -match "^\s*›\s*") {
+            $composerStart = $index
+        }
+    }
+    if ($composerStart -lt 0) {
+        return $false
+    }
+
+    $taskProbe = $Task -replace "\s", ""
+    if ($taskProbe.Length -gt 64) {
+        $taskProbe = $taskProbe.Substring(0, 64)
+    }
+    $activeComposer = ($lines[$composerStart..($lines.Count - 1)] -join "") -replace "\s", ""
+    if ($activeComposer.StartsWith("›AskCodextodoanything")) {
+        return $false
+    }
+    return $taskProbe.Length -gt 0 -and $activeComposer.Contains($taskProbe)
 }
 
 function New-UniqueAgentName {
@@ -134,16 +226,17 @@ if ($Placement -eq "pane" -and -not $Direction) {
 
 if ($DryRun) {
     [pscustomobject]@{
-        status               = "dry-run"
-        placement            = $Placement
-        direction            = $Direction
-        workspace_id         = $workspaceId
-        source_pane_id       = $currentPane.pane_id
-        cwd                  = $resolvedCwd
-        label                = $Label
-        agent_name           = $agentName
-        launcher             = "scode"
-        waits_for_completion = $false
+        status                = "dry-run"
+        placement             = $Placement
+        direction             = $Direction
+        workspace_id          = $workspaceId
+        source_pane_id        = $currentPane.pane_id
+        cwd                   = $resolvedCwd
+        label                 = $Label
+        agent_name            = $agentName
+        launcher              = "scode"
+        submission_timeout_ms = $SubmissionTimeoutMs
+        waits_for_completion  = $false
     } | ConvertTo-Json -Compress
     exit 0
 }
@@ -165,7 +258,9 @@ else {
     $tabId = $created.result.pane.tab_id
 }
 
-Invoke-HerdrCommand -Arguments @("pane", "run", $paneId, "scode")
+Invoke-HerdrCommand -Arguments @(
+    "pane", "run", $paneId, "scode -c check_for_update_on_startup=false"
+)
 
 $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 $detected = $null
@@ -188,18 +283,89 @@ if (-not $detected -or $detected.result.agent.agent_status -notin @("idle", "don
 }
 
 Invoke-HerdrJson -Arguments @("agent", "rename", $paneId, $agentName) | Out-Null
-Invoke-HerdrJson -Arguments @("agent", "prompt", $agentName, $Task) | Out-Null
+$ready = Get-DetectedAgent -PaneId $agentName
+if (-not $ready -or $ready.result.agent.agent_status -notin @("idle", "done")) {
+    throw "scode in $paneId stopped being ready before task submission. The target was left open for inspection; delegated was not returned."
+}
+
+$baselineStateChangeSeq = [long]$ready.result.agent.state_change_seq
+$prompt = Invoke-HerdrCapture -Arguments @(
+    "agent", "prompt", $agentName, $Task,
+    "--wait", "--until", "working", "--timeout", "$SubmissionTimeoutMs"
+)
+$submission = $null
+$confirmation = $null
+$enterRetried = $false
+
+if ($prompt.ExitCode -eq 0) {
+    $submission = Get-DetectedAgent -PaneId $agentName
+    $confirmation = "herdr-observed-working"
+}
+else {
+    $submission = Get-DetectedAgent -PaneId $agentName
+    if ($submission -and (Test-AgentSubmission `
+            -Detected $submission `
+            -BaselineStateChangeSeq $baselineStateChangeSeq)) {
+        $confirmation = "lifecycle-changed-after-prompt"
+    }
+    elseif (($prompt.Output -join "`n") -notmatch "(?i)(agent_prompt_stalled|timeout)") {
+        throw "Task submission failed in ${paneId}: $($prompt.Output -join [Environment]::NewLine). The target was left open for inspection; delegated was not returned."
+    }
+}
+
+if (-not $confirmation) {
+    $beforeRetry = Get-DetectedAgent -PaneId $agentName
+    if ($beforeRetry -and (Test-AgentSubmission `
+            -Detected $beforeRetry `
+            -BaselineStateChangeSeq $baselineStateChangeSeq)) {
+        $submission = $beforeRetry
+        $confirmation = "lifecycle-changed-before-enter-retry"
+    }
+    elseif (
+        $beforeRetry -and
+        $beforeRetry.result.agent.agent_status -in @("idle", "done") -and
+        (Test-TaskInActiveComposer `
+            -DetectionText (Get-AgentDetectionText -AgentName $agentName) `
+            -Task $Task)
+    ) {
+        Invoke-HerdrJson -Arguments @("agent", "send-keys", $agentName, "enter") | Out-Null
+        $enterRetried = $true
+        $submission = Wait-AgentSubmission `
+            -AgentName $agentName `
+            -BaselineStateChangeSeq $baselineStateChangeSeq `
+            -TimeoutMs $SubmissionTimeoutMs
+        if ($submission) {
+            $confirmation = "lifecycle-changed-after-enter-retry"
+        }
+    }
+}
+
+if (-not $confirmation) {
+    throw "Task submission could not be confirmed in $paneId within $SubmissionTimeoutMs ms. Enter was retried only when the task was still in the active composer. The target was left open for inspection; delegated was not returned."
+}
+
+$submissionStatus = if ($submission) {
+    $submission.result.agent.agent_status
+}
+else {
+    "working-observed"
+}
 
 [pscustomobject]@{
-    status               = "delegated"
-    placement            = $Placement
-    direction            = $Direction
-    workspace_id         = $workspaceId
-    tab_id               = $tabId
-    pane_id              = $paneId
-    cwd                  = $resolvedCwd
-    label                = $Label
-    agent_name           = $agentName
-    launcher             = "scode"
-    waits_for_completion = $false
+    status                  = "delegated"
+    placement               = $Placement
+    direction               = $Direction
+    workspace_id            = $workspaceId
+    tab_id                  = $tabId
+    pane_id                 = $paneId
+    cwd                     = $resolvedCwd
+    label                   = $Label
+    agent_name              = $agentName
+    launcher                = "scode"
+    submission_timeout_ms   = $SubmissionTimeoutMs
+    submission_confirmed    = $true
+    submission_confirmation = $confirmation
+    submission_status       = $submissionStatus
+    enter_retried           = $enterRetried
+    waits_for_completion    = $false
 } | ConvertTo-Json -Compress
