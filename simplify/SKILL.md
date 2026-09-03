@@ -12,6 +12,7 @@ Simplify the user-selected target; otherwise use the current diff and recent unt
 3. Apply a change when behavior stays stable, scope stays inside the target, the result fits repository style, and verification is proportionate to risk.
 4. Preserve public APIs, schemas, migrations, persistence formats, dependency versions, UX behavior, generated files, and intentional ownership boundaries unless the user includes them in scope.
 5. Keep patches focused and reversible; update tests only as needed by the cleanup.
-6. Run the narrowest relevant verification and report changed simplifications, verification, and any higher-risk ideas left untouched.
+6. In tests, assert the intended result positively. Do not use negative assertions against old text, symbols, or implementation details merely to prove removal.
+7. Run the narrowest relevant verification and report changed simplifications, verification, and any higher-risk ideas left untouched.
 
 If the target is unclear outside a repository, ask for the path or scope.
