@@ -14,10 +14,18 @@ Use `scripts/pr_worktree.py` as the lifecycle source of truth. Set every later c
 - Continue in a matching worktree when its existing changes belong to the task. Preserve unrelated changes and stop instead of creating a clean duplicate.
 - Keep branch worktrees attached. Do not create detached worktrees; `prepare` may attach a clean legacy PR worktree to its branch.
 
+## Naming
+
+- Follow an explicit user-supplied name or repository naming policy. Otherwise use `<type>/<short-kebab-topic>`: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `build`, or `ci`, according to the change.
+- Name branches for the work, not the agent or model. Use an agent-specific prefix only when explicitly requested or required by the repository.
+- For example, use `feat/tui-usage-chart` for a feature and `fix/login-timeout` for a bugfix.
+- For a new topic worktree, derive the directory from the branch: `feat/tui-usage-chart` becomes `.worktrees/feat-tui-usage-chart`, or sibling `<repo>-feat-tui-usage-chart` when `.worktrees` is neither present nor ignored. Use `pr-<number>` for a PR worktree.
+- Preserve existing branch names and registered paths, including legacy names. Rename or move them only when explicitly requested; a naming change never justifies a duplicate worktree.
+
 ## Commands
 
 ```powershell
-python <skill>\scripts\pr_worktree.py start codex/<topic> --repo <OWNER/REPO> --base <base> --format markdown
+python <skill>\scripts\pr_worktree.py start <type>/<topic> --repo <OWNER/REPO> --base <base> --format markdown
 python <skill>\scripts\pr_worktree.py prepare <PR> --repo <OWNER/REPO> --format markdown
 python <skill>\scripts\pr_worktree.py status --path <worktree> --format markdown
 ```

@@ -194,7 +194,7 @@ def branch_path_label(branch: str) -> str:
 
 def default_new_worktree_path(root: Path, branch: str) -> Path:
     local_root = root / ".worktrees"
-    suffix = f"pr-new-{branch_path_label(branch)}"
+    suffix = branch_path_label(branch)
     if local_root.is_dir() or is_ignored(root, local_root):
         return (local_root / suffix).resolve()
     return (root.parent / f"{root.name}-{suffix}").resolve()
@@ -905,7 +905,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="create or safely reuse a local topic-branch worktree before a PR exists",
     )
     start_parser.add_argument(
-        "branch", help="new local topic branch, for example codex/i18n-audit"
+        "branch", help="topic branch, for example feat/usage-chart or fix/login-timeout"
     )
     start_parser.add_argument(
         "--repo", help="base OWNER/REPO; inferred from gh or a git remote by default"
@@ -923,7 +923,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="start from the fetched base branch, or the current clean HEAD",
     )
     start_parser.add_argument(
-        "--path", help="explicit worktree path; relative paths resolve from repo root"
+        "--path",
+        help="explicit worktree path; defaults to the branch name with slashes replaced by hyphens; "
+        "relative paths resolve from repo root",
     )
     start_parser.add_argument("--remote", help="remote used to fetch the base branch")
     start_parser.add_argument(
