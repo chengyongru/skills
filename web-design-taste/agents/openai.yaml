@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web Design Taste"
+  short_description: "Refine product UI with coherent, restrained design"
+  default_prompt: "Use $web-design-taste to refine this interface's hierarchy, controls, typography, and information value."

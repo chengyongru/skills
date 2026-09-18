@@ -21,12 +21,14 @@ Skill 索引
 | [`repo-prose`](repo-prose/SKILL.md) | 让仓库文字保持当前、具体，并清除创作过程残留。 |
 | [`autoresearch`](autoresearch/SKILL.md) | 准备单目标的可量化改进实验。 |
 | [`abtest`](abtest/SKILL.md) | 准备隔离的 control/treatment 实验。 |
+| [`web-design-taste`](web-design-taste/SKILL.md) | 统一产品界面的控件、排版与交互，提高信息含量。 |
 | [`simplify`](simplify/SKILL.md) | 执行行为保持型代码清理。 |
 | [`verify`](verify/SKILL.md) | 用黑盒证据验证公共行为。 |
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | 通过真实 gateway 和浏览器验证 nanobot WebUI。 |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | 协调 nanobot 的 simplify、verify、review 和 CI gate。 |
 | [`triage`](triage/SKILL.md) | 为复杂对象生成简短决策简报。 |
 | [`herdr-scode-delegate`](herdr-scode-delegate/SKILL.md) | 通过 Herdr 把后台任务委派给另一个 `scode` 会话。 |
+| [`herdr-worktree-right`](herdr-worktree-right/SKILL.md) | 在当前 Herdr pane 右侧打开正在使用的 worktree，优先复用已有 pane。 |
 | [`pr-worktree`](pr-worktree/SKILL.md) | 为每个分支维护唯一的 attached worktree。 |
 | [`pr-review`](pr-review/SKILL.md) | 审查 PR 正确性、可达性和合并价值。 |
 | [`pr-fix`](pr-fix/SKILL.md) | 在授权范围内修复 PR 分支。 |

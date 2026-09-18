@@ -21,12 +21,14 @@ Skill index
 | [`repo-prose`](repo-prose/SKILL.md) | Keep repository prose current, concrete, and free of authoring residue. |
 | [`autoresearch`](autoresearch/SKILL.md) | Prepare one measurable improvement experiment. |
 | [`abtest`](abtest/SKILL.md) | Prepare isolated control/treatment experiments. |
+| [`web-design-taste`](web-design-taste/SKILL.md) | Refine product UI with coherent controls, typography, and useful information. |
 | [`simplify`](simplify/SKILL.md) | Apply behavior-preserving cleanup. |
 | [`verify`](verify/SKILL.md) | Verify public behavior with black-box evidence. |
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | Verify nanobot WebUI through the real gateway and browser. |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | Coordinate nanobot simplify, verification, review, and CI gates. |
 | [`triage`](triage/SKILL.md) | Produce a short decision brief for complex artifacts. |
 | [`herdr-scode-delegate`](herdr-scode-delegate/SKILL.md) | Delegate a background task to another `scode` session in Herdr. |
+| [`herdr-worktree-right`](herdr-worktree-right/SKILL.md) | Open the active worktree in the right-hand Herdr pane, reusing it when present. |
 | [`pr-worktree`](pr-worktree/SKILL.md) | Maintain one attached worktree per branch. |
 | [`pr-review`](pr-review/SKILL.md) | Review PR correctness, reachability, and merge value. |
 | [`pr-fix`](pr-fix/SKILL.md) | Apply an authorized focused fix to a PR branch. |
