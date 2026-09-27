@@ -40,8 +40,8 @@ function Get-TargetPane {
     return $pane
 }
 
-if ($env:HERDR_ENV -ne '1') {
-    throw 'Run this helper inside a Herdr pane (HERDR_ENV=1).'
+if ($env:HERDR_ENV -ne '1' -or -not $env:HERDR_PANE_ID) {
+    throw 'Run this helper inside a Herdr pane with HERDR_ENV=1 and inherited HERDR_PANE_ID.'
 }
 
 $rootOutput = @(& git -C $Cwd rev-parse --show-toplevel 2>&1 | ForEach-Object { "$_" })
