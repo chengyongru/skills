@@ -19,8 +19,8 @@ class OpenWorktreeTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {"HERDR_ENV": "1", "HERDR_PANE_ID": "w1:p1"})
         self.env.start()
         self.addCleanup(self.env.stop)
-        self.root = "/tmp/work tree's $(touch nope)"
-        self.cwd = "/tmp/other"
+        self.root = os.path.abspath("/tmp/work tree's $(touch nope)")
+        self.cwd = os.path.abspath("/tmp/other")
         self.neighbor = "w1:p2"
         self.busy = False
         self.prompt = "user@host % "
@@ -32,6 +32,9 @@ class OpenWorktreeTests(unittest.TestCase):
         caller = {"pane_id": "w1:p1", "tab_id": "w1:t1"}
         target = {"pane_id": "w1:p2", "tab_id": "w1:t1", "cwd": self.cwd}
         if operation == "current":
+            requested = args[3] if args[2] == "--pane" else os.environ["HERDR_PANE_ID"]
+            if requested != caller["pane_id"]:
+                raise RuntimeError('herdr failed: {"error":{"code":"pane_not_found"}}')
             return {"pane": caller}
         if operation == "neighbor":
             return {"neighbor": {
@@ -58,10 +61,10 @@ class OpenWorktreeTests(unittest.TestCase):
             return {"pane": target}
         self.fail(f"Unexpected Herdr call: {args}")
 
-    def execute(self, dry_run=False):
+    def execute(self, dry_run=False, caller_pane_id=None):
         with patch.object(helper, "run_command", return_value=self.root + "\n"), \
                 patch.object(helper, "herdr", side_effect=self.fake_herdr):
-            return helper.open_worktree(self.root, dry_run)
+            return helper.open_worktree(self.root, dry_run, caller_pane_id)
 
     def test_reuses_right_shell_with_quoted_path(self):
         self.assertEqual(self.execute()["status"], "reused")
@@ -100,6 +103,33 @@ class OpenWorktreeTests(unittest.TestCase):
                 patch.object(helper, "run_command") as command:
             with self.assertRaisesRegex(RuntimeError, "inherited HERDR_PANE_ID"):
                 helper.open_worktree(self.root)
+            command.assert_not_called()
+
+    def test_stale_caller_reports_recovery_before_neighbor_lookup(self):
+        with patch.dict(os.environ, {"HERDR_PANE_ID": "w1:p99"}):
+            with self.assertRaisesRegex(RuntimeError, "--caller-pane-id <verified-id>"):
+                self.execute()
+        self.assertEqual(self.calls, [("pane", "current", "--current")])
+
+    def test_verified_caller_creates_neighbor_with_stale_or_missing_environment(self):
+        self.neighbor = None
+        for inherited_id in ("w1:p99", ""):
+            with self.subTest(inherited_id=inherited_id), \
+                    patch.dict(os.environ, {"HERDR_PANE_ID": inherited_id}):
+                self.calls.clear()
+                result = self.execute(caller_pane_id="w1:p1")
+                self.assertEqual(result["status"], "created")
+                self.assertEqual(result["caller_pane_id"], "w1:p1")
+                self.assertEqual(self.calls[0], ("pane", "current", "--pane", "w1:p1"))
+                split = next(call for call in self.calls if call[1] == "split")
+                self.assertEqual(split[split.index("--pane") + 1], "w1:p1")
+                self.assertEqual(os.environ["HERDR_PANE_ID"], inherited_id)
+
+    def test_explicit_caller_still_requires_herdr_environment(self):
+        with patch.dict(os.environ, {"HERDR_ENV": ""}), \
+                patch.object(helper, "run_command") as command:
+            with self.assertRaisesRegex(RuntimeError, "HERDR_ENV=1"):
+                helper.open_worktree(self.root, caller_pane_id="w1:p1")
             command.assert_not_called()
 
     def test_invalid_neighbor_is_rejected(self):

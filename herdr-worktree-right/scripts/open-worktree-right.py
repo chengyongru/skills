@@ -49,16 +49,37 @@ def directory_command(shell, worktree):
     raise RuntimeError(f"Unsupported shell '{shell}' in right-hand pane.")
 
 
-def open_worktree(cwd, dry_run=False):
-    if os.environ.get("HERDR_ENV") != "1" or not os.environ.get("HERDR_PANE_ID"):
-        raise RuntimeError("Run inside a Herdr pane with HERDR_ENV=1 and inherited HERDR_PANE_ID.")
+def open_worktree(cwd, dry_run=False, caller_pane_id=None):
+    if os.environ.get("HERDR_ENV") != "1" or not (caller_pane_id or os.environ.get("HERDR_PANE_ID")):
+        raise RuntimeError(
+            "Run inside Herdr (HERDR_ENV=1) with inherited HERDR_PANE_ID "
+            "or a verified --caller-pane-id."
+        )
     root = run_command(["git", "-C", cwd, "rev-parse", "--show-toplevel"]).rstrip("\n")
     if not os.path.isabs(root) or any(c in root for c in "\r\n\x1b"):
         raise RuntimeError("Git did not return a safe absolute worktree path.")
     worktree = os.path.normpath(root)
-    caller = herdr("pane", "current", "--current")["pane"]
+    caller_arguments = ("--pane", caller_pane_id) if caller_pane_id else ("--current",)
+    try:
+        caller = herdr("pane", "current", *caller_arguments)["pane"]
+    except RuntimeError as error:
+        if not caller_pane_id and "pane_not_found" in str(error):
+            raise RuntimeError(
+                f"Inherited caller pane '{os.environ.get('HERDR_PANE_ID')}' was not found. "
+                "A shared agent daemon may retain stale pane context. "
+                "List live panes with 'herdr pane list', identify this conversation using "
+                "'herdr pane read <id> --source recent-unwrapped --lines 80', "
+                "then retry with --caller-pane-id <verified-id>. "
+                f"Right-hand pane lookup has not run. Original error: {error}"
+            ) from error
+        raise
     if not caller.get("pane_id") or not caller.get("tab_id"):
         raise RuntimeError("Herdr did not resolve the calling pane.")
+    if caller_pane_id and caller["pane_id"] != caller_pane_id:
+        raise RuntimeError(
+            f"Herdr resolved a different caller pane: expected {caller_pane_id}, "
+            f"received {caller['pane_id']}."
+        )
     neighbor = herdr(
         "pane", "neighbor", "--pane", caller["pane_id"], "--direction", "right",
     )["neighbor"]
@@ -129,10 +150,13 @@ def open_worktree(cwd, dry_run=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cwd", default=os.getcwd())
+    parser.add_argument("--caller-pane-id", help="live caller pane ID verified against this conversation")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     try:
-        print(json.dumps(open_worktree(args.cwd, args.dry_run), ensure_ascii=False))
+        print(json.dumps(
+            open_worktree(args.cwd, args.dry_run, args.caller_pane_id), ensure_ascii=False,
+        ))
     except (OSError, RuntimeError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         print(json.dumps({"status": "error", "error": str(error)}, ensure_ascii=False), file=sys.stderr)
         return 1

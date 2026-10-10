@@ -3,6 +3,8 @@
 param(
     [ValidateNotNullOrEmpty()]
     [string]$Cwd = (Get-Location).Path,
+    [ValidateNotNullOrEmpty()]
+    [string]$CallerPaneId,
     [switch]$DryRun
 )
 
@@ -40,8 +42,8 @@ function Get-TargetPane {
     return $pane
 }
 
-if ($env:HERDR_ENV -ne '1' -or -not $env:HERDR_PANE_ID) {
-    throw 'Run this helper inside a Herdr pane with HERDR_ENV=1 and inherited HERDR_PANE_ID.'
+if ($env:HERDR_ENV -ne '1' -or (-not $CallerPaneId -and -not $env:HERDR_PANE_ID)) {
+    throw 'Run this helper inside Herdr (HERDR_ENV=1) with inherited HERDR_PANE_ID or a verified -CallerPaneId.'
 }
 
 $rootOutput = @(& git -C $Cwd rev-parse --show-toplevel 2>&1 | ForEach-Object { "$_" })
@@ -50,8 +52,19 @@ if ($LASTEXITCODE -ne 0 -or $rootOutput.Count -ne 1) {
 }
 $worktreeRoot = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($rootOutput[0]))
 $pathComparison = if ($IsWindows) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
-$caller = (Invoke-Herdr @('pane', 'current', '--current')).pane
+$callerArguments = if ($CallerPaneId) { @('--pane', $CallerPaneId) } else { @('--current') }
+try {
+    $caller = (Invoke-Herdr (@('pane', 'current') + $callerArguments)).pane
+} catch {
+    if (-not $CallerPaneId -and $_.Exception.Message -match 'pane_not_found') {
+        throw "Inherited caller pane '$env:HERDR_PANE_ID' was not found. A shared agent daemon may retain stale pane context. List live panes with 'herdr pane list', identify this conversation using 'herdr pane read <id> --source recent-unwrapped --lines 80', then retry with -CallerPaneId <verified-id>. Right-hand pane lookup has not run. Original error: $($_.Exception.Message)"
+    }
+    throw
+}
 if (-not $caller.pane_id -or -not $caller.tab_id) { throw 'Herdr did not resolve the calling pane.' }
+if ($CallerPaneId -and $caller.pane_id -ne $CallerPaneId) {
+    throw "Herdr resolved a different caller pane: expected $CallerPaneId, received $($caller.pane_id)."
+}
 
 # Use the resolved ID: --current on neighbor/process-info can target UI focus instead.
 $neighbor = (Invoke-Herdr @('pane', 'neighbor', '--pane', $caller.pane_id, '--direction', 'right')).neighbor
