@@ -11,6 +11,11 @@
 - Include only decisions, contracts, domain facts, and tool usage the model cannot reliably infer.
 - Move repeated fragile mechanics into deterministic scripts and remove unreferenced resources.
 
+## Source comments
+
+- Express internal invariants through names, ownership, types, and executable checks. Keep code comments for required legal text, active tooling directives, public API contracts, and verified external constraints.
+- Route comment and workaround audits through [simplify's comment cleanup workflow](simplify/references/comment-cleanup.md); retain unresolved constraints until their claims and replacements are checked.
+
 ## Verification output
 
 - Deliver human-facing verification plans, progress, findings, and final results directly in the conversation.

@@ -12,17 +12,9 @@ Skill index
 
 | Skill | Purpose |
 |---|---|
-| [`grill-me`](grill-me/SKILL.md) | Stress-test a plan one decision at a time. |
-| [`idea-capture`](idea-capture/SKILL.md) | Save and maintain actionable ideas. |
-| [`idea-next`](idea-next/SKILL.md) | Pick one evidence-based next action. |
-| [`material`](material/SKILL.md) | Capture verified fragments worth sharing. |
-| [`draft`](draft/SKILL.md) | Turn fragments or raw input into publishable copy. |
-| [`rewrite`](rewrite/SKILL.md) | Polish Chinese technical writing while preserving facts and voice. |
 | [`repo-prose`](repo-prose/SKILL.md) | Keep repository prose current, concrete, and free of authoring residue. |
-| [`autoresearch`](autoresearch/SKILL.md) | Prepare one measurable improvement experiment. |
-| [`abtest`](abtest/SKILL.md) | Prepare isolated control/treatment experiments. |
 | [`web-design-taste`](web-design-taste/SKILL.md) | Refine product UI with coherent controls, typography, and useful information. |
-| [`simplify`](simplify/SKILL.md) | Apply behavior-preserving cleanup. |
+| [`simplify`](simplify/SKILL.md) | Clean code, comments, and workarounds while preserving behavior; audit with a high-level plan. |
 | [`verify`](verify/SKILL.md) | Verify public behavior with black-box evidence. |
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | Verify nanobot WebUI through the real gateway and browser. |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | Coordinate nanobot simplify, verification, review, and CI gates. |
@@ -39,12 +31,11 @@ Skill index
 Routing
 -------
 
-- Content: `material -> draft -> rewrite`.
-- Repository prose: use `repo-prose` for documentation, comments, and contributor instructions; keep authorial publishing in `rewrite`.
+- Repository prose: use `repo-prose` for documentation, comments, and contributor instructions.
 - Agent delegation: use `herdr-scode-delegate` to assign a bounded background task to another `scode` session without supervising its pane.
 - PR code work: use `pr-worktree` for local review, testing, fixes, and rebases. Use `triage`, `pr-label`, and `pr-metadata` directly against the remote PR; `pr-fix` composes `pr-metadata` after an authorized push.
+- Comment/workaround audits: use `simplify` to produce a read-only high-level plan. For broad audits, it can delegate module inspections to read-only workers. Cleanup requests apply scoped fixes with proportionate verification; `pr-review` checks relevant comment and directive changes in the PR.
 - Verification: use generic `verify` across projects, `nanobot-webui-verify` for nanobot browser/gateway surfaces, and `nanobot-gate` for full nanobot readiness.
-- Experiments: choose `autoresearch` for iterative improvement or `abtest` for control/treatment comparison.
 - Human-readable plans and results stay in the conversation; skills persist deterministic state and raw evidence when useful.
 
 External mutations such as pushes, PR comments, labels, merges, and remote writes begin from explicit authorization for that operation.
@@ -66,7 +57,8 @@ Invocation
 
 Explicit mentions are the clearest option when installed skills have adjacent scopes:
 
-    Use $idea-capture to save this idea.
+    Use $triage to explain PR #123 before a local review.
+    Use $simplify to audit repository comments and workarounds; return a high-level plan without editing files.
     Use $nanobot-gate to check this change before PR creation.
     Use $pr-review to perform a read-only review of PR #123.
 

@@ -38,7 +38,13 @@ A finding states reachable trigger, violated contract, concrete consequence, and
 
 Priority: premise/value -> security/data -> correctness/lifecycle -> compatibility -> ownership -> proof gaps -> performance -> maintainability -> consequential style.
 
-Recommendations:
+## Comments and workarounds
+
+- Judge a workaround from its current reachable trigger, protected behavior, and concrete maintenance cost; its explanatory comment is a claim, not evidence. Prefer a root-cause fix that preserves the contract and makes internal behavior apparent.
+- Check that comment deletions preserve required legal text, active tooling directives, public documentation contracts, and verified external constraints. Retain unresolved constraint claims while requesting the missing proof.
+- Treat redundant prose as cleanup feedback. Raise a blocking finding only for a demonstrated contract, tooling, correctness, or maintenance consequence; avoid widening a PR review into a repository-wide comment sweep.
+
+## Recommendations
 
 - close/no-merge: invalid premise, unreachable problem, duplicate/stale work, or carrying cost above value;
 - must fix: reachable wrong operation, weakened security/data boundary, broken public contract, false central claim, or required failing check;

@@ -25,7 +25,7 @@ A public API or documented extension contract counts as supported even when cons
 
 ## Review and verify
 
-1. Inspect changed files from contracts outward. For a focused review, avoid a full value packet and inspect only the changed contract and closest consumer or test. For scope expansion, identify the invariant or consumer that forces each extra file.
+1. Inspect changed files from contracts outward. For a focused review, avoid a full value packet and inspect only the changed contract and closest consumer or test. For scope expansion, identify the invariant or consumer that forces each extra file. When the diff adds or removes workaround explanations, constraints, or tool directives, also read the comment criteria in `references/review-criteria.md`.
 2. Classify observations as Confirmed, Risk, Question, or Not a finding. Put reachable, concrete, evidenced issues in findings; keep risks/questions separate.
 3. Use CI as configured-matrix evidence and choose the smallest decisive proof for the changed surface. Read `references/verification.md` when CI is missing/ambiguous or the surface needs focused public, migration, security, race, package, or restart proof.
 4. Decide the merge recommendation from the findings and decision-relevant evidence gaps.

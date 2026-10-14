@@ -12,17 +12,9 @@ Skill 索引
 
 | Skill | 用途 |
 |---|---|
-| [`grill-me`](grill-me/SKILL.md) | 逐个决策压力测试计划。 |
-| [`idea-capture`](idea-capture/SKILL.md) | 保存和维护可行动想法。 |
-| [`idea-next`](idea-next/SKILL.md) | 选择一个有证据支持的下一步。 |
-| [`material`](material/SKILL.md) | 保存值得分享的已验证素材。 |
-| [`draft`](draft/SKILL.md) | 把素材或原始输入写成可发布内容。 |
-| [`rewrite`](rewrite/SKILL.md) | 在保护事实和声音的前提下润色中文技术写作。 |
 | [`repo-prose`](repo-prose/SKILL.md) | 让仓库文字保持当前、具体，并清除创作过程残留。 |
-| [`autoresearch`](autoresearch/SKILL.md) | 准备单目标的可量化改进实验。 |
-| [`abtest`](abtest/SKILL.md) | 准备隔离的 control/treatment 实验。 |
 | [`web-design-taste`](web-design-taste/SKILL.md) | 统一产品界面的控件、排版与交互，提高信息含量。 |
-| [`simplify`](simplify/SKILL.md) | 执行行为保持型代码清理。 |
+| [`simplify`](simplify/SKILL.md) | 清理代码、注释和 workaround 并保持行为；审计时返回高层计划。 |
 | [`verify`](verify/SKILL.md) | 用黑盒证据验证公共行为。 |
 | [`nanobot-webui-verify`](nanobot-webui-verify/SKILL.md) | 通过真实 gateway 和浏览器验证 nanobot WebUI。 |
 | [`nanobot-gate`](nanobot-gate/SKILL.md) | 协调 nanobot 的 simplify、verify、review 和 CI gate。 |
@@ -39,12 +31,11 @@ Skill 索引
 路由
 ----
 
-- 内容：`material -> draft -> rewrite`。
-- 仓库文字：文档、注释和贡献者说明使用 `repo-prose`；有作者声音的公开写作继续使用 `rewrite`。
+- 仓库文字：文档、注释和贡献者说明使用 `repo-prose`。
 - Agent 委派：使用 `herdr-scode-delegate` 把边界明确的后台任务交给另一个 `scode` 会话，无需持续盯住其 pane。
 - PR 代码工作：本地 review、测试、修复和 rebase 使用 `pr-worktree`。`triage`、`pr-label` 和 `pr-metadata` 直接操作远端 PR；`pr-fix` 在授权推送后组合调用 `pr-metadata`。
+- 注释/workaround 审计：使用 `simplify` 返回只读高层计划。全仓审计可以按模块分给只读代理。清理请求执行范围内的修复及相应验证；`pr-review` 检查 PR 中相关注释和工具指令的变化。
 - 验证：跨项目使用 `verify`；nanobot 浏览器/gateway 场景使用 `nanobot-webui-verify`；完整 nanobot 就绪检查使用 `nanobot-gate`。
-- 实验：迭代改进使用 `autoresearch`；control/treatment 对照使用 `abtest`。
 - 人类可读的计划和结果直接在对话中交付；确定性状态和原始证据按需落盘。
 
 推送、PR 评论、标签、合并和其他远端修改从对应操作的明确授权开始。
@@ -66,7 +57,8 @@ Skill 索引
 
 多个已安装 skill 范围相近时，显式名称最清楚：
 
-    Use $idea-capture to save this idea.
+    Use $triage to explain PR #123 before a local review.
+    Use $simplify to audit repository comments and workarounds; return a high-level plan without editing files.
     Use $nanobot-gate to check this change before PR creation.
     Use $pr-review to perform a read-only review of PR #123.
 
