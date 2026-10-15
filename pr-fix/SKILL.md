@@ -11,7 +11,7 @@ The user's authorization defines the PR and local edit scope. Prepare or reuse t
 
 1. Establish the confirmed trigger/consequence, violated contract or requested before/after, expected change cone, and the smallest proof required by the changed surface.
 2. Prepare or reuse the PR head branch worktree and confirm its attached branch, upstream, head repository, and existing task-owned changes.
-3. Read repository instructions, current base/PR diff, and the narrow owner/caller path.
+3. Read repository instructions, current base/PR diff, and the narrow owner/caller path. When a behavioral root cause is unclear, reproduce it on the affected surface, list plausible mechanisms, and use targeted observations to eliminate candidates before editing. Keep only fixes supported by a surviving cause; discard changes motivated by disproven hypotheses.
 4. Change the smallest surface enforcing the contract; add or update the closest regression proof when behavior changed. Preserve unrelated author/user work and record why any file outside the expected cone changes.
 5. Choose and run the smallest decisive verification: reproduce a behavioral failure and run its closest regression when practical; add compatibility, authority, persistence, lifecycle, concurrency, packaging, or public-surface proof only when the changed contract requires it. For docs, tests, or config-only changes, use the closest diff/lint/build check. Inspect final scope and generated churn.
 
