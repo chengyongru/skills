@@ -13,4 +13,4 @@ Use one coordinated, verifiable unit for a genuinely internal API migration: upd
 - Update tests for the intended contract. Delete an implementation-detail test only after its useful behavior coverage is preserved; do not remove a regression test merely because it fails during the migration.
 - If external consumers, persistence, deployment ordering, or compatibility obligations exist, use an explicit compatibility/deprecation plan instead. Do not force a breaking change to satisfy this principle.
 
-A complete local migration does not authorize committing, rebasing, publishing, or deleting user state. Report out-of-scope consumers and the smallest additional decision needed.
+Report out-of-scope consumers and the smallest additional decision needed.

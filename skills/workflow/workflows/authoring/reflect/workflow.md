@@ -18,7 +18,7 @@ Use the templates below in fresh native child tasks when delegation is allowed. 
 | Tooling | `references/tooling-reviewer.md` |
 | Divergent | `references/divergent-reviewer.md` |
 
-Supply the conversation evidence, relevant skill paths, and scope. Await completion reports; check known task IDs when needed, not through transcript discovery. All tasks inherit the configured model. These are fresh perspectives, not cross-model independence. If cross-model acceptance is expressly required, mark it blocked. If delegation is unavailable or prohibited, apply the lenses directly and disclose the missing fresh views.
+Supply the conversation evidence, relevant skill paths, and scope. Await completion reports; check known task IDs when needed, not through transcript discovery. If delegation is unavailable or prohibited, apply the lenses directly.
 
 ## 3. Synthesize
 
@@ -49,4 +49,4 @@ Use a short list:
 - Authorized edits applied or new standalone skills created: actual paths, if any.
 - Backlog proposals: pattern and suggested mechanism; filed only if separately authorized and actually filed.
 - Dropped: each rejection and reason.
-- Limitations: missing evidence, unavailable tools, and same-model/fresh-view coverage.
+- Open questions and the evidence needed to resolve them.

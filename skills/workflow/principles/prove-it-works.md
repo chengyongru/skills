@@ -13,7 +13,7 @@ Check the real thing, not a proxy:
 
 Use installed [nanobot-webui-verify](../workflows/verify/webui/workflow.md) for nanobot browser-visible behavior, a matching project-specific verifier, or [verify](../workflows/verify/public/workflow.md). Exercise the changed happy path and highest-risk reachable edge through the supported public interface. Terminal rendering/input behavior needs the actual supported terminal, including real WezTerm evidence for the target environment's nanobot work. Static and unit checks support that evidence but do not prove an unexercised live claim.
 
-For documentation, inspect the actual instructions, paths, schema/links, and representative decision boundaries. Do not require UI, performance, ten-worker, or cross-model lanes unrelated to the change. Same-model independent review is not cross-model proof; an explicit different-model acceptance requirement remains blocked without a supported interface.
+For documentation, inspect the actual instructions, paths, schema/links, and representative decision boundaries. Do not require UI, performance, ten-worker, or cross-model lanes unrelated to the change.
 
 Reuse a deterministic repository check when it captures the claim. Write a new script only if it adds justified value and the request permits it; read-only work does not require new files. Keep useful receipts under `.nanobot-workflows/runs/<run>/`, outside the live plugin, and commit/publish them only if authorized. Never mutate shared/live state, disable checks, or bypass approvals just to obtain evidence.
 

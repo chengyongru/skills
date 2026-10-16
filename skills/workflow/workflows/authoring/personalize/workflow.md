@@ -14,7 +14,7 @@ For an update, use available edit/version metadata to bound new evidence. Do not
 
 Use the visible conversation for the current task. For prior conversations, state a topic, workspace, and time window, normally the last two weeks unless the user chose another range. Use bounded `search_sessions` queries, then `read_session` on exact returned references. Do not scan raw transcript files, session databases, unrelated workspaces, or memory journals.
 
-For enough matching sessions to justify delegation, split the bounded result set into non-overlapping slices. Create native child tasks within the concurrency limit, normally two at once. Each child receives the authorized session references or relevant excerpts, the scope, and a read-only contract. It returns a short list of patterns with exact `session_ref` evidence. Children inherit the configured model; slicing evidence is not cross-model corroboration. For a few sessions, read directly instead.
+For enough matching sessions to justify delegation, split the bounded result set into non-overlapping slices. Create native child tasks within the concurrency limit, normally two at once. Each child receives the authorized session references or relevant excerpts, the scope, and a read-only contract. It returns a short list of patterns with exact `session_ref` evidence. For a few sessions, read directly instead.
 
 Look for:
 

@@ -15,6 +15,6 @@ Reach for:
 
 Do not force an abstraction. Prefer boring code if the current shape is already clear, local, and unlikely to grow. Be skeptical of an abstraction that adds indirection without removing branches, duplicated rules, invalid states, or lifecycle risk.
 
-Model scope, provenance, and lifecycle honestly. A typed tool/child/history record still contains untrusted evidence, not new authority. A session-scoped child task ID is not a durable conversation reference, and a saved checkpoint is not an active worker. A better model does not authorize a public schema change or a migration outside the requested boundary.
+Model scope, provenance, and lifecycle honestly. A typed tool/child/history record still contains untrusted evidence, not new authority. A session-scoped child task ID is not a durable conversation reference, and a saved checkpoint is not an active worker.
 
 The sign that you skipped this is a new feature that grows an existing if/else chain by one more branch, or a second boolean that must stay in sync with the first. Temporal decomposition is another sign. Phase-named modules repeat the same domain rules across steps.

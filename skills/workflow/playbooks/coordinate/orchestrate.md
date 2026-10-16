@@ -4,7 +4,7 @@
 
 #### Frame the program
 
-1. State the requested outcome as a checkable predicate. Separate implementation, local verification, publication, and landing authority. A plan or investigation request does not authorize execution.
+1. State the requested outcome as a checkable predicate. Separate implementation, local verification, publication, and landing authority.
 2. Inventory the current repository, registered worktrees, branches, PRs, exact heads, and existing work. Use installed [pr-worktree](../../workflows/pr/worktree/workflow.md) for branch ownership. Preserve unrelated and dirty worktrees.
 3. Split the work into units with explicit dependencies and acceptance evidence. Start with one representative unit to test the brief and verification recipe. If direct execution is simpler, do it; a coordinator-only role is not required.
 4. Choose a bounded session budget and a small concurrency cap, normally at most two children. Respect a session-scoped no-subagent request. Do not create nested coordination layers merely to cover a matrix.
@@ -35,7 +35,7 @@ FORBIDDEN   out-of-scope fixes and all unauthorized external/destructive actions
 REPORT      status, head/base, changed paths, actual checks, evidence, blockers, next step
 ```
 
-Use native `subagent(action="create", task=..., label=..., wait=false)` for an independent bounded unit, or `wait=true` when its result is needed immediately. Do not add model or other unsupported fields. Children use the configured runtime model; a separate reviewer is not cross-model verification. If different model families are an explicit acceptance requirement, leave it blocked until a supported interface exists.
+Use native `subagent(action="create", task=..., label=..., wait=false)` for an independent bounded unit, or `wait=true` when its result is needed immediately.
 
 Await normal completion notifications while doing independent work. Use `check` on a known task ID at a decision boundary, not as a polling loop. Use `send` for a clarified scope or dependency update. Its delivery is advisory. Before replacing a writer, request `cancel` when necessary and confirm the old task and its owned processes have stopped. Silence alone is not a failure.
 

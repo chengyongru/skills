@@ -9,6 +9,6 @@
 5. After each meaningful iteration, update a single-writer checkpoint in the agent workspace's `.nanobot-workflows/runs/<run>/`: hypothesis, exact head/state, observed result, evidence, known handles, and next action. Use the shared [workflow helper](../../scripts/workflow.py) `paths` command to locate it and the supported `log` command when a decision trail helps.
 6. Stop when the predicate is met, the user stops the work, a required capability/decision blocks progress, or the runtime budget is reached. A plateau calls for a bounded evidence-based pivot, not infinite retries or a relaxed predicate. Report partial progress honestly and leave a pickup note.
 
-There is no persistent loop created by this playbook. If the user specifies a time or interval, use `cron` with the requested cadence, a bounded task, and a stop condition. Do not create a schedule merely because work is long, and do not promise activity after the turn or a restart.
+For a user-requested time or interval, use `cron` with the requested cadence, a bounded task, and a stop condition.
 
 **Reply:** predicate, iterations and evidence, kept versus rejected changes, any authorized publications, final predicate state, remaining blockers, and checkpoint path.

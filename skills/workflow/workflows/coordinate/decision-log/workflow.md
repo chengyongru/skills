@@ -83,8 +83,6 @@ Read top to bottom, follow the evidence pointers, and spot-check. In PowerShell,
 Import-Csv -LiteralPath '<external-log-path>' -Delimiter "`t" | Format-Table -Wrap
 ```
 
-This does not authorize publishing the log.
-
 ## Composing this skill
 
 Other skills route their audit trail here instead of inventing one. Reference it by name and let it own the format. Don't restate the columns.

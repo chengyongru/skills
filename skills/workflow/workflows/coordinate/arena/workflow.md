@@ -8,7 +8,7 @@ Every candidate gets the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric, 3-6 concrete gradeable criteria for what success looks like on *this* task. It is the picker's tool in Phase D. Candidates only see the task.
-3. Choose a bounded candidate count, normally two. Give candidates the same brief and separate contexts. All use the runtime-configured model; agreement is not cross-model verification. If different model families are an explicit acceptance requirement, report that requirement blocked. Do not change runtime configuration or launch an external agent CLI to satisfy it.
+3. Choose a bounded candidate count, normally two. Give candidates the same brief and separate contexts.
 4. Give each candidate its own output location outside the plugin, such as `<agent-workspace>/.nanobot-workflows/runs/<task>/candidate-<n>/`, per the **separate-before-serializing-shared-state** principle skill. Use installed [pr-worktree](../../pr/worktree/workflow.md) for registered worktrees when actual candidate code needs isolation; do not assume child tasks get separate machines.
 
 ## Phase B: Fan out
@@ -19,11 +19,11 @@ If a candidate fails without output, inspect its terminal result before a bounde
 
 ## Phase C: Cross-judge
 
-After all candidates finish writing, create one fresh judge task with the rubric and candidates labeled by path. Its contract is read-only: read the completed candidates, score each criterion, and recommend a base with rationale; no edits, commands with side effects, or publication. It may run alongside your reading in Phase D. This is a separate same-model view, not an independent model-family check.
+After all candidates finish writing, create one fresh judge task with the rubric and candidates labeled by path. Its contract is read-only: read the completed candidates, score each criterion, and recommend a base with rationale; no edits, commands with side effects, or publication. It may run alongside your reading in Phase D.
 
 ## Phase D: Pick a base
 
-Read every candidate end to end before picking. Score each against the rubric criterion by criterion, not on holistic feel, and compare with the judge. Agreement is useful context, not proof. Disagreement may expose bias, missing evidence, or an ambiguous rubric. Read both rationales and check the underlying evidence before deciding.
+Read every candidate end to end before picking. Score each against the rubric criterion by criterion, not on holistic feel, and compare with the judge. Compare the evidence behind both agreement and disagreement to expose bias, missing evidence, or an ambiguous rubric. Read both rationales and check the underlying evidence before deciding.
 
 Pick the base a future maintainer can extend most easily without breaking invariants. When two feel tied, prefer the cleaner boundary or smaller API, per the Laziness Protocol.
 
@@ -31,7 +31,7 @@ Pick the base a future maintainer can extend most easily without breaking invari
 
 Walk each losing candidate once more for what is worth porting into the base, usually one or two things per candidate, not most of it. Fold each graft in by hand, per the **redesign-from-first-principles** principle skill, so the result stays coherent under one mental model. Don't paste mechanically.
 
-If the candidates converge on one shape, record that convergence and verify the shape; same-model agreement alone is not validation. No graft is needed. If they wildly diverge, check whether Phase A was under-specified. Reframe and re-run when necessary rather than averaging the divergence. Deliver the artifact locally; committing or publishing is a separate authorized action.
+If the candidates converge on one shape, record the convergence, skip the graft, and verify the result. If they wildly diverge, check whether Phase A was under-specified. Reframe and re-run when necessary rather than averaging the divergence. Deliver the artifact locally; committing or publishing is a separate authorized action.
 
 ## Phase F: Verify
 

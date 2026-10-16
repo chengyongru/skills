@@ -41,8 +41,7 @@ State intent and a falsifiable check for done. A playbook supplies the ordinary 
 - State the bounded task and done predicate, the allowed local workspace/worktree, and where a decision trail should live.
 - State which user-owned decisions are pre-approved and which actions must wait. Do not grant commit/push/merge permission accidentally through a copied example.
 - Give a budget/exit condition: on a real blocker or the session's limit, stop and leave evidence, known resource handles, and a next action outside the plugin.
-- A current-session run is not persistent cloud automation. If the user actually wants a timed/recurring job, request `cron` with an explicit interval, task scope, and stop condition; do not create one merely because someone is away.
-- Separate same-model reviews are fresh views, not cross-model acceptance. Name a required model-family check explicitly; if unsupported, it must remain blocked.
+- For a timed or recurring job, request `cron` with an explicit interval, task scope, and stop condition.
 
 ## Steer in one line
 

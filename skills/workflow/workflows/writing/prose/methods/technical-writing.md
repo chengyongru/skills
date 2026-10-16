@@ -1,6 +1,6 @@
 # Technical writing
 
-Write so a tired engineer understands on the first read. Follow installed [repo-prose](../workflow.md) for repository-facing text and apply these four writing layers without overriding repository contracts or the user's language. Drafting a PR description or commit message does not authorize publishing or committing it.
+Write so a tired engineer understands on the first read. Follow installed [repo-prose](../workflow.md) for repository-facing text and apply these four writing layers without overriding repository contracts or the user's language.
 
 Three rules sit above the layers:
 

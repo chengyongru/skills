@@ -1,6 +1,6 @@
 # Never Block on the Human
 
-Proceed without repeated permission questions for ordinary, reversible local work already covered by a clear request. "Reversible" is a risk property, not an authorization grant. A status question or read-only analysis does not authorize edits.
+Proceed without repeated permission questions for ordinary, reversible local work already covered by a clear request.
 
 - Make reasonable implementation decisions inside the agreed scope, verify them, and present the result. Ask only when an essential fact, authority boundary, or user-owned decision is missing.
 - Fix an in-scope blocker rather than asking whether to perform routine execution. Record unrelated bugs and follow-ups instead of expanding the task into self-healing work everywhere.

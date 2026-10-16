@@ -12,4 +12,4 @@ When concurrent actors might share mutable state, first ask whether they need th
 5. **Keep run records single-writer.** Put task state outside the plugin under `.nanobot-workflows/runs/<run>/`. Children report into their own files; one coordinator updates a shared checkpoint/log after inspecting the evidence. A file path in a prompt is not a lock.
 6. **Reconcile before takeover.** Advisory `send` delivery is not a stop. If a child must be replaced, use `cancel` when necessary and confirm final task/process state before another writer starts. Preserve unknown locks/resources; do not kill unrelated processes or delete user state to clear a presumed stale owner.
 
-Isolation does not authorize additional workers, branch publication, shared-state mutation, or deletion. Use a bounded native fan-out only when permitted, and honor a no-subagent request.
+Use a bounded native fan-out only when permitted, and honor a no-subagent request.

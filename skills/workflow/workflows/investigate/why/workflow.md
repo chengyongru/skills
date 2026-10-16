@@ -2,7 +2,7 @@
 
 Investigate the motivation and intent behind code. The companion [how](../how/workflow.md) skill answers what the code does and how it works. [why](workflow.md) answers what forces led to its shape.
 
-Use bounded native `subagent` tasks for source investigation and synthesis when delegation is allowed, keeping returned task IDs. Every task explicitly permits only scoped source reads, including confirmed read-only Git/forge commands when needed, and prohibits file changes, service launches, commands with side effects, messages, tracker mutations, and publication. Read-only scope is an instruction, not a sandbox flag. Children inherit the configured model; source diversity is evidence diversity, not cross-model verification. If delegation is unavailable or prohibited, perform the same scoped source passes directly and disclose that limitation.
+Use bounded native `subagent` tasks for source investigation and synthesis when delegation is allowed, keeping returned task IDs. Every task explicitly permits only scoped source reads, including confirmed read-only Git/forge commands when needed, and prohibits file changes, service launches, commands with side effects, messages, tracker mutations, and publication. If delegation is unavailable or prohibited, investigate the same sources directly.
 
 ## Operating Posture
 
@@ -20,7 +20,7 @@ First confirm the repository and available read capabilities. Git history requir
 
 ## Step 3. Spawn Parallel Investigators
 
-**Default to a complete coverage map within the requested scope.** Search available relevant categories in bounded waves; record empty results and unavailable sources. A user-specified narrow scope stays narrow and is named in the map. Completeness does not authorize unrelated private searches or expensive unbounded queries.
+**Default to a complete coverage map within the requested scope.** Search available relevant categories in bounded waves; record empty results and unavailable sources. A user-specified narrow scope stays narrow and is named in the map.
 
 ### Discovery
 

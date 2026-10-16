@@ -13,6 +13,4 @@ This package incorporates material from the reviewed `0.15.25-nanobot.1` adaptat
 
 This integration replaces the flat skill catalog with domain routes, converts leaf skills into linked workflows/methods/principles, integrates existing personal execution helpers, updates resource paths and invocation examples, and keeps workflow state outside the immutable package. The pstack logo, editor-specific agent metadata, Cursor cloud/Benny automation, Origin/Bun helpers, and upstream Bash scripts are not distributed by this package.
 
-The mapping from previous workflow names to their integrated locations is recorded in [provenance.json](provenance.json). Source attribution does not imply that every resulting file is unchanged upstream material. Adaptation and original integration work are **Copyright (c) 2026 chengyongru**, licensed under MIT alongside the retained pstack notices.
-
-This repository is an independent nanobot integration, not an official Cursor or pstack release, and does not claim endorsement by the upstream author.
+The mapping from previous workflow names to their integrated locations is recorded in [provenance.json](provenance.json). Adaptation and original integration work are **Copyright (c) 2026 chengyongru**, licensed under MIT alongside the retained pstack notices.

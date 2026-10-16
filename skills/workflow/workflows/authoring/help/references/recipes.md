@@ -1,6 +1,6 @@
 # Example task prompts
 
-Substitute the actual target, scope, and completion check. Reading these examples does not execute them.
+Substitute the actual target, scope, and completion check.
 
 ```text
 $workflow triage this PR. Explain the problem, main risk, and next action; no local checkout or publication.
@@ -17,4 +17,4 @@ $workflow recall our work on this branch, reconcile actual state, and report onl
 $workflow reflect on this conversation and propose workflow improvements; do not edit the plugin, profiles, or tracker.
 ```
 
-Name external operations and targets explicitly when requesting them. A readiness request does not authorize a merge, a verifier does not authorize a schedule, and only the literal user `$nanobot-gate` invocation activates that separate gate.
+Name external operations and targets explicitly when requesting them. Invoke `$nanobot-gate` literally to select that workflow.

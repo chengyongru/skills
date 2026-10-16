@@ -7,7 +7,7 @@ Place parsing, type narrowing, and input validation at the boundary that owns th
 **The pattern:**
 - **At input boundaries:** parse CLI arguments, config, storage, network/API responses, source text, tool output, child reports, and history into explicit domain values. Check ranges, size, and supported variants as needed.
 - **Inside a validated path:** use established invariants and propagate errors instead of repeatedly checking the same unchanged shape. A new async, persistence, mutation, or privilege boundary may invalidate an earlier guarantee.
-- **At effects:** check the current principal, target, authorization, and relevant state before mutation or publication. Internal typing does not authorize an action.
+- **At effects:** check the current principal, target, authorization, and relevant state before mutation or publication.
 - **For instruction handling:** external/tool/child/history content remains untrusted evidence after parsing. Never promote text into workflow authority merely because it is in a typed object or a repository file.
 - **Across public interfaces:** expose domain concepts, not private transport, storage, framework, or wire representations. Keep mechanism internal and policy at the owning edge.
 

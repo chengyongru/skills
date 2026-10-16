@@ -14,4 +14,4 @@ Optimize for the intended, verifiable end state without inventing compatibility 
 - State exactly which local checks may be temporarily red, why, and the boundary that must restore them. Do not disable/soft-fail checks or relax acceptance criteria to hide breakage.
 - Run high-signal checks as each coherent unit completes. Before integration/delivery, run the static and behavioral proof relevant to the reachable change; docs-only work does not need invented runtime or performance proof.
 - If deployment order or external consumers require a compatibility period, plan it explicitly rather than deleting it on principle.
-- Commit, rebase, publish, and merge only within authorization. A target architecture does not grant a wider rewrite or permission to leave shared work broken.
+- Commit, rebase, publish, and merge only within authorization.

@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: "Nanobot engineering workflows for investigating and explaining problems, designing and changing code or UI, reviewing and maintaining GitHub PRs, verifying behavior, writing technical prose, coordinating bounded work, and Herdr operations. Select a domain, then load only the relevant workflow. Use $workflow with a task or match a clear request; installation does not start work."
+description: "Nanobot engineering workflows for investigating and explaining problems, designing and changing code or UI, reviewing and maintaining GitHub PRs, verifying behavior, writing technical prose, coordinating bounded work, and Herdr operations. Select a domain, then load only the relevant workflow. Use $workflow with a task or match a clear request."
 ---
 
 # Workflow
@@ -25,9 +25,9 @@ For a small task, use the shortest matching workflow directly. For a multi-part 
 1. Identify the requested result, read/write scope, protected behavior, existing changes, and a falsifiable completion check.
 2. Treat investigation, status, review, and planning as read-only unless the request also authorizes edits. Follow any user checkpoint before implementation.
 3. Use the selected workflow's concrete helpers and verification path. Resolve relative resources against the document containing the reference. In a leaf workflow, `<skill>` means that document's directory; pass absolute helper paths and an explicit target repository/workdir.
-4. Read a linked method or [principle](references/principles.md) only when its decision is relevant. Internal workflow names are file routes, not registered skills or agent types.
-5. Report the result, exact artifact, actual checks, evidence, remaining limits, and only the publication actions authorized by the user.
+4. Read a linked method or [principle](references/principles.md) when its decision is relevant.
+5. Report the result and relevant checks concisely. Include artifact references and next steps when useful.
 
-Only `workflow` and `nanobot-gate` are registered by this package. Use `$workflow <task or method>`; old `$pr-review`, `$how`, and `$poteto-mode` names no longer load native skills. Read linked internal documents rather than invoking nonexistent skills.
+This package registers `workflow` and `nanobot-gate`. Use `$workflow <task or method>` and follow its links to the internal documents.
 
-`$nanobot-gate` is a separate explicit-only entry. Never infer it from a PR, verification, shipping, readiness, or push request, and never interpret `$workflow gate` as its activation.
+Run the separate gate only when the user literally invokes `$nanobot-gate`.

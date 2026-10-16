@@ -22,7 +22,7 @@ Decompose into atomic, independently-landable units. Sequence riskiest-unknown-f
 
 - Build the verification harness before the work, with the baseline captured from the pre-change state, so the check reads as "old value vs new value".
 - For one-way-door design decisions, run the [architect](../../code/architect/workflow.md) skill (it runs [arena](../arena/workflow.md)). Skip it for mechanical work whose shape is already concrete. A second arena over a settled design is over-engineering (the **laziness-protocol** principle skill).
-- Decide what fans out. Parallelize only across seams, with bounded native child tasks and distinct allowed output paths or registered worktrees through installed [pr-worktree](../../pr/worktree/workflow.md) (the **separate-before-serializing-shared-state** principle skill). A branch name alone does not isolate a shared checkout. Children inherit the configured model; a judge is a fresh view, not cross-model verification. Explicit cross-model acceptance remains blocked without a supported interface.
+- Decide what fans out. Parallelize only across seams, with bounded native child tasks and distinct allowed output paths or registered worktrees through installed [pr-worktree](../../pr/worktree/workflow.md) (the **separate-before-serializing-shared-state** principle skill). A branch name alone does not isolate a shared checkout.
 - Write the designed phase list down. That list is what the human reviews.
 
 Execute only the authorized scope; a plan-only request stops at the workflow. Add concrete steps to the checklist between the Phase C and Phase D entries. Run each under the Phase C loop discipline, and weave the Phase D log through them, a row as each step lands, rather than saving the whole trail for the end.

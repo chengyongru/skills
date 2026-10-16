@@ -22,7 +22,7 @@ This is a fictional example of a maintained user-facing verification map for Not
 
 - Start every recipe from the baseline state unless its preconditions say otherwise.
 - Prefer ARIA roles and accessible names over CSS selectors or DOM position.
-- In the real generated map, commands, quoted names, and flags are exact tested recipes. These fictional examples demonstrate that precision, not a claim that the named tools are present.
+- In the real generated map, commands, quoted names, and flags are exact tested recipes.
 - Run browser actions through `control-notes browser`.
 - Run terminal actions through `control-notes cli -- <command>`.
 - Restore seeded data after a mutation. Do not remove proof artifacts during cleanup.

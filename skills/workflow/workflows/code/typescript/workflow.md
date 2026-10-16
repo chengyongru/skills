@@ -1,6 +1,6 @@
 # TypeScript best practices
 
-Apply the **type-system-discipline** principle skill first. Use this guidance for the scoped `.ts`/`.tsx` work, preserving the repository's established type/schema conventions. Run its real type/lint/test commands through `exec` with an explicit working directory and PowerShell-compatible arguments, not editor-only diagnostics. Reading these rules does not authorize editing files outside the requested change.
+Apply the **type-system-discipline** principle skill first. Use this guidance for the scoped `.ts`/`.tsx` work, preserving the repository's established type/schema conventions. Run its real type/lint/test commands through `exec` with an explicit working directory and PowerShell-compatible arguments, not editor-only diagnostics.
 
 | Rule | Summary |
 |------|---------|

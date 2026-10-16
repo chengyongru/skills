@@ -3,7 +3,7 @@
 **Own the design, observable contract, and verification.** Implement directly or use bounded children where the work genuinely separates. A session-scoped no-subagent request prevails.
 
 1. Ground the affected subsystem with [how](../../workflows/investigate/how/workflow.md). State the user-visible result, exclusions, compatibility constraints, and acceptance criteria. Product direction is not inferred from a convenient implementation.
-2. Explore consequential alternatives with [architect](../../workflows/code/architect/workflow.md), [arena](../../workflows/coordinate/arena/workflow.md), or a small isolated Prototype when warranted and within scope. A straightforward change does not need competing agents. Same-model alternatives can reveal design tradeoffs but are not cross-model review; an explicit different-model requirement stays blocked without a supported interface.
+2. Explore consequential alternatives with [architect](../../workflows/code/architect/workflow.md), [arena](../../workflows/coordinate/arena/workflow.md), or a small isolated Prototype when warranted and within scope. A straightforward change does not need competing agents.
 3. Keep a brief throughput checkpoint, with justified `n/a` entries when appropriate:
    - **Blocking prerequisites:** contracts, shared primitives, fixtures, or user decisions needed first.
    - **Independent workstreams:** truly disjoint outputs that can proceed safely in parallel.
