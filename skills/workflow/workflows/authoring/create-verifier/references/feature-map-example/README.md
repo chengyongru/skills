@@ -1,6 +1,6 @@
 # Notes verification map
 
-This is a fictional example of a maintained user-facing verification map for Notes, not a supplied app or installed nanobot control tool. Use the shape when authoring a real authorized workspace verifier; discover its actual commands/selectors instead of running these examples against an unrelated app. Read the index before a real verification run, then the matching feature recipe.
+Example of a maintained user-facing verification map for a Notes application. Replace its names, commands, and controls with the target project's tested interface. Use the shape when authoring a real authorized workspace verifier; discover its actual commands/selectors instead of running these examples against an unrelated app. Read the index before a real verification run, then the matching feature recipe.
 
 ## Baseline preconditions
 

@@ -18,7 +18,7 @@ Write for a reader who has the resulting repository state, not the authoring tra
 5. Update the owning source before generated catalogs, snapshots, or derived documentation.
 6. Re-read the result without the surrounding conversation and verify that every preserved claim remains concrete and checkable.
 
-## Nanobot documentation
+## Tool and configuration documentation
 
 - Keep a tool's top-level description to its purpose, selection boundaries, and necessary cross-parameter constraints. Put parameter meanings in schema descriptions.
 - Explain user-facing configuration, defaults, visible effects, and limitations. Preserve security boundaries, compatibility constraints, and failure behavior; omit internal mechanisms, class names, ownership walkthroughs, and design defenses.

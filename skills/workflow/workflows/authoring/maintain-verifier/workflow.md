@@ -16,7 +16,7 @@ An audit-only request stays read-only except for authorized disposable verificat
 
 ## Pass
 
-0. **Locate the target.** Find the installed verification skill with launch/drive sections and a feature map, normally `<agent-workspace>/skills/verify-<app>/SKILL.md` for an authored standalone skill. For nanobot browser-visible behavior, [nanobot-webui-verify](../../verify/webui/workflow.md) takes precedence; otherwise use the matching project-specific verifier, then [verify](../../verify/public/workflow.md). Several maintenance targets mean ask which; none means point at `$workflow create-verification-skill`, not invent one. Confirm writable ownership and the authorized live-test scope before continuing.
+0. **Locate the target.** Find the installed verification skill with launch/drive sections and a feature map, normally `<agent-workspace>/skills/verify-<app>/SKILL.md` for an authored standalone skill. Use the matching project-specific verifier or [project adapter](../../../references/project.md), then [public-surface verification](../../verify/public/workflow.md). Several maintenance targets mean ask which; none means point at `$workflow create-verification-skill`, not invent one. Confirm writable ownership and the authorized live-test scope before continuing.
 
 1. **Index hygiene.** Read the feature map README and discover siblings with `list_dir`/`rg --files`. Identify missing, extra, duplicate, or dead entries; apply only authorized corrections. Keep this lightweight, with no generated inventory.
 

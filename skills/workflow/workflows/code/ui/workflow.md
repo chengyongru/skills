@@ -6,7 +6,7 @@ Make the interface feel like one product: calm typography, purposeful controls, 
 
 - Inspect the actual components, shared styles, data contracts, and one representative screen before editing. Distinguish a rendering defect from a missing behavior or missing data.
 - Extract the useful property of a reference: baseline alignment, information hierarchy, tooltip composition, or chart encoding. Verify font identity before naming it; optical quality also depends on weight, color, line height, and rendering.
-- When applying this profile to nanobot, read [the calibration](references/nanobot-calibration.md). For other products, use it only when a concrete example would resolve an ambiguous choice; preserve their own tokens and brand.
+- Use the target product's design system, tokens, and documented visual decisions. Read a [project adapter](../../../references/project.md) when it provides relevant calibration.
 
 ## Arrange controls by purpose and size
 

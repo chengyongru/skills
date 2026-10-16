@@ -1,13 +1,13 @@
 ---
 name: nanobot-gate
-description: Explicit-invocation-only workflow for snapshot-bound simplify, verification, candidate review, formal PR review, and CI readiness for nanobot changes. Use only when the user explicitly writes `$nanobot-gate`. Never infer or auto-trigger this skill from push, PR, merge, release, readiness, review, verification, or CI requests.
+description: Explicit-invocation-only workflow for snapshot-bound simplify, verification, candidate review, formal PR review, and CI readiness for HKUDS/nanobot and its forks. Use only when the user explicitly writes `$nanobot-gate`. Never infer or auto-trigger this skill from push, PR, merge, release, readiness, review, verification, or CI requests.
 ---
 
 # Nanobot Gate
 
 Run this workflow only after the user explicitly invokes `$nanobot-gate`. Do not activate it automatically for adjacent publication or readiness work.
 
-Read the [runtime contract](../workflow/references/runtime.md). Bind every conclusion to one candidate snapshot with `scripts/gate_state.py`; `<skill>` below is this gate's directory. Keep prose in the conversation and raw evidence in an ignored evidence directory.
+Confirm the target is HKUDS/nanobot or a fork and read its [project adapter](../workflow/projects/nanobot/workflow.md) and the [runtime contract](../workflow/references/runtime.md). Bind every conclusion to one candidate snapshot with `scripts/gate_state.py`; `<skill>` below is this gate's directory. Keep prose in the conversation and raw evidence in an ignored evidence directory.
 
 ## Required gates
 
@@ -16,7 +16,7 @@ Read the [runtime contract](../workflow/references/runtime.md). Bind every concl
 - merge readiness: pre-PR gates plus formal [pr-review](../workflow/workflows/pr/review/workflow.md) and required CI;
 - release readiness: merge gates plus repository release checks.
 
-Use [pr-worktree](../workflow/workflows/pr/worktree/workflow.md) for isolation, [simplify](../workflow/workflows/code/simplify/workflow.md) before freezing, [nanobot-webui-verify](../workflow/workflows/verify/webui/workflow.md) for WebUI/gateway surfaces, generic [verify](../workflow/workflows/verify/public/workflow.md) for other public surfaces, [pr-fix](../workflow/workflows/pr/fix/workflow.md) for confirmed remediation, and formal [pr-review](../workflow/workflows/pr/review/workflow.md) only at the fetched PR head.
+Use [pr-worktree](../workflow/workflows/pr/worktree/workflow.md) for isolation, [simplify](../workflow/workflows/code/simplify/workflow.md) before freezing, [nanobot-webui-verify](../workflow/projects/nanobot/webui/workflow.md) for WebUI/gateway surfaces, generic [verify](../workflow/workflows/verify/public/workflow.md) for other public surfaces, [pr-fix](../workflow/workflows/pr/fix/workflow.md) for confirmed remediation, and formal [pr-review](../workflow/workflows/pr/review/workflow.md) only at the fetched PR head.
 
 ## Candidate cycle
 

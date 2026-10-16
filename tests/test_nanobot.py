@@ -72,7 +72,7 @@ class NativeLoaderTests(unittest.TestCase):
         self.enable()
         project = self.root / 'separate project'
         project.mkdir()
-        resource = self.package / 'skills/workflow/workflows/pr/review/methods/references/rubric.md'
+        resource = self.package / 'skills/workflow/projects/nanobot/webui/workflow.md'
         original = resource.read_bytes()
         read = ReadFileTool.create(ToolContext(config=ToolsConfig(restrict_to_workspace=True),
                                                 workspace=str(self.workspace)))

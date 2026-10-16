@@ -19,17 +19,13 @@ Use `scripts/collect-context.ps1`, `run-with-log.ps1`, and `find-free-port.ps1` 
 
 ## Real-terminal verification
 
-For changes to terminal rendering, selection, appearance, or input, use real WezTerm; mocks and ConPTY are supporting evidence only.
+For terminal rendering, selection, appearance, or input changes, use the target project's supported terminal and documented launch command. Read its [project adapter](../../../references/project.md) for platform-specific fixtures and acceptance rules.
 
-1. Pin the requested source snapshot and honor source/index/remote no-edit limits. Put fixtures, logs, and screenshots under an owned `<workspace>\artifacts\<run-id>\wezterm` directory rather than modifying the checkout.
-2. Launch a dedicated, uniquely classed WezTerm window and owned runtime. Record the window class, PIDs, and ports for cleanup. For nanobot, exercise the actual `tui/src/index.ts` CLI with its current flags. Use an isolated, protocol-compatible fake WebSocket server when deterministic `file_edit` activity is needed; inspect the current protocol instead of guessing messages.
-3. Trigger the changed interaction with real keyboard/mouse input. Capture visible state and runtime errors, then verify continued navigation and composer input. When practical, compare base and fixed behavior using the same fixture.
-4. For auto-theme tests, keep watched config inputs separate from frequently written evidence/log files to avoid reload feedback. Record support for native theme notifications (mode 2031). If unsupported and notification injection is explicitly permitted, change the real terminal colors, then send `\x1b[?997;2n` (light) or `\x1b[?997;1n` (dark) through the owned pane's input using `send-text --no-paste`. Require the TUI's OSC 10/11 queries and genuine WezTerm color replies; never synthesize replies or directly set application theme state. Report injected-notification coverage separately; it does not prove native notification support.
-5. Close only the recorded owned window/processes/server and confirm port release. Never close unrelated WezTerm panes, gateways, or browser sessions.
-
-Example: for an auto-theme selection fix, seed a deterministic file edit, open `/diff`, select patch text with the mouse, then change terminal appearance in both directions so the diff is rebuilt. Prove that no `TextBufferView is destroyed` error or debug-console takeover occurs, and that the diff remains navigable and input still works.
-
-Report the exact snapshot, actions, screenshots/logs, limitations, and cleanup. Do not mark PASS if the real-terminal path was not exercised.
+1. Pin the requested snapshot and keep fixtures, logs, and screenshots in a task-owned evidence directory.
+2. Launch an isolated instance in the supported terminal. Record the owned window or pane, PIDs, ports, launch command, and relevant terminal capabilities.
+3. Trigger the changed interaction with real keyboard or mouse input. Observe visible state, runtime errors, continued navigation, and input. Compare base and head under the same fixture when practical.
+4. For protocol-dependent behavior, capture the application's requests and the terminal's actual responses. Identify any permitted injected events separately from native behavior.
+5. Close the owned instance and verify resource release. Report the snapshot, terminal/version, actions, evidence, and unchecked scenarios.
 
 ## Process-lifecycle verification
 

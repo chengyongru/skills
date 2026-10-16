@@ -11,7 +11,7 @@
 
 #### Verification design
 
-Map proof to reachable changed behavior. Static/unit checks support, but do not replace, a live behavioral claim. Choose one to five high-signal scenarios rather than a mandatory worker count. Use installed [nanobot-webui-verify](../../workflows/verify/webui/workflow.md) for nanobot browser-visible behavior, a matching project verifier, or [verify](../../workflows/verify/public/workflow.md). Terminal changes need the real supported terminal path, including real WezTerm evidence for the target environment's nanobot work.
+Map proof to reachable changed behavior. Static/unit checks support, but do not replace, a live behavioral claim. Choose one to five high-signal scenarios rather than a mandatory worker count. Use the target project's verifier or [verify](../../workflows/verify/public/workflow.md). Terminal changes use the project's supported terminal and launch path.
 
 Add performance measurement only when performance is a requirement or a plausible changed risk. Name the metric, workload, error/work counts, noise controls, baseline, and failure budget. Compare the same scenario at base and head; when base lacks the feature, state that and set an absolute budget instead of inventing a ratio. For docs-only work, mark unrelated live/performance checks not applicable with a reason. If cross-model review is explicitly required, list it as blocked unless a supported different-model interface is actually available.
 

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "package": {
     "name": "nanobot-workflows",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "repository": "https://github.com/chengyongru/skills"
   },
   "sources": {
@@ -108,7 +108,7 @@
       "maintain-verification-skill": "skills/workflow/workflows/authoring/maintain-verifier/workflow.md",
       "make-bot-ui": "skills/workflow/workflows/code/webhook-ui/workflow.md",
       "nanobot-gate": "skills/nanobot-gate/SKILL.md",
-      "nanobot-webui-verify": "skills/workflow/workflows/verify/webui/workflow.md",
+      "nanobot-webui-verify": "skills/workflow/projects/nanobot/webui/workflow.md",
       "no-comments": "skills/workflow/workflows/code/simplify/methods/comments.md",
       "poteto-help": "skills/workflow/workflows/authoring/help/workflow.md",
       "poteto-mode": "skills/workflow/SKILL.md",
@@ -165,6 +165,7 @@
       "Merge adversarial review into PR review methods and comment review into simplify methods.",
       "Merge technical-writing and unslop into repository prose methods.",
       "Keep concrete PR, worktree, WebUI, verification, design, and Herdr helpers with their workflows.",
+      "Select commands and proof from the target repository; keep HKUDS/nanobot resources in an optional project adapter.",
       "Keep principles and playbooks as linked references, not separately discoverable skills.",
       "Preserve the reviewed working-copy contract improvements in the personal skills source.",
       "Omit editor-specific agents metadata and the pstack logo; neither is used by this package."

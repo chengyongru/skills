@@ -18,4 +18,4 @@ Inspect actual capabilities and change workflow preferences only when requested.
 5. Write the requested values to `<agent-workspace>/.nanobot-workflows/settings.json`, then read them back. Never store credentials, a full nanobot config, transcripts, private task IDs, or a fixed project path. The planning ceiling does not alter gateway admission, token limits, or provider reasoning.
 6. Explain the saved choices and any capability limitation. Future workflow use reads these preferences; they require neither a package change nor gateway restart and do not activate an always-on mode.
 
-Use fewer or no workers when the task, runtime, or user's no-subagent restriction requires it. For proof use a matching project verifier, including [nanobot WebUI](../../verify/webui/workflow.md) or [public verification](../../verify/public/workflow.md), rather than automatically creating a new verifier.
+Use fewer or no workers when the task, runtime, or user's no-subagent restriction requires it. For proof use the target project's verifier or [public verification](../../verify/public/workflow.md).

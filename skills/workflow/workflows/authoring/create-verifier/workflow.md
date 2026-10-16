@@ -4,7 +4,7 @@ Every serious project needs a repeatable way to drive the real app and prove beh
 
 ## 1. Interview the repo, not the user
 
-First inspect installed verification skills and harnesses. For nanobot browser-visible behavior, [nanobot-webui-verify](../../verify/webui/workflow.md) takes precedence; otherwise prefer the matching project-specific skill, then [verify](../../verify/public/workflow.md). If one already covers the need, use it or propose focused maintenance instead of generating a duplicate. Creating a new standalone skill requires the user's authorization. Answer the following from the codebase and only ask what cannot be observed:
+First inspect installed verification skills and harnesses. Prefer the matching project-specific verifier or [project adapter](../../../references/project.md), then [public-surface verification](../../verify/public/workflow.md). If one already covers the need, use it or propose focused maintenance instead of generating a duplicate. Creating a new standalone skill requires the user's authorization. Answer the following from the codebase and only ask what cannot be observed:
 
 - **Surface:** what does a user actually touch? A web UI, a CLI/TUI, a desktop app, an API, a mobile app, a library? A repo can have several; pick the primary one and note the rest.
 - **Run:** how does the app start locally? Prefer the repo's own documented dev command (package scripts, Makefile, README quickstart). Note ports, env vars, seed data, auth.

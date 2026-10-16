@@ -15,7 +15,7 @@ Do not force a test when it would be impractical. If the available test would re
 
 ## If a Failing Test Is Impractical
 
-Use the closest executable regression check instead: an existing targeted script, reproduction command, browser flow, snapshot comparison, log assertion, or focused integration check. Run the actual repository command through `exec` with a PowerShell-compatible invocation and explicit working directory. For app proof, use installed [nanobot-webui-verify](../../verify/webui/workflow.md) for nanobot browser-visible behavior, otherwise the matching project-specific verifier or [verify](../../verify/public/workflow.md). Keep disposable state/evidence outside the plugin and do not touch a user's running instance.
+Use the closest executable regression check instead: an existing targeted script, reproduction command, browser flow, snapshot comparison, log assertion, or focused integration check. Run the actual repository command through `exec` with a PowerShell-compatible invocation and explicit working directory. For app proof, use the target project's verifier or [verify](../../verify/public/workflow.md). Keep disposable state/evidence outside the plugin and do not touch a user's running instance.
 
 Prefer no new test over a bad test. A bad test is one that mostly tests mocks, encodes current implementation details, depends on timing or unrelated global state, needs expensive infrastructure for a small fix, or would be deleted immediately after proving the fix.
 

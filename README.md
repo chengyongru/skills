@@ -2,14 +2,14 @@
 
 English | [简体中文](README.zh-CN.md)
 
-A nanobot Agent Plugin combining chengyongru's engineering skills with adapted [pstack](https://github.com/cursor/plugins/tree/99743e9c151c8537cbbf1f98bb38f34ef3368453/pstack) workflows. The methods apply across projects; the runtime integration targets nanobot.
+Engineering workflows for maintaining software projects, delivered as a nanobot Agent Plugin. It combines chengyongru's skills with adapted [pstack](https://github.com/cursor/plugins/tree/99743e9c151c8537cbbf1f98bb38f34ef3368453/pstack) methods. Each project supplies its own instructions, toolchain, commands, and acceptance rules; nanobot provides the execution tools.
 
 Only two skills are discoverable:
 
 | Entry | Purpose |
 |---|---|
-| [`$workflow`](skills/workflow/SKILL.md) | Route the current task to one domain and load the matching workflow on demand. |
-| [`$nanobot-gate`](skills/nanobot-gate/SKILL.md) | Snapshot-bound nanobot readiness workflow, **only when the user literally invokes it**. |
+| [`$workflow`](skills/workflow/SKILL.md) | Maintain the current project: select its instructions and tools, then load the matching engineering workflow. |
+| [`$nanobot-gate`](skills/nanobot-gate/SKILL.md) | Optional snapshot-bound readiness workflow for HKUDS/nanobot and its forks, selected by literal invocation. |
 
 Investigation, code, PR, verification, writing, coordination, authoring, and environment operations live behind the primary router. Their workflows, review methods, principles, and playbooks are files, not separately registered skills. This keeps their descriptions out of nanobot's routine skill summary instead of moving a full catalog into the entry document.
 
@@ -46,6 +46,12 @@ $workflow open the current worktree in the right-hand Herdr pane.
 
 The short entry description also permits selection for a matching natural-language request. Explicit `$workflow` is the clearest choice when several installed capabilities overlap. Use `$workflow pr-review`, `$workflow how`, or `$workflow architect` to select a specific method.
 
+## Project selection
+
+Start with the current repository's `AGENTS.md`, contribution guide, manifests, scripts, and CI. Use its build, format, test, and launch commands and its supported browser or terminal. Prefer its existing verifier; use the public-interface workflow when it needs a verification plan.
+
+[Project adapters](skills/workflow/references/project.md) hold specialized procedures. The included [HKUDS/nanobot adapter](skills/workflow/projects/nanobot/workflow.md) contains its WebUI launcher, WezTerm checks, and UI calibration. Load it for that repository or its forks. Other projects follow their own engineering setup.
+
 ## Migrate older installations
 
 This repository ships a complete nanobot plugin.
@@ -65,6 +71,7 @@ skills/
     SKILL.md                 # small discoverable router
     routes/                  # one index per domain
     workflows/               # concrete workflows and adjacent helpers
+    projects/                # optional repository-specific adapters
     playbooks/               # task sequences, grouped by domain
     principles/              # on-demand decision guidance
     references/              # runtime and worker contracts

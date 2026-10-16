@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "nanobot-workflows",
-  "version": "1.0.0",
-  "description": "Progressively loaded engineering workflows for nanobot, combining personal skills with adapted pstack methods.",
+  "version": "1.0.1",
+  "description": "Engineering workflows for maintaining software projects, delivered as a nanobot Agent Plugin with on-demand project adapters.",
   "author": {
     "name": "chengyongru",
     "url": "https://github.com/chengyongru"

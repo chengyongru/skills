@@ -2,7 +2,7 @@
 
 **Own the workload, measurement, and causal explanation.** A performance investigation stays read-only; implementation, disruptive profiling, and live-state changes require the appropriate scope.
 
-1. Reproduce the user's complaint on the real supported surface with a representative workload. Capture a baseline at the exact source/runtime version. Use the installed matching driver/verifier, including [nanobot-webui-verify](../../workflows/verify/webui/workflow.md) for nanobot browser behavior or [verify](../../workflows/verify/public/workflow.md) otherwise. Vet measurements with [benchmark-checklist](../../workflows/verify/benchmark/workflow.md): work/error counts, warmup/cache conditions, repetitions/spread, comparable inputs, and the bottleneck. If no safe capture is available, report the gap instead of claiming a ceiling from source inspection.
+1. Reproduce the user's complaint on the real supported surface with a representative workload. Capture a baseline at the exact source/runtime version. Use the target project's driver or verifier, or [verify](../../workflows/verify/public/workflow.md) for the measured public surface. Vet measurements with [benchmark-checklist](../../workflows/verify/benchmark/workflow.md): work/error counts, warmup/cache conditions, repetitions/spread, comparable inputs, and the bottleneck. If no safe capture is available, report the gap instead of claiming a ceiling from source inspection.
 2. Ground hypotheses with [how](../../workflows/investigate/how/workflow.md) and the trace. Try the performance mantras in order, cheapest first:
    1. Do not do work whose result nobody uses.
    2. Do it, but do not do it again.

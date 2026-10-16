@@ -12,7 +12,7 @@ Find an existing endpoint from user-supplied configuration or the destination's 
 - A safe test mode or explicitly authorized test action and how to observe its result.
 - Whether delivery can be retried safely and how duplicate actions are prevented.
 
-This skill does not create a webhook service. Nanobot's presence, gateway port, skill catalog, or `cron` support is not evidence of an inbound webhook or automation API. Do not invent a routine-creation tool, event envelope, sender-key card, or gateway endpoint. If no supported authorized webhook exists, explain that integration is unavailable. Offer a UI-only prototype or an explicit proposal for a separately scoped backend, without claiming a working bot connection.
+This skill does not create a webhook service. Do not invent a routine-creation tool, event envelope, sender-key card, or gateway endpoint. If no supported authorized webhook exists, explain that integration is unavailable. Offer a UI-only prototype or an explicit proposal for a separately scoped backend, without claiming a working bot connection.
 
 ## 2. Plan the smallest UI and adapter
 
@@ -43,7 +43,7 @@ Choose the bind address, transport security, authentication, and network exposur
 
 ## 6. Verify and hand back
 
-Use installed [nanobot-webui-verify](../../verify/webui/workflow.md) for nanobot browser-visible behavior, otherwise the matching project verifier or [verify](../../verify/public/workflow.md). Drive the real UI, observe its server request, and inspect the destination's documented acknowledgement and resulting state for an explicitly permitted test action. A successful HTTP response alone does not prove a bot woke or completed the action.
+Use the target project's verifier or [verify](../../verify/public/workflow.md). Drive the real UI, observe its server request, and inspect the destination's documented acknowledgement and resulting state for an explicitly permitted test action. A successful HTTP response alone does not prove a bot woke or completed the action.
 
 Do not send a probe just because the payload sounds harmless. Use a documented no-op/test mode with authorized network access, or ask for a specific permitted test. If live delivery cannot be tested safely, prove local validation/UI behavior with a clearly labeled stub and report the external integration unverified. Do not pass stub evidence off as a real webhook run.
 

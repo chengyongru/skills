@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: "Nanobot engineering workflows for investigating and explaining problems, designing and changing code or UI, reviewing and maintaining GitHub PRs, verifying behavior, writing technical prose, coordinating bounded work, and Herdr operations. Select a domain, then load only the relevant workflow. Use $workflow with a task or match a clear request."
+description: "Engineering workflows for maintaining software projects: investigate and explain problems, design and change code or UI, maintain GitHub PRs, verify behavior, write technical prose, coordinate bounded work, and use Herdr. Select a domain, then load only the relevant workflow. Use $workflow with a task or match a clear request."
 ---
 
 # Workflow
@@ -22,7 +22,7 @@ For a small task, use the shortest matching workflow directly. For a multi-part 
 
 ## Establish scope
 
-1. Identify the requested result, read/write scope, protected behavior, existing changes, and a falsifiable completion check.
+1. Establish the [target project](references/project.md), its instructions and toolchain, the requested result, existing changes, and a falsifiable completion check.
 2. Treat investigation, status, review, and planning as read-only unless the request also authorizes edits. Follow any user checkpoint before implementation.
 3. Use the selected workflow's concrete helpers and verification path. Resolve relative resources against the document containing the reference. In a leaf workflow, `<skill>` means that document's directory; pass absolute helper paths and an explicit target repository/workdir.
 4. Read a linked method or [principle](references/principles.md) when its decision is relevant.

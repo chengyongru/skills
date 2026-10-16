@@ -2,14 +2,14 @@
 
 [English](README.md) | 简体中文
 
-一个面向 nanobot 的 Agent Plugin，整合 chengyongru 的工程 skills 与适配后的 [pstack](https://github.com/cursor/plugins/tree/99743e9c151c8537cbbf1f98bb38f34ef3368453/pstack) 工作流。工程方法适用于不同项目，运行接口针对 nanobot。
+一套用于工程化维护软件项目的工作流，以 nanobot Agent Plugin 提供，整合 chengyongru 的 skills 与适配后的 [pstack](https://github.com/cursor/plugins/tree/99743e9c151c8537cbbf1f98bb38f34ef3368453/pstack) 方法。各项目提供自己的规范、技术栈、命令和验收要求，nanobot 提供执行工具。
 
 只有两个可发现的 skill：
 
 | 入口 | 用途 |
 |---|---|
-| [`$workflow`](skills/workflow/SKILL.md) | 根据当前任务选择领域，再按需读取具体工作流。 |
-| [`$nanobot-gate`](skills/nanobot-gate/SKILL.md) | 绑定候选快照的 nanobot 就绪检查，**仅在用户字面显式调用时启用**。 |
+| [`$workflow`](skills/workflow/SKILL.md) | 维护当前项目：先确认项目规范与工具，再按需读取工程工作流。 |
+| [`$nanobot-gate`](skills/nanobot-gate/SKILL.md) | HKUDS/nanobot 及其 fork 可选的快照就绪检查，通过字面显式调用选择。 |
 
 调查、代码、PR、验证、写作、协作、技能维护和环境操作都由主入口路由。具体工作流、审查方法、原则和 playbook 是按需读取的文件，不单独注册为 skill。它们的描述不会进入 nanobot 的常规 skill 摘要，主入口也不内嵌完整目录。
 
@@ -46,6 +46,12 @@ $workflow 在右侧 Herdr pane 打开当前 worktree。
 
 主入口的简短描述也支持按明确的自然语言任务选择；多个已安装能力重叠时，显式 `$workflow` 最清楚。可以用 `$workflow pr-review`、`$workflow how`、`$workflow architect` 选择具体方法。
 
+## 按项目选择流程
+
+先读取当前仓库的 `AGENTS.md`、贡献指南、项目配置、脚本和 CI，使用它自己的构建、格式化、测试、启动命令以及支持的浏览器或终端。优先使用项目已有的验证器，需要设计验证方案时使用公开接口验证工作流。
+
+专用流程放在[项目适配层](skills/workflow/references/project.md)。随包提供的 [HKUDS/nanobot 适配](skills/workflow/projects/nanobot/workflow.md)包含它的 WebUI 启动器、WezTerm 检查和 UI 校准，用于该仓库及其 fork。其他项目按各自的工程配置执行。
+
 ## 从旧安装迁移
 
 本仓库提供完整的 nanobot 插件。
@@ -65,6 +71,7 @@ skills/
     SKILL.md                 # 简短、可发现的主路由
     routes/                  # 每个领域一个索引
     workflows/               # 具体工作流及其相邻 helper
+    projects/                # 按需选择的项目适配
     playbooks/               # 按领域分组的任务步骤
     principles/              # 按需读取的决策原则
     references/              # runtime 与 worker 约束

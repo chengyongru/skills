@@ -11,8 +11,8 @@ A writing child gets exclusive ownership of that branch/worktree or truly disjoi
 #### Prepare the diff and evidence
 
 1. Confirm acceptance criteria and the intended base. Inspect the actual diff, including relevant new files, for scope leaks and secrets.
-2. Use installed [simplify](../../workflows/code/simplify/workflow.md) for behavior-preserving cleanup and [repo-prose](../../workflows/writing/prose/workflow.md) for repository prose. Keep useful invariants and rationale; do not churn comments merely to satisfy a style ritual. Respect repository commands and the no `ruff format` constraint.
-3. Run the narrow checks that prove the changed behavior. Use the matching project verifier, including [nanobot-webui-verify](../../workflows/verify/webui/workflow.md) for nanobot browser flows, or [verify](../../workflows/verify/public/workflow.md). Record exact head or dirty-snapshot state, commands, outcomes, and evidence outside the plugin in `.nanobot-workflows/runs/<run>/`.
+2. Use installed [simplify](../../workflows/code/simplify/workflow.md) for behavior-preserving cleanup and [repo-prose](../../workflows/writing/prose/workflow.md) for repository prose. Keep useful invariants and rationale; do not churn comments merely to satisfy a style ritual. Follow the repository's commands and formatting policy.
+3. Run the narrow checks that prove the changed behavior. Use the target project's verifier or [verify](../../workflows/verify/public/workflow.md). Record exact head or dirty-snapshot state, commands, outcomes, and evidence outside the plugin in `.nanobot-workflows/runs/<run>/`.
 4. If commits are authorized, stage only intended paths and keep coherent, ordered commits. Demonstrate failing-then-passing tests locally when appropriate; do not require publishing a broken intermediate commit. Rebase/amend only within granted history-editing scope. Never bypass hooks.
 
 #### Title and body

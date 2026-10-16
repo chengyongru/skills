@@ -14,7 +14,7 @@
 - Use concrete actions, preconditions, and expected outcomes. Include decisions and contracts the model cannot safely infer; link optional detail instead of repeating it.
 - Preserve the concrete PR, worktree, verification, and environment helpers. Adapt orchestration around them rather than replacing proven operations with generic advice.
 - Preserve exact snapshot and authorization boundaries, reachable behavioral assertions, owned-resource cleanup, and honest proof limitations.
-- Treat nanobot as the runtime target while keeping project-neutral methods reusable. Route project-specific proof to the matching verifier.
+- Nanobot provides the runtime; the target repository provides engineering commands, supported environments, and acceptance rules. Keep repository-specific procedures under `skills/workflow/projects/` and select them by confirmed project identity.
 - Preserve third-party attribution, upstream license text, and provenance when adapting or merging pstack material.
 - Do not run `ruff format` or edit protected profiles/memory as part of skill maintenance.
 

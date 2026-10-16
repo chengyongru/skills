@@ -11,7 +11,7 @@ Check the real thing, not a proxy:
 
 ## Choose decisive, proportionate proof
 
-Use installed [nanobot-webui-verify](../workflows/verify/webui/workflow.md) for nanobot browser-visible behavior, a matching project-specific verifier, or [verify](../workflows/verify/public/workflow.md). Exercise the changed happy path and highest-risk reachable edge through the supported public interface. Terminal rendering/input behavior needs the actual supported terminal, including real WezTerm evidence for the target environment's nanobot work. Static and unit checks support that evidence but do not prove an unexercised live claim.
+Use the target project's verifier or [verify](../workflows/verify/public/workflow.md). Exercise the changed happy path and highest-risk reachable edge through the supported public interface. Terminal rendering/input checks use the project's supported terminal and documented launch path. Static and unit checks support that evidence but do not prove an unexercised live claim.
 
 For documentation, inspect the actual instructions, paths, schema/links, and representative decision boundaries. Do not require UI, performance, ten-worker, or cross-model lanes unrelated to the change.
 
