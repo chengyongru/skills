@@ -1,0 +1,12 @@
+### Visual parity
+
+**Own the agreed visual equivalence. The captured baseline is the spec, not a file to edit until checks pass.** Pixel-exact parity requires image-diff evidence, not only an impression by eye.
+
+1. Establish the baseline before migration. Capture the current component and target implementation across relevant states using the same viewport, scale, fonts, theme, data, and settled animation state. Record source/head and harness conditions. No baseline means no parity claim.
+2. Freeze the comparison contract: capture recipe, baseline images, expected zero-diff rule or a user-approved tolerance for a known source of nondeterminism. Do not weaken the threshold, alter the baseline, or restructure unrelated code merely to make a check pass. If the baseline appears wrong, show the discrepancy and obtain the appropriate decision.
+3. Migrate one component at a time, with shared primitives as explicit prerequisites. Work directly or use bounded permitted children for independent components. Use installed [pr-worktree](../../workflows/pr/worktree/workflow.md) for branch ownership, one writer per branch, and no concurrent writes to shared harnesses/baselines. Keep all production and API changes inside the requested parity scope.
+4. Drive the actual interface and run image comparison for each component/state. Use available Playwright tools and installed [nanobot-webui-verify](../../workflows/verify/webui/workflow.md) for nanobot browser flows; use another matching verifier when appropriate. Save baseline, head, and diff images with the exact environment/head under `.nanobot-workflows/runs/<run>/`. A nonzero delta fails an exact-parity contract. Investigate and rerun within a finite budget; blocked tooling or unstable capture is not a pass.
+5. Check interaction and accessibility contracts that the migration could affect; equal pixels alone do not prove keyboard, focus, or event behavior. Performance checks are needed only for an actual changed risk or requirement, not by default.
+6. Deliver the local change and receipts, or follow Opening a PR for authorized commits/push/PR creation. Do not auto-publish a PR per component or run a persistent retry loop. A user-timed follow-up uses `cron` only at the requested cadence.
+
+**Reply:** migrated components and states, baseline/harness conditions, each diff result and any approved tolerance, interaction proof, exact head and artifact paths, and limitations. No claim of zero diff without an actual comparison.

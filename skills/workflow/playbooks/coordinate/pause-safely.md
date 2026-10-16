@@ -1,0 +1,11 @@
+### Pause safely
+
+**Leave a checkpoint a cold-start session can use.** Honor an explicit pause/hold immediately. "Keep going" is not a pause request, but it cannot override runtime limits or justify promising work after the turn.
+
+1. Stop starting new work. Bring the current owned atomic step to a safe boundary without taking an unapproved external action. Do not interrupt a shared operation or discard someone else's edits merely to make status look clean.
+2. Notify known children of the hold with `subagent(action="send", task_id=..., message=...)`. Delivery is advisory; use `subagent(action="cancel", task_id=...)` when stopping the task is necessary. Check final state and any task-owned processes before claiming all writes stopped. Do not terminate the user's unrelated gateway, terminal, or browser sessions.
+3. Preserve the actual working state. Inspect tracked and untracked files and distinguish your edits from existing work. A checkpoint does not require a commit. Make a local WIP commit only if commits are authorized and only for the intended files; otherwise leave the edits intact and document them. No new push, PR, merge, stash, reset, or cleanup is implied by pausing.
+4. Write an external resume note under the agent workspace's `.nanobot-workflows/runs/<run>/`, located through the shared [workflow helper](../../scripts/workflow.py) `paths` command. Include current user scope, repository/worktree and exact head, dirty/untracked paths, progress, actual verification and evidence, pending decisions, known child/process handles and final states, and the next safe action. Link an existing decision trail instead of duplicating it. Never write protected history/profile/memory or the live plugin.
+5. If a user-authorized sustained goal or schedule exists, follow its runtime guidance for pausing it; do not silently leave it active or create a new job. A time-specific follow-up uses `cron` only when requested, at the requested cadence.
+
+**Reply:** saved state and note path, what is verified, what remains on disk, any authorized commit, whether children/processes are confirmed stopped or still unresolved, and the first pickup action. Do not claim private child IDs can be resumed after restart.

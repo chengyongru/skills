@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "nanobot-workflows",
+  "version": "1.0.0",
+  "description": "Progressively loaded engineering workflows for nanobot, combining personal skills with adapted pstack methods.",
+  "author": {
+    "name": "chengyongru",
+    "url": "https://github.com/chengyongru"
+  },
+  "homepage": "https://github.com/chengyongru/skills",
+  "repository": "https://github.com/chengyongru/skills",
+  "license": "MIT",
+  "keywords": ["nanobot", "workflow", "pstack", "engineering", "verification"],
+  "extensions": {
+    "dev.nanobot": {
+      "displayName": "Nanobot Workflows",
+      "category": "Workflow",
+      "permissions": [
+        "Project files and task-scoped history",
+        "User-authorized shell and browser verification",
+        "Private subagents when permitted"
+      ]
+    }
+  }
+}

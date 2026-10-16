@@ -1,23 +1,26 @@
-# Skills Repository Guidance
+# Nanobot Workflows repository guidance
 
-## Instruction style
+## Package boundary
 
-- Write instructions as concrete actions, preconditions, and expected outcomes.
-- Prefer positive imperative phrasing that tells the agent which path to take.
-- Express safety boundaries through exact authorization, validated targets, and scoped operations.
-- Reserve prohibitive wording for an irreducible safety boundary with no equally clear positive form.
-- Keep generic skills project-neutral and route project-specific work to the matching specialized skill.
-- Keep `SKILL.md` under 60 lines by default.
-- Include only decisions, contracts, domain facts, and tool usage the model cannot reliably infer.
-- Move repeated fragile mechanics into deterministic scripts and remove unreferenced resources.
+- Keep exactly two discoverable entries: `skills/workflow/SKILL.md` and the explicit-only `skills/nanobot-gate/SKILL.md`.
+- Keep the primary entry under 60 lines. Route to one domain, then load the selected workflow; do not copy the entire catalog into an entry or runtime contract.
+- Store internal procedures as `workflow.md` or named reference files, not additional `SKILL.md` registrations. Update every caller and example when moving an internal route.
+- Keep executable helpers and their resources adjacent to the owning workflow. Resolve paths from that document, and use an explicit target repo/workdir for commands.
+- Keep shared readable resources beneath a registered skill root. Keep runtime state, logs, evidence, bytecode, and generated skills outside the installed package.
+- Preserve literal user activation of `$nanobot-gate`. No other route may imply it.
 
-## Source comments
+## Source and behavior
 
-- Express internal invariants through names, ownership, types, and executable checks. Keep code comments for required legal text, active tooling directives, public API contracts, and verified external constraints.
-- Route comment and workaround audits through [simplify's comment cleanup workflow](simplify/references/comment-cleanup.md); retain unresolved constraints until their claims and replacements are checked.
+- Use concrete actions, preconditions, and expected outcomes. Include decisions and contracts the model cannot safely infer; link optional detail instead of repeating it.
+- Preserve the concrete PR, worktree, verification, and environment helpers. Adapt orchestration around them rather than replacing proven operations with generic advice.
+- Preserve exact snapshot and authorization boundaries, reachable behavioral assertions, owned-resource cleanup, and honest proof limitations.
+- Treat nanobot as the runtime target while keeping project-neutral methods reusable. Route project-specific proof to the matching verifier.
+- Preserve third-party attribution, upstream license text, and provenance when adapting or merging pstack material.
+- Do not run `ruff format` or edit protected profiles/memory as part of skill maintenance.
 
-## Verification output
+## Verification and output
 
-- Deliver human-facing verification plans, progress, findings, and final results directly in the conversation.
-- Persist machine-readable state and raw evidence such as JSON manifests, command logs, responses, screenshots, and snapshots when they support reproducibility.
-- Create a prose report file when the user explicitly requests a document artifact.
+- Run `python -B -m unittest discover -s tests -v` and the adjacent tests for helpers changed or relocated.
+- Use a compatible nanobot environment for native discovery, activation, summary, invocation, and restricted-resource-read proof. A skipped native check is not a pass.
+- Keep human-facing plans, findings, and verification results in the conversation. Persist machine-readable state or raw evidence only when useful; create a prose report only when requested.
+- Update both README files when installation, invocation, or routing contracts change.

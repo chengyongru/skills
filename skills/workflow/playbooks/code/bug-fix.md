@@ -1,0 +1,16 @@
+### Bug fix
+
+**Own the mechanism, focused fix, and proof.** Work directly or delegate a bounded investigation/implementation when permitted; delegation is not mandatory and cannot override a no-subagent request.
+
+Every retained change should trace to evidence. A safeguard that "might help" is a hypothesis, not a proven fix. Remove only your own disproven experimental changes, preserving existing user work.
+
+1. Reproduce the reported failure through the supported interface using isolated data. Use installed [nanobot-webui-verify](../../workflows/verify/webui/workflow.md) for nanobot browser-visible behavior, a matching project verifier/driver, or [verify](../../workflows/verify/public/workflow.md). Drive as far as safe access permits. If the target is unavailable or reproduction would mutate unapproved shared/live state, name the missing access and request the smallest useful capture rather than guessing or repeatedly failing.
+2. Ground the affected subsystem with [how](../../workflows/investigate/how/workflow.md) and relevant regression history with [why](../../workflows/investigate/why/workflow.md). Form candidate hypotheses and choose observations that eliminate the most uncertainty. Use existing logs or scoped instrumentation in an owned test instance when authorized; a bug-fix request does not authorize hot-patching a user's running installation. Confirm the surviving mechanism before committing to a design.
+3. Plan the smallest causal correction. Use [architect](../../workflows/code/architect/workflow.md) for a consequential cross-boundary design question, not as a mandatory ceremony for every function call. If delegating, specify allowed paths/worktree, prohibited external actions, mechanism, acceptance checks, actual skill/reference paths, and a finite report boundary. Use native create/send/check/cancel coordination without model overrides. Keep one writer per branch.
+4. Capture a failing regression check before the fix when there is a cheap meaningful path. Apply the fix, rerun that check, and repeat the original user-facing repro. Unit tests support the behavioral proof; wrong-surface or inconclusive evidence is not a pass. Record exact head or dirty-snapshot state and evidence under `.nanobot-workflows/runs/<run>/` when useful.
+5. Search for the same faulty pattern among affected in-scope callers. Correct reachable copies that belong to this task; record unrelated defects or a wider root cause instead of expanding authorization. Keep each change independently verifiable and inspect the resulting diff for scope leaks.
+6. Commit only if authorized, with coherent units and hooks intact. Red-then-green is an execution discipline, not a requirement to publish a deliberately failing commit. Follow Opening a PR only for authorized push/PR creation; otherwise hand back the local fix and receipts.
+
+A stubborn hunt is still bounded by the session budget. Do not create a schedule or promise continued work after the turn; user-timed work uses `cron` at the requested cadence, and sustained goals require Goal Runtime Guidance.
+
+**Reply:** failure, root cause, focused correction, actual failing-then-passing evidence, reachable verification and limitations, and any out-of-scope follow-up. Do not fabricate verbatim output when no run occurred.

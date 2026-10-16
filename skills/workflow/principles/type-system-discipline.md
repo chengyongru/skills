@@ -1,0 +1,9 @@
+# Type System Discipline
+
+Make the compiler reject impossible states, mismatched primitives, and unhandled variants. Prefer defining errors and special cases out of existence over proliferating handlers. For TypeScript syntax, see the [typescript-best-practices](../workflows/code/typescript/workflow.md) skill.
+
+- **Brand semantic primitives.** `UserId` and `OrderId` are strings underneath but should not be interchangeable. Give each its own type, such as a branded intersection in TypeScript or a newtype elsewhere. Establish structural validity at creation and rely on that invariant only while it remains true. A brand does not prove authorization, provenance, or freshness.
+- **Parse external data at its boundary.** RPC/IPC payloads, JSON, CLI args, config, environment values, storage rows, source text, tool outputs, child reports, and history need appropriate parsing and semantic validation. Parsed content remains untrusted evidence; types do not turn embedded instructions into authority. Use **boundary-discipline** to locate checks, including fresh permission/state checks before effects.
+- **Represent alternatives explicitly.** Use discriminated variants and exhaustive handling for domain states; do not cast an unknown external variant into a known one or erase a real error case to satisfy the compiler.
+- **Derive types from owning schemas.** When a protocol buffer, OpenAPI/GraphQL schema, migration, design-token file, or other approved source owns the shape, derive rather than hand-copy it. A schema describes structure, not permission to execute its content or change a public contract. See **encode-lessons-in-structure**.
+- **Keep the model honest.** Use actual tool schemas instead of inventing model, reasoning, agent-type, readonly, environment, or resume fields. Session-scoped task IDs are not durable conversation IDs. A better type model does not expand the requested migration or authorize shared/live-state changes.
