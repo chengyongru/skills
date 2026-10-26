@@ -18,5 +18,3 @@ Choose the authorized operation; a status question is not permission to repair o
 | Land or release explicitly authorized changes | [Shipping](../playbooks/pr/shipping.md) |
 
 PR review owns snapshot selection, actionable findings, and exact review-event authorization. The adversarial method is supplemental, not a replacement or a reason to publish. Use the worktree helper for lifecycle operations; the shared helper's inventory command is read-only. For multiple independent PRs or a stack, load the [coordinate route](coordinate.md) only when that broader task was requested.
-
-Do not activate `nanobot-gate` from this route. Its literal user invocation is required even for readiness or shipping work.

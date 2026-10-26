@@ -10,8 +10,6 @@ The user's authorization defines the PR and local edit scope. Prepare or reuse t
 4. Change the smallest surface enforcing the contract; add or update the closest regression proof when behavior changed. Preserve unrelated author/user work and record why any file outside the expected cone changes.
 5. Choose and run the smallest decisive verification: reproduce a behavioral failure and run its closest regression when practical; add compatibility, authority, persistence, lifecycle, concurrency, packaging, or public-surface proof only when the changed contract requires it. For docs, tests, or config-only changes, use the closest diff/lint/build check. Inspect final scope and generated churn.
 
-When invoked by `nanobot-gate`, return the local edits and evidence after step 5. The gate owns resnapshotting, further remediation, and later publication.
-
 ## Publish
 
 Only when commit and push are explicitly authorized:

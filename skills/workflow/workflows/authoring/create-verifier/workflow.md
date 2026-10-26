@@ -35,4 +35,4 @@ Within the authorized local test scope, run its instructions end to end once: la
 
 ## 5. Offer the maintenance loop
 
-Point the user at `$workflow maintain-verification-skill` for keeping the map honest. Suggest a cadence only if asked; create a `cron` schedule only for an explicit approved time/interval, never as a generation side effect. No automatic commit, PR, package edit, or `$nanobot-gate` invocation.
+Point the user at `$workflow maintain-verification-skill` for keeping the map honest. Suggest a cadence only if asked; create a `cron` schedule only for an explicit approved time/interval, never as a generation side effect. No automatic commit, PR, or package edit.

@@ -14,5 +14,3 @@ Read the checkout's `AGENTS.md`, relevant `.agent/` guidance, contribution instr
 | TUI rendering, selection, appearance, or input | [Real WezTerm verification](terminal.md) |
 | WebUI visual language and shared components | [UI calibration](ui-calibration.md) |
 | CLI, API, package, or subprocess lifecycle | [Public-surface verification](../../workflows/verify/public/workflow.md), using this checkout's entrypoints and contracts |
-
-The separate [`$nanobot-gate`](../../../nanobot-gate/SKILL.md) provides snapshot-bound readiness checks when the user literally invokes it.

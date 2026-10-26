@@ -7,7 +7,7 @@ Answer the user's question without starting setup or implementation. Read only t
 - For preferences use [settings](../settings/workflow.md); absent settings mean defaults, not a broken configuration.
 - For choosing work, use the short [primary router](../../../SKILL.md), then only the selected domain.
 
-The package has two native entries: `$workflow <task or method>` and the separate literal-only `$nanobot-gate`. Old `$how`, `$pr-review`, `$poteto-mode`, and other flat skill names are no longer host registrations; express the intent after `$workflow` instead.
+Use `$workflow <task or method>` as the native entry. Old `$how`, `$pr-review`, `$poteto-mode`, and other flat skill names are no longer host registrations; express the intent after `$workflow` instead.
 
 Examples:
 

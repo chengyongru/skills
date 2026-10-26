@@ -8,7 +8,7 @@ For maintainers. For installation and first use, see the [README](README.md).
 
 Users without an older install can skip this section.
 
-- Replace legacy calls such as `$pr-review`, `$verify`, `$how`, and `$poteto-mode` with `$workflow <task or method>`. Keep `$nanobot-gate` as an explicit-only entry point.
+- Replace legacy calls such as `$pr-review`, `$verify`, `$how`, and `$poteto-mode` with `$workflow <task or method>`.
 - Confirm the path and ownership of old standalone skills before moving them out of discovery paths; preserve local changes. Workspace skills take precedence over plugins, and leftover copies add entries to the skill summary.
 - Disable the old `pstack` plugin before replacing it. Enabling both leaves the old plugin's 54 descriptions in place.
 - Do not delete a source directory just because a skill was linked from it. Confirm the link, installed copy, and ownership first.
@@ -20,7 +20,7 @@ Read the target repository's `AGENTS.md`, contribution guide, project configurat
 
 Project-specific procedures live in the [project adapter layer](skills/workflow/references/project.md). The included [HKUDS/nanobot adapter](skills/workflow/projects/nanobot/workflow.md) applies to that repository and its forks; use each other project's own engineering configuration.
 
-Only `skills/workflow/SKILL.md` and the explicit `skills/nanobot-gate/SKILL.md` are discoverable entries. The main entry routes on demand to `routes/`, `workflows/`, `projects/`, `playbooks/`, `principles/`, `references/`, and helper scripts; these internal documents are not standalone skills.
+The discoverable entry is `skills/workflow/SKILL.md`. It routes on demand to `routes/`, `workflows/`, `projects/`, `playbooks/`, `principles/`, `references/`, and helper scripts; these internal documents are not standalone skills.
 
 Run the shared helper from its installed path with `-B` to avoid writing bytecode:
 

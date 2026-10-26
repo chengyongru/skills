@@ -28,6 +28,6 @@ An audit-only request stays read-only except for authorized disposable verificat
 
 5. **Triage.** Wrong or missing user-POV description → doc drift, fix it. Working behavior the harness can't drive → harness gap, fix it; a harness fix follows the same helpers rule as generation (scripts executable, invocation documented in the skill body). App behavior that's actually broken → product gap; record it for the user, keep it out of this PR.
 
-6. **Deliver or stop.** Re-read every applied change or proposed patch. Report clean, changed, or blocked and the coverage honestly. Open/push a PR only if separately authorized; otherwise hand back local corrections or proposals. This pass does not invoke `$nanobot-gate` or create a schedule.
+6. **Deliver or stop.** Re-read every applied change or proposed patch. Report clean, changed, or blocked and the coverage honestly. Open/push a PR only if separately authorized; otherwise hand back local corrections or proposals. This pass does not create a schedule.
 
 Keep concise run notes and evidence under a task-owned external directory, such as `<agent-workspace>/.nanobot-workflows/runs/<task>/`; do not commit them automatically. If the user asks for a maintenance cadence, use `cron` only after the actual interval and scope are explicit.

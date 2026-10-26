@@ -50,4 +50,4 @@ State intent and a falsifiable check for done. A playbook supplies the ordinary 
 - "Keep the uncertainty. Which claims have direct evidence?"
 - "Stop at a local patch. Do not commit, publish, or send anything."
 
-A named principle steers a decision; it does not override scope or native skill policies. `$nanobot-gate` requires its literal invocation, not a generic request for rigor or verification.
+A named principle steers a decision; it does not override scope or native skill policies.

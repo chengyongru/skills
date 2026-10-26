@@ -21,8 +21,6 @@
         "herdr-worktree-right/scripts/open-worktree-right.ps1": "f814fad645318bbb8f8b5d2a2ca8ebdafde83bbb33f1b2b2daa80334fc42c751",
         "herdr-worktree-right/scripts/open-worktree-right.py": "5de73a94ef1718e430efa525eb5220664b294b17579894054f9ae99c348e6668",
         "herdr-worktree-right/scripts/test_open_worktree_right.py": "9d62846f1b9b4831910fe9c3cd42348e8a1480d1d84a500c23f0f3d0d2a26945",
-        "nanobot-gate/SKILL.md": "7cba50697f18601ea78cbbe48f5c83ccbda67743b410a83a9a847a33a08d8b00",
-        "nanobot-gate/scripts/gate_state.py": "d148d23f1864f34d8942e6bdcbff20efa4738ec3caf6b413b17877ff97d698ea",
         "nanobot-webui-verify/SKILL.md": "051ae1fe808f80f68de1c760166fdf9ab3eee36ceb3363daef85dc44e06d13a3",
         "nanobot-webui-verify/scripts/webui_runtime.py": "013c898588a6a0ab54cbc16bc94bc2ea6217dee29789ba4a0ea588ecb135811d",
         "pr-fix/SKILL.md": "6228b457c6e4ab400f12de6f4b6267c6aba96f94c6f22657163cc2b87be2e168",
@@ -60,7 +58,6 @@
         "herdr-worktree-right/scripts/open-worktree-right.ps1": "1dc207dcd893ed0b56d4b212e7ab8c9f98f874cd8eac79b7733416f272f1b9b7",
         "herdr-worktree-right/scripts/open-worktree-right.py": "e998e047817e4744432c9923a4d7d8e73fba06690af0de24d149292891f247e8",
         "herdr-worktree-right/scripts/test_open_worktree_right.py": "74739c32455631bd2c950203d34ec994146d9e76e76f7ced906b60f2366e8e15",
-        "nanobot-gate/scripts/gate_state.py": "d148d23f1864f34d8942e6bdcbff20efa4738ec3caf6b413b17877ff97d698ea",
         "nanobot-webui-verify/scripts/webui_runtime.py": "013c898588a6a0ab54cbc16bc94bc2ea6217dee29789ba4a0ea588ecb135811d",
         "pr-label/scripts/pr_label.py": "000b7007b23b4b0a1d2eddbb2188670f1c6249473a7c68b0d6e1808d8c7a2069",
         "pr-metadata/scripts/pr_metadata.py": "ff693dcfdded029edb30cced882d9296b5566d36002363128d3cb4e87ca6e50b",
@@ -86,8 +83,7 @@
   },
   "integration": {
     "public_entrypoints": [
-      "workflow",
-      "nanobot-gate"
+      "workflow"
     ],
     "legacy_workflow_targets": {
       "architect": "skills/workflow/workflows/code/architect/workflow.md",
@@ -107,7 +103,6 @@
       "ketchup": "skills/workflow/workflows/investigate/catch-up/workflow.md",
       "maintain-verification-skill": "skills/workflow/workflows/authoring/maintain-verifier/workflow.md",
       "make-bot-ui": "skills/workflow/workflows/code/webhook-ui/workflow.md",
-      "nanobot-gate": "skills/nanobot-gate/SKILL.md",
       "nanobot-webui-verify": "skills/workflow/projects/nanobot/webui/workflow.md",
       "no-comments": "skills/workflow/workflows/code/simplify/methods/comments.md",
       "poteto-help": "skills/workflow/workflows/authoring/help/workflow.md",
@@ -161,7 +156,7 @@
       "why": "skills/workflow/workflows/investigate/why/workflow.md"
     },
     "decisions": [
-      "Replace the flat catalogs with one domain router and one literal-invocation-only gate.",
+      "Replace the flat catalogs with one domain router.",
       "Merge adversarial review into PR review methods and comment review into simplify methods.",
       "Merge technical-writing and unslop into repository prose methods.",
       "Keep concrete PR, worktree, WebUI, verification, design, and Herdr helpers with their workflows.",

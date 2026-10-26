@@ -13,4 +13,4 @@ Select proof for the changed public contract. Existing project-specific verifier
 
 Use the target project's supported environment and documented commands. Scope live checks and task-owned resources before starting; keep evidence outside the installed plugin and clean up owned resources. The public-surface workflow includes terminal and process-lifecycle checks.
 
-Read [prove it works](../principles/prove-it-works.md) when the observation itself is disputed. Do not infer an explicit gate request from ordinary verification.
+Read [prove it works](../principles/prove-it-works.md) when the observation itself is disputed.

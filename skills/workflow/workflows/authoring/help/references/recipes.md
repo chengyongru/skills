@@ -17,4 +17,4 @@ $workflow recall our work on this branch, reconcile actual state, and report onl
 $workflow reflect on this conversation and propose workflow improvements; do not edit the plugin, profiles, or tracker.
 ```
 
-Name external operations and targets explicitly when requesting them. Invoke `$nanobot-gate` literally to select that workflow.
+Name external operations and targets explicitly when requesting them.

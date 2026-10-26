@@ -28,6 +28,4 @@ For a small task, use the shortest matching workflow directly. For a multi-part 
 4. Read a linked method or [principle](references/principles.md) when its decision is relevant.
 5. Report the result and relevant checks concisely. Include artifact references and next steps when useful.
 
-This package registers `workflow` and `nanobot-gate`. Use `$workflow <task or method>` and follow its links to the internal documents.
-
-Run the separate gate only when the user literally invokes `$nanobot-gate`.
+Use `$workflow <task or method>` and follow its links to the internal documents.

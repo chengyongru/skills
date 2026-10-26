@@ -8,7 +8,7 @@
 
 没有旧安装的用户可跳过本节。
 
-- 旧调用 `$pr-review`、`$verify`、`$how`、`$poteto-mode` 等改为 `$workflow <任务或方法>`；`$nanobot-gate` 仍须显式调用。
+- 旧调用 `$pr-review`、`$verify`、`$how`、`$poteto-mode` 等改为 `$workflow <任务或方法>`。
 - 先确认旧 standalone skill 的安装路径和归属，再移出发现目录；保留本地修改。Workspace skills 优先于插件，残留副本会增加 skill 摘要条目。
 - 替换旧 pstack 插件前先禁用它；两者同时启用会保留旧插件的 54 条描述。
 - 不要因 skill 是源码链接就删除源码目录。确认链接、安装副本和归属后再操作。
@@ -20,7 +20,7 @@
 
 项目专用流程见[项目适配层](skills/workflow/references/project.md)。随包提供的 [HKUDS/nanobot 适配](skills/workflow/projects/nanobot/workflow.md)适用于该仓库及其 fork；其他项目按自身工程配置执行。
 
-只发现 `skills/workflow/SKILL.md` 与显式入口 `skills/nanobot-gate/SKILL.md`。主入口按需路由到 `routes/`、`workflows/`、`projects/`、`playbooks/`、`principles/`、`references/` 和辅助脚本；这些内部文档不是独立 skill。
+插件入口是 `skills/workflow/SKILL.md`，按需路由到 `routes/`、`workflows/`、`projects/`、`playbooks/`、`principles/`、`references/` 和辅助脚本；这些内部文档不是独立 skill。
 
 共享 helper 使用实际安装路径调用，且用 `-B` 避免写入 bytecode：
 
