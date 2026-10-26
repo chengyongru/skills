@@ -32,9 +32,3 @@ Describe the task in the nanobot conversation. When scopes overlap, use `$workfl
 $workflow Review this PR read-only: summarize the changes, risks, and next steps. Do not post a review.
 $workflow Explain the cause of this bug and propose a fix; do not edit files yet.
 ```
-
-## Updates and migration
-
-The enabled plugin package is immutable; editing it invalidates its enabled state. To update, prepare and review a new version in a separate source directory, replace the installed package, and enable it again. If you have standalone skills or an older pstack plugin installed, read the [migration guide](MAINTAINING.md) first. Users without an older install can skip it.
-
-See the [maintainer guide](MAINTAINING.md) for migration details, development, tests, package layout, and provenance.
