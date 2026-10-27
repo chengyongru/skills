@@ -73,6 +73,29 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(domain_names, {'investigate.md', 'code.md', 'pr.md', 'verify.md',
                                         'writing.md', 'coordinate.md', 'authoring.md', 'environment.md'})
 
+    def test_on_demand_tracking_and_explanation_routes(self) -> None:
+        tracking = (WORKFLOW / 'references/linear.md').resolve()
+        explanation = (WORKFLOW / 'references/explanation.md').resolve()
+        introduction = (WORKFLOW / 'workflows/pr/explain/workflow.md').resolve()
+        pr_linking = (WORKFLOW / 'references/linear-pr-links.md').resolve()
+        expected = {
+            'SKILL.md': {tracking, explanation},
+            'playbooks/code/feature.md': {tracking},
+            'references/linear.md': {pr_linking},
+            'playbooks/pr/opening-a-pr.md': {pr_linking},
+            'workflows/pr/metadata/workflow.md': {pr_linking},
+            'routes/pr.md': {introduction},
+            'routes/investigate.md': {introduction},
+            'workflows/investigate/triage/workflow.md': {introduction},
+            'workflows/investigate/how/workflow.md': {explanation},
+            'workflows/investigate/how/references/explainer-prompt.md': {explanation},
+            'workflows/investigate/teach/workflow.md': {explanation},
+            'workflows/pr/explain/workflow.md': {explanation},
+        }
+        for caller, targets in expected.items():
+            with self.subTest(caller=caller):
+                self.assertTrue(targets.issubset(set(document_links(WORKFLOW / caller))))
+
     def test_all_document_links_are_contained_and_resolve(self) -> None:
         for document in ROOT.rglob('*.md'):
             if '.git' in document.parts:

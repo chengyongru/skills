@@ -1,14 +1,14 @@
 # How
 
-Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
+Explore the codebase to answer "how does X work?" questions. Use [behavior-first explanation](../../../references/explanation.md): build a mental model of the complete behavior, responsibilities, and correctness conditions, not an annotated tour of variables and calls.
 
-Delegate with native `subagent` tasks and keep their returned task IDs. Each task names the question, angle, actual prompt/reference paths, allowed source reads, and a read-only contract: no file changes, process launches, or external mutations. Children inherit the configured model. This workflow explains the system; it does not change it. If delegation is unavailable or prohibited, perform the same scoped exploration and synthesis directly and disclose that limitation.
+Work directly for a small question. For independent tracing that benefits from delegation, use bounded native `subagent` tasks and keep their returned task IDs. Each task names the question, angle, actual prompt/reference paths, allowed source reads, and a read-only contract: no file changes, process launches, or external mutations. Children inherit the configured model. If delegation is unavailable or prohibited, do the same scoped work directly. This workflow explains the system; it does not change it.
 
 ## 1. Assess complexity
 
 If the scope is ambiguous, state your interpretation and explore. The user can redirect.
 
-- **Simple** (a single module, a small utility, a narrow question such as "how does function X work"): no explorers. Spawn one explainer that explores and explains in one pass, built from `references/explainer-prompt.md` without the explorer-findings section. Go to step 4.
+- **Simple** (one behavior or a narrow mechanism): inspect the relevant source and explain directly. Do not load explorer or explainer templates unless delegation is useful. Go to step 4.
 - **Complex** (a subsystem spanning multiple files or services, a cross-cutting feature, a full architectural overview): go to step 2.
 
 When in doubt, take the simple path.
@@ -27,4 +27,4 @@ Check the explainer's load-bearing claims and cited paths against the source, re
 
 ## Output format
 
-The explanation uses the sections defined in `references/explainer-prompt.md`, dropping any that do not apply: Overview, Key Concepts, How It Works, Where Things Live, Gotchas.
+Use the shared explanation guidance directly; delegated explainers use `references/explainer-prompt.md`. Do not force a sectioned report. Lead with the observable behavior and use a small diagram when it clarifies causality. Include code locations only when necessary or requested.

@@ -28,6 +28,8 @@ The body is a one-minute briefing for a reader with the diff. Use these headings
 - `## Blast Radius`: affected consumers and the concrete risk.
 - `## Verification`: actual commands/scenarios and results, including missing proof. For performance, give a primary before/after number with units and link the full evidence.
 
+For a known Linear task, load [Issue–PR relationship rules](../../references/linear-pr-links.md) at this stage. Choose a resolving, contributing, or reference-only association from the actual scope, put the explicit relation in the description or an available structured link, and verify it after publication. A generic backlink is not enough to establish merge automation.
+
 Attach screenshots or video when they prove a visible claim. Keep detailed logs, head SHAs, and experiment tables in linked artifacts. Do not label a check successful because it was planned or reported by a child.
 
 #### Authorized publication

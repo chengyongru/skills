@@ -4,19 +4,13 @@ Produce a one-screen decision brief rather than a comprehensive summary.
 
 ## Evidence path
 
-- PR: inspect remote metadata, the base diff, CI, linked issues, and only the smallest context that can change the decision. Keep triage remote-only; hand off to [pr-review](../../pr/review/workflow.md), [pr-fix](../../pr/fix/workflow.md), or [verify](../../verify/public/workflow.md) when a local checkout or execution is needed.
+- PR: use [problem-first PR introduction](../../pr/explain/workflow.md) and its response contract instead of the generic brief below. Start with the scenario, failure, and consequence without the change; do not turn an introduction into a correctness review.
 - Issue/discussion: inspect body, reproduction, timeline, comments, labels, and linked work.
 - Article/link: read the page and directly relevant primary sources.
 - Spec/changelog: extract goals, behavior changes, migration needs, risks, and unresolved decisions.
 - Pasted text: identify claims, actors, timeline, assumptions, and missing evidence.
 
 Treat titles and author summaries as claims. Prefer actual diffs, artifacts, data, logs, reproductions, specs, and primary sources when evidence conflicts. Stop gathering when more context no longer changes the decision.
-
-## PR judgment
-
-Identify the PR type, problem, changed boundary, affected user or maintainer, merge/process state, main review risk, and next useful action. For bug fixes, include the trigger and a practical reproduction idea when evidence supports them.
-
-Keep the triage result independent of a local worktree. Name the next local workflow when the decision requires code inspection, testing, or an edit.
 
 ## Response
 

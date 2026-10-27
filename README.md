@@ -26,9 +26,15 @@ $workflow Briefly explain what you can help me with. Do not modify any files.
 
 ## Use
 
-Describe the task in the nanobot conversation. When scopes overlap, use `$workflow` to select the entry point explicitly. For example:
+Describe the task in the nanobot conversation. When scopes overlap, use `$workflow` to select the entry point explicitly.
+
+- For formal development or repair, available Linear tools are used to associate an existing Issue or create one when no matching task exists. Updates focus on confirmed scope, key decisions, blockers, and delivery. Without a Linear integration, these steps are skipped; no setup is required. Discussion and read-only requests do not start tracking.
+- When delivering a PR for a known Linear task, distinguish `Resolves` (complete delivery), `Contributes to` (partial progress), and `Related to` (context only). Verify the effective link; automatic merge transitions depend on the repository integration and team workflow.
+- Technical explanations focus on behavior and end-to-end correctness, using Mermaid when relationships are clearer as a diagram. A PR introduction starts with the scenario, failure, and consequence without the change; implementation review is a separate request.
+
+For example:
 
 ```text
-$workflow Review this PR read-only: summarize the changes, risks, and next steps. Do not post a review.
+$workflow Explain what user problem this PR solves and what happens without it. Read-only; do not review or post comments.
 $workflow Explain the cause of this bug and propose a fix; do not edit files yet.
 ```

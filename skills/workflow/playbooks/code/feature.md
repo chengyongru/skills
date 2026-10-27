@@ -17,4 +17,4 @@
 
 For one code-coupled feature or migration, prefer one owner and a clear dependency sequence. Parent-level fan-out is for independent artifacts, not two writers on the same model or branch. Reassess the checkpoint at phase boundaries without expanding scope.
 
-**Reply:** built behavior, key choices and tradeoffs, throughput checkpoint, real verification and limitations, delivery state, and open user decisions.
+**Reply:** the built behavior, decision-relevant choices, actual verification and limitations, delivery state, and open user decisions. Keep execution checkpoints and detailed evidence out of the main explanation unless they affect a decision; for a linked Linear Issue, use the [concise writeback rules](../../references/linear.md).

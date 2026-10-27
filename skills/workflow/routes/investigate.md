@@ -4,7 +4,8 @@ Choose the question the user actually asked. Keep analysis read-only; follow-up 
 
 | Question | Workflow |
 |---|---|
-| What is this PR, issue, document, or unfamiliar topic, and what matters? | [Triage](../workflows/investigate/triage/workflow.md) |
+| What user problem does this PR solve, and what happens without it? | [PR introduction](../workflows/pr/explain/workflow.md) |
+| What is this issue, document, or unfamiliar topic, and what matters? | [Triage](../workflows/investigate/triage/workflow.md) |
 | How does the subsystem run, and who owns the state? | [How](../workflows/investigate/how/workflow.md) |
 | Why was this choice made, or why did behavior change? | [Why](../workflows/investigate/why/workflow.md) |
 | Help me understand the mechanism and rationale together | [Teach](../workflows/investigate/teach/workflow.md) |

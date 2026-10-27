@@ -24,8 +24,10 @@ For a small task, use the shortest matching workflow directly. For a multi-part 
 
 1. Establish the [target project](references/project.md), its instructions and toolchain, the requested result, existing changes, and a falsifiable completion check.
 2. Treat investigation, status, review, and planning as read-only unless the request also authorizes edits. Follow any user checkpoint before implementation.
-3. Use the selected workflow's concrete helpers and verification path. Resolve relative resources against the document containing the reference. In a leaf workflow, `<skill>` means that document's directory; pass absolute helper paths and an explicit target repository/workdir.
-4. Read a linked method or [principle](references/principles.md) when its decision is relevant.
-5. Report the result and relevant checks concisely. Include artifact references and next steps when useful.
+3. For formal development or repair with exposed Linear tools, load [optional task tracking](references/linear.md) before implementation; without those tools, skip the integration.
+4. When explaining a mechanism or introducing a PR, load [behavior-first explanation](references/explanation.md). Do not preload it for unrelated work.
+5. Use the selected workflow's concrete helpers and verification path. Resolve relative resources against the document containing the reference. In a leaf workflow, `<skill>` means that document's directory; pass absolute helper paths and an explicit target repository/workdir.
+6. Read a linked method or [principle](references/principles.md) when its decision is relevant.
+7. Report the result and relevant checks concisely. Include artifact references and next steps when useful.
 
 Use `$workflow <task or method>` and follow its links to the internal documents.

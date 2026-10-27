@@ -71,8 +71,14 @@ class NativeLoaderTests(unittest.TestCase):
         self.enable()
         project = self.root / 'separate project'
         project.mkdir()
-        resource = self.package / 'skills/workflow/projects/nanobot/webui/workflow.md'
-        original = resource.read_bytes()
+        resources = [self.package / 'skills/workflow' / relative for relative in (
+            'projects/nanobot/webui/workflow.md',
+            'references/linear.md',
+            'references/linear-pr-links.md',
+            'references/explanation.md',
+            'workflows/pr/explain/workflow.md',
+        )]
+        originals = {resource: resource.read_bytes() for resource in resources}
         read = ReadFileTool.create(ToolContext(config=ToolsConfig(restrict_to_workspace=True),
                                                 workspace=str(self.workspace)))
         write = WriteFileTool.create(ToolContext(config=ToolsConfig(restrict_to_workspace=True),
@@ -80,21 +86,24 @@ class NativeLoaderTests(unittest.TestCase):
         scope = validate_workspace_scope_payload(
             {'project_path': str(project), 'access_mode': 'restricted'},
             default_workspace=self.workspace, default_restrict_to_workspace=True)
-        async def probe() -> tuple[str, str, str]:
+        async def probe() -> tuple[list[str], list[str], list[str]]:
             token = bind_workspace_scope(scope)
             try:
-                good = await read.execute(path=str(resource))
-                refused = await write.execute(path=str(resource), content='overwrite probe')
+                good = [await read.execute(path=str(resource)) for resource in resources]
+                refused = [await write.execute(path=str(resource), content='overwrite probe')
+                           for resource in resources]
                 set_agent_plugin_enabled(self.workspace, 'nanobot-workflows', False)
-                disabled = await read.execute(path=str(resource))
+                disabled = [await read.execute(path=str(resource)) for resource in resources]
                 return good, refused, disabled
             finally:
                 reset_workspace_scope(token)
         good, refused, disabled = asyncio.run(probe())
-        self.assertIn(original.decode('utf-8').splitlines()[0], good)
-        self.assertIn('outside allowed directory', refused)
-        self.assertIn('outside allowed directory', disabled)
-        self.assertEqual(resource.read_bytes(), original)
+        for index, resource in enumerate(resources):
+            with self.subTest(resource=resource.relative_to(self.package)):
+                self.assertIn(originals[resource].decode('utf-8').splitlines()[0], good[index])
+                self.assertIn('outside allowed directory', refused[index])
+                self.assertIn('outside allowed directory', disabled[index])
+                self.assertEqual(resource.read_bytes(), originals[resource])
 
     def test_package_update_requires_new_approval(self) -> None:
         self.enable()

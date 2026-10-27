@@ -8,7 +8,7 @@ Keep the PR title and description aligned with the actual pushed scope. Do not c
 python <skill>\scripts\pr_metadata.py inspect <PR> --repo <OWNER/REPO> --format json
 ```
 
-2. Compare it with the actual PR diff and repository conventions. Preserve accurate context, issue links and closing keywords, template sections, checklists, and verification notes. Make no change when the metadata remains accurate.
+2. Compare it with the actual PR diff and repository conventions. Preserve accurate context, valid issue relationships, template sections, checklists, and verification notes. For linked Linear tasks, load [Issue–PR relationship rules](../../../references/linear-pr-links.md); reconcile the resolving/contributing/reference-only type with actual scope rather than blindly preserving a closing keyword. Make no change when the metadata remains accurate.
 3. Present the exact title/body change before mutation. An explicit metadata request authorizes it; when called by [pr-fix](../fix/workflow.md), synchronizing stale metadata after the authorized pushed fix is part of fix completion.
 4. Plan, then apply and verify the minimal replacement:
 

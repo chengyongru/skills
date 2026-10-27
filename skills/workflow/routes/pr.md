@@ -4,7 +4,7 @@ Choose the authorized operation; a status question is not permission to repair o
 
 | Operation | Workflow or playbook |
 |---|---|
-| Explain a PR before local review | [Remote-only triage](../workflows/investigate/triage/workflow.md) |
+| Introduce a PR: what problem does it solve, and what happens without it? | [Problem-first introduction](../workflows/pr/explain/workflow.md) |
 | Check head, CI, reviews, threads, and blockers | [PR status, check mode](../playbooks/pr/babysit.md) |
 | Perform a maintainer-quality review | [PR review](../workflows/pr/review/workflow.md) |
 | Explicitly challenge a diff with fresh views (`interrogate`) | [Adversarial review method](../workflows/pr/review/methods/interrogate.md) |
