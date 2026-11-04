@@ -129,9 +129,11 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(len(list((WORKFLOW / 'playbooks').rglob('*.md'))), 23)
         self.assertEqual(len(list((WORKFLOW / 'principles').glob('*.md'))), 24)
 
-    def test_concrete_personal_helpers_preserve_source_content(self) -> None:
+    def test_concrete_personal_helpers_match_reviewed_snapshots(self) -> None:
         provenance = json.loads((ROOT / 'provenance.json').read_text(encoding='utf-8'))
         sources = provenance['sources']['personal_skills']['helper_sha256_lf']
+        adaptations = provenance['integration'].get('helper_adaptations', {})
+        self.assertLessEqual(set(adaptations), set(sources))
         targets = provenance['integration']['legacy_workflow_targets']
         checked = 0
         for old, digest in sources.items():
@@ -140,7 +142,8 @@ class PackageTests(unittest.TestCase):
                 continue
             destination = (ROOT / targets[path.parts[0]]).parent / Path(*path.parts[1:])
             normalized = destination.read_text(encoding='utf-8').encode('utf-8')
-            self.assertEqual(sha256(normalized).hexdigest(), digest, destination)
+            expected = adaptations[old]['sha256_lf'] if old in adaptations else digest
+            self.assertEqual(sha256(normalized).hexdigest(), expected, destination)
             checked += 1
         self.assertGreater(checked, 10)
         license_text = (ROOT / 'LICENSES/pstack-MIT.txt').read_text(encoding='utf-8')
