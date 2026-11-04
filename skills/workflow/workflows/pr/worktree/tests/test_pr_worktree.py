@@ -110,6 +110,32 @@ class WorktreeNamingTests(unittest.TestCase):
             worktrees.default_worktree_path(self.root, 42), self.root.parent / "repo-pr-42",
         )
 
+    def test_cleanup_preserves_unrelated_unavailable_worktree_registration(self) -> None:
+        approved = self.root / ".worktrees" / "approved"
+        retained = self.root / ".worktrees" / "unavailable"
+        self.git("worktree", "add", "-b", "test/approved", str(approved), "origin/main")
+        self.git("worktree", "add", "-b", "test/retained", str(retained), "origin/main")
+        offline = self.root.parent / "offline-storage"
+        retained.rename(offline)
+        self.git("config", "gc.worktreePruneExpire", "now")
+        before = worktrees.registered_worktrees(self.root)
+        self.assertIn(retained, [entry["path"] for entry in before])
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "cleanup", "--repo-dir", str(self.root),
+             "--path", str(approved), "--format", "json"],
+            capture_output=True, text=True, encoding="utf-8",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"action": "removed", "path": str(approved)})
+        self.assertFalse(approved.exists())
+        self.assertEqual(
+            worktrees.registered_worktrees(self.root),
+            [entry for entry in before if entry["path"] != approved],
+        )
+        self.assertEqual((offline / "tracked.txt").read_text(), "base\n")
+
     def test_help_uses_task_based_examples(self) -> None:
         result = subprocess.run(
             [sys.executable, str(SCRIPT), "start", "--help"],

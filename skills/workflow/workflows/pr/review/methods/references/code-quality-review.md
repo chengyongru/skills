@@ -1,14 +1,14 @@
 # Code Quality Review
 
-Each reviewer applies this code-quality lens in addition to the rubric. It is a strict standard focused on implementation quality, maintainability, abstraction quality, and codebase health.
+Apply this lens within the requested scope and the [PR review criteria](../../references/review-criteria.md). Structural concerns need a concrete correctness or maintenance consequence; code size and preferred designs are prompts to investigate, not findings by themselves.
 
-Above all, be ambitious about code structure. Do not merely identify local cleanup. Actively search for "code judo" moves, restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
+Look for simplifications that remove a demonstrated burden while preserving behavior. Count replacement code and new indirection when judging a proposed reduction; moving the same complexity into more files does not remove it.
 
 ## Core Prompt
 
 Start from this baseline:
 
-> Perform a deep code quality audit of the current branch's changes.
+> Audit the supplied diff and exact snapshot. Do not replace a focused scope with the whole current branch.
 > Rethink how to structure / implement the changes to meaningfully improve code quality without impacting behavior.
 > Work to improve abstractions, modularity, reduce Spaghetti code, improve succinctness and legibility.
 > Be ambitious about proposing a restructuring when it clearly improves the implementation, but do not apply changes during this review.
@@ -18,9 +18,9 @@ Start from this baseline:
 
 Each dimension is stated once. Apply the ones that are relevant.
 
-0. **Be ambitious about structural simplification.** Do not stop at "this could be a bit cleaner." Look for reframings that make whole branches, helpers, modes, conditionals, or layers disappear. Assume a "code judo" move is often available. It uses the existing architecture more effectively and makes the change dramatically simpler. If you can delete complexity rather than rearrange it, push hard for that.
+0. **Look for structural simplification.** Consider reframings that remove branches, helpers, modes, conditionals, or layers. Explain the actual burden removed and the cost of the replacement. Simple code with no demonstrated problem does not need a redesign.
 
-1. **Do not let a PR push a file from under 1k lines to over 1k lines without a very strong reason.** Treat this as a strong smell. Prefer extracting helpers, subcomponents, or modules. If the diff crosses that threshold, ask whether the code should be decomposed first. Waive only for a compelling structural reason where the resulting file stays clearly organized.
+1. **Inspect file growth for mixed responsibilities.** Propose decomposition when it separates real ownership or removes a concrete maintenance burden. Crossing a line-count threshold alone does not justify a finding or a mechanical split.
 
 2. **Do not allow spaghetti growth in existing code.** Be suspicious of new ad-hoc conditionals, scattered special cases, or one-off branches inserted into unrelated flows. Treat "weird if statements in random places" as a design problem, not a style nit. Prefer pushing the logic into a dedicated helper, state machine, or module instead of tangling an existing path.
 
@@ -36,11 +36,11 @@ Each dimension is stated once. Apply the ones that are relevant.
 
 ## Output Expectations
 
-Prioritize structural code-quality regressions and missed simplifications first, then spaghetti and branching complexity, then boundary, type, and file-size concerns, then smaller modularity and legibility issues.
+Use the parent review's priority order: security, data, and correctness issues come before structural suggestions. Keep confirmed findings separate from risks, questions, and optional improvements.
 
-## Approval Bar
+## Blocking Bar
 
-Do not approve merely because behavior seems correct. Treat these as presumptive blockers unless the author can justify them: the PR keeps a lot of incidental complexity when a code-judo move would delete it. Pushes a file from below 1000 lines to above 1000 lines. Adds ad-hoc branching that tangles an existing flow. Scatters feature checks across shared code. Adds an unnecessary abstraction, wrapper, or cast-heavy contract, or duplicates an existing helper or puts logic in the wrong layer when there is a clear canonical home. If those conditions are not met, leave explicit, actionable feedback and push for a cleaner decomposition.
+Block only for a demonstrated contract violation or concrete maintenance consequence within the change's scope. Name the affected caller or maintainer task, the burden introduced, and why the proposed fix is necessary. A preferred abstraction, a shorter file, or an opportunity for unrelated cleanup is not a blocker.
 
 ## Review Tone
 

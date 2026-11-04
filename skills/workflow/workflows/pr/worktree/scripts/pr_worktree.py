@@ -829,7 +829,6 @@ def cleanup(args: argparse.Namespace) -> dict[str, Any]:
             )
 
     output(["git", "worktree", "remove", str(path)], cwd=root)
-    output(["git", "worktree", "prune"], cwd=root)
     return {"action": "removed", "path": str(path)}
 
 

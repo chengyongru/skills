@@ -78,13 +78,54 @@
       "reviewed_nanobot_port": "0.15.25-nanobot.1",
       "license": "MIT",
       "original_provenance": "third_party/pstack-provenance.json",
-      "license_sha256_lf": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+      "license_sha256_lf": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "selective_updates": [
+        {
+          "version": "0.15.36",
+          "commit": "c742dd61706fbacc1b95f1a20b7b988cf096ce6c",
+          "source_files": [
+            {
+              "path": "skills/ketchup/SKILL.md",
+              "sha256": "f2923ffd14f6fc778f75a47aaed1f317fb5fd00b5701ca769d6446c74106dead",
+              "targets": ["skills/workflow/workflows/investigate/catch-up/workflow.md"]
+            },
+            {
+              "path": "skills/sharpen/SKILL.md",
+              "sha256": "563dfc460c605d311e650726288e2f1cbd61eab817db178d6e7e29643e07e7a2",
+              "targets": ["skills/workflow/workflows/investigate/sharpen/workflow.md"]
+            },
+            {
+              "path": "skills/principle-explain-the-number/SKILL.md",
+              "sha256": "3c84fbf9a7d9842abcfcd134010782b32092ac3d3fb4aaf9ed5732dca83aa58c",
+              "targets": [
+                "skills/workflow/principles/explain-the-number.md",
+                "skills/workflow/workflows/verify/benchmark/workflow.md"
+              ]
+            }
+          ],
+          "adaptations": [
+            "Keep every pending decision item without a whole-reply word cap; preserve read-only and native-resource boundaries.",
+            "Make sharpen return only the rewritten task prompt without executing it or relaxing user constraints.",
+            "Set the decision threshold, noise criterion, and bounded trial plan before measurement; retain the requested-ballpark exception."
+          ]
+        }
+      ]
     }
   },
   "integration": {
     "public_entrypoints": [
       "workflow"
     ],
+    "helper_adaptations": {
+      "pr-worktree/scripts/pr_worktree.py": {
+        "sha256_lf": "92a022f81426a7b10719ec72ddd0b9dc0bd5efc5e17d52d9d1b5d11d0625546a",
+        "reason": "Remove repository-wide pruning from path-scoped worktree cleanup."
+      },
+      "pr-worktree/tests/test_pr_worktree.py": {
+        "sha256_lf": "7afbbcfbb97733e82517d68b16728af650d0e66294de111ec02ed1bfb8773c2e",
+        "reason": "Exercise cleanup through the CLI and preserve an unrelated unavailable worktree registration."
+      }
+    },
     "legacy_workflow_targets": {
       "architect": "skills/workflow/workflows/code/architect/workflow.md",
       "arena": "skills/workflow/workflows/coordinate/arena/workflow.md",

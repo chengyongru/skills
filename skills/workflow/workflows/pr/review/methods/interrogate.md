@@ -4,13 +4,9 @@ Use two fresh reviewer tasks to challenge code changes and produce a synthesized
 
 ## Step 1, Scope
 
-Identify what to review from context:
+Retain the parent review's exact scope, base, and target SHA. For a standalone request, resolve the named files/diff or the branch's merge base and target SHA once. Include uncommitted changes only when they belong to the requested scope, and identify them separately from committed sources. Do not substitute a moving `HEAD` or the full branch for a narrower supplied snapshot.
 
-- If the user points at specific files or a diff, use that.
-- If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset.
-- If the user's message references recent work, gather the relevant files.
-
-Package the diff or file contents with any surrounding context files the reviewers need to understand the code.
+Package that diff or file content with the surrounding context paths reviewers need. A finding must refer to the same snapshot as its evidence.
 
 ## Step 2, Intent
 
@@ -35,25 +31,10 @@ You are the lead reviewer, a pragmatic senior engineer, not a neutral aggregator
 - **Noted**. Technically valid but not actionable. Context-dependent, premature optimization, or low-impact at this stage.
 - **Dismissed**. Wrong, nitpicky, or missing context, with a brief reason.
 
-## Output Format
+## Output
 
-### Intent
-> [The stated intent paragraph from Step 2]
+For a PR, follow the parent [PR review output contract](../workflow.md). The buckets above are internal triage, not mandatory report sections. For a standalone review, lead with actionable findings or say none were found; include only risks or evidence gaps that could change the recommendation.
 
-### Reviewers
-- Reviewer [label]: [scope, N findings, completion/limitation] (one bullet per reviewer). State that views used the same runtime-configured model; name it only if actually known.
+Distinguish source-based findings from reproduced failures. A decisive source trace can support a finding without a run; a read-only pass cannot claim runtime verification. When reproduction is authorized and needed to settle a claim, verify it at the scoped snapshot before calling it reproduced.
 
-### Act On
-[Each: description, which reviewers raised it, reachable evidence, why it matters.]
-
-### Consider
-[Each: description, which reviewers raised it, the tradeoff.]
-
-### Noted
-[Brief list.]
-
-### Dismissed
-[Each with a brief rationale.]
-
-### Agreement Map
-[Where reviewers agreed and diverged, evidence resolving disagreements, and the same-model limitation. Agreement alone does not establish correctness.]
+Briefly identify the use or absence of fresh reviewer contexts and the same-model limitation. Omit empty sections. Include intent, reviewer-by-reviewer breakdowns, dismissed items, or an agreement map only when the user asks for the full audit.

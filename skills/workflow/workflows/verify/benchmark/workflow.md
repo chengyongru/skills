@@ -6,7 +6,7 @@ For a quick ballpark the user asked for, one run is enough. Still check question
 
 ## Before you run anything
 
-- Write down the claim you expect to make, in the words you would ship ("export is 30% faster at p50 on the 60k-row dataset"). The questions test that sentence.
+- Apply [Explain the Number](../../../principles/explain-the-number.md): state the decision, the effect that would change it, the acceptable noise, and the trial plan. Define the workload and metric before running, rather than choosing a favorable claim afterward. A requested ballpark remains an estimate, not a comparison verdict.
 - Read the measurement script. Note what it times, counts, and ignores.
 - Check the actual host and competing load. On Windows use PowerShell, for example `(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors` for logical CPU count and sampled `Get-Process` CPU deltas or supported performance counters for load. CPU totals are cumulative, not instantaneous utilization. Do not assume Unix load-average tools or stop another user's process. If load cannot be isolated, interleave the sides and report the noise. Keep fixture writes and evidence in a task-owned directory outside the plugin, never production or profile/memory state.
 
@@ -16,15 +16,15 @@ For a quick ballpark the user asked for, one run is enough. Still check question
 2. **Was it tuned?** Run every side the way production runs it: release builds, production flags and env, batching and transaction settings, connection pools, caches as warm or cold as production sees them, and the same versions and data. If one side runs on defaults, you compared configurations, not implementations. A limiter that is a setting (a commit per row, a debug build, a missing index) means that side is untuned. Tune it and measure again before you pick a winner. If you cannot tune it, do not pick a winner from that run. When the user is choosing what to adopt, narrowing the claim to the code as it ships today does not fix this, because they adopt the option, not today's settings.
 3. **Did it break limits?** Do the arithmetic. Compare bytes per second with disk and network bandwidth, operations per second times cost per operation with your cores, and the time saved with the time the changed piece took. Removing a piece that takes 10% of the run can make the run at most about 11% faster. A result past a limit measured something other than the work, such as a cache, a no-op, or a bug.
 4. **Did it error?** Count failures and non-success responses, and check that outputs are correct, not just present. Rejections are often fast, and timeouts and retries are slow. If the script does not count errors, add the count.
-5. **Does it reproduce?** Run each side at least 5 times, alternating (A, B, A, B, and so on) so warmup, lazy initialization, caches, and drift favor neither. Report the median and range. A gap smaller than the run-to-run variation is no measurable difference. When the call is close, use a rank-sum test or the harness's own statistics.
+5. **Does it reproduce?** Plan at least 5 runs per side, alternating (A, B, A, B, and so on) so warmup, lazy initialization, caches, and drift favor neither. Report the median and range. Use the planned statistical method or the harness's uncertainty estimate to judge the gap; overlapping raw ranges alone do not establish equality or a difference. Distinguish a measurable effect from one large enough to change the decision. If the planned runs cannot resolve the comparison, report it as inconclusive rather than adding trials until a preferred verdict appears.
 6. **Does it matter?** Next to any micro result, measure the end-to-end path a user waits on, with realistic data sizes and concurrency, and report the micro result as a share of the whole. A helper that takes 1% of a request can make the request at most 1% faster, however fast the helper gets.
 7. **Did it even happen?** Confirm the work ran inside the timed region: the request reached the server, the rows were written, the bytes were read, and the code used the result. Lazy code (generators nobody iterates, promises nobody awaits, results the JIT can discard) and timeouts produce numbers for work that never happened.
 
 ## Report
 
 - Lead with the verdict: faster, slower, no measurable difference, or inconclusive.
-- Give the number with its unit, the run count, the range, and the limiter. For example, "p50 41 ms → 33 ms, median of 7 runs per side, range 32 to 35 ms after, bound by JSON parsing on one core."
-- Call the verdict inconclusive when you claim a difference but cannot name the limiter, when a side ran untuned, or when you could not check questions 4 and 7. Name the gap.
+- Give the number with its unit, the run count, the range, and the measured limiter or an explicit statement that the cause is unknown. For example, "p50 41 ms → 33 ms, median of 7 runs per side, range 32 to 35 ms after, bound by JSON parsing on one core."
+- Call the comparison inconclusive when the planned trials cannot resolve the decision threshold, a side ran untuned, or questions 4 and 7 remain unchecked. Name the gap. Keep a repeatable measured difference separate from its explanation: an unknown limiter leaves causality unproven, not the observed timings invalid.
 - Keep a PR body to one primary number, per the **Opening a PR** playbook. Put the runs, range, and limiter evidence in a linked artifact or notes file.
 
 ## Other perf material

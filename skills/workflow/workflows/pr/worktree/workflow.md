@@ -35,4 +35,4 @@ Run cleanup only when requested:
 python <skill>\scripts\pr_worktree.py cleanup --repo-dir <base-repo> --path <worktree> --format markdown
 ```
 
-Cleanup preserves worktrees with changes, untracked files, missing upstreams, or unpushed commits. Never force-remove them.
+Cleanup removes only the specified worktree and its registration; it does not prune other registrations. It preserves worktrees with changes, untracked files, missing upstreams, or unpushed commits. Never force-remove them.

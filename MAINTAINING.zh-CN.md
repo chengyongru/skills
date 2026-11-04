@@ -45,5 +45,5 @@ python -B -m unittest discover -s skills/workflow/workflows/environment/worktree
 ## 许可证与来源
 
 - 原创 skills 与整合部分：Copyright (c) 2026 chengyongru，MIT。
-- pstack 衍生内容：Copyright (c) 2026 Lauren Tan，MIT；上游为 `cursor/plugins/pstack` v0.15.25，固定 commit `99743e9c151c8537cbbf1f98bb38f34ef3368453`。
+- pstack 衍生内容：Copyright (c) 2026 Lauren Tan，MIT；基线为 `cursor/plugins/pstack` v0.15.25，固定 commit `99743e9c151c8537cbbf1f98bb38f34ef3368453`。后续按需吸收的改进单独记录在 provenance 文件的 `sources.pstack.selective_updates` 中。
 - 完整说明见 [LICENSE](LICENSE)、[上游 MIT 声明](LICENSES/pstack-MIT.txt)、[第三方版权说明](THIRD_PARTY_NOTICES.md) 和 [provenance](provenance.json)。
