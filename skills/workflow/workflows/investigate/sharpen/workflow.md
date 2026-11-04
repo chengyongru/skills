@@ -1,1 +1,7 @@
-Before starting, ask how a top expert would approach this task (their raw sources, their real methods, an outside check that the result is right), what the user is really after, and whether the task is over- or underspecified. Question self-imposed implementation assumptions that do not serve the goal, but never relax explicit user constraints, authorization, repository rules, or runtime boundaries. Leave choices that belong to the user open instead of deciding them. Fold in only what makes the work better, not bigger, but always keep one outside check that the result is right, without narrating the framing, then do the work. Don't hand back a rewritten prompt.
+# Sharpen
+
+Rewrite the user's task to make it deeper, not bigger. Return only the rewritten prompt. Do not execute the task it describes; this turn stays read-only.
+
+Before writing, identify what a top professional would do that the task omits, the primary sources they would start from, the methods and available tools they would use, and an independent check that could show the result is right.
+
+Preserve the user's goal and explicit constraints, authorization, repository rules, and runtime boundaries. Question only self-imposed assumptions that do not serve the goal. Include only additions that improve the requested result, keep the outside check within the permitted scope, and leave choices belonging to the user open rather than deciding them.

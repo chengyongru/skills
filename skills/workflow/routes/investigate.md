@@ -10,7 +10,7 @@ Choose the question the user actually asked. Keep analysis read-only; follow-up 
 | Why was this choice made, or why did behavior change? | [Why](../workflows/investigate/why/workflow.md) |
 | Help me understand the mechanism and rationale together | [Teach](../workflows/investigate/teach/workflow.md) |
 | Restate the goal before work (`in-your-own-words`) | [Understand](../workflows/investigate/understand/workflow.md) |
-| Improve the task definition or approach (`sharpen`) | [Sharpen](../workflows/investigate/sharpen/workflow.md) |
+| Rewrite a task prompt without executing it (`sharpen`) | [Sharpen](../workflows/investigate/sharpen/workflow.md) |
 | Reconstruct relevant prior work (`recall`) | [Recall](../workflows/investigate/recall/workflow.md) |
 | Catch me up on this chat (`ketchup`) | [Catch up](../workflows/investigate/catch-up/workflow.md) |
 | Restate the last reply without jargon (`bro`) | [Plain language](../workflows/investigate/plain-language/workflow.md) |

@@ -45,5 +45,5 @@ When a compatible nanobot installation is available, package tests run the nativ
 ## License and provenance
 
 - Original skills and integration: Copyright (c) 2026 chengyongru, MIT.
-- pstack-derived content: Copyright (c) 2026 Lauren Tan, MIT; upstream `cursor/plugins/pstack` v0.15.25, pinned to commit `99743e9c151c8537cbbf1f98bb38f34ef3368453`.
+- pstack-derived content: Copyright (c) 2026 Lauren Tan, MIT; baseline `cursor/plugins/pstack` v0.15.25, pinned to commit `99743e9c151c8537cbbf1f98bb38f34ef3368453`. Selected later refinements are recorded separately in `sources.pstack.selective_updates` in the provenance file.
 - Full details: [LICENSE](LICENSE), [upstream MIT notice](LICENSES/pstack-MIT.txt), [third-party notices](THIRD_PARTY_NOTICES.md), and [provenance](provenance.json).

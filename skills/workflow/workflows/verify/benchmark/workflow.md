@@ -6,7 +6,7 @@ For a quick ballpark the user asked for, one run is enough. Still check question
 
 ## Before you run anything
 
-- Write down the claim you expect to make, in the words you would ship ("export is 30% faster at p50 on the 60k-row dataset"). The questions test that sentence.
+- Apply [Explain the Number](../../../principles/explain-the-number.md): state the decision, the effect that would change it, the acceptable noise, and the trial plan. Define the workload and metric before running, rather than choosing a favorable claim afterward. A requested ballpark remains an estimate, not a comparison verdict.
 - Read the measurement script. Note what it times, counts, and ignores.
 - Check the actual host and competing load. On Windows use PowerShell, for example `(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors` for logical CPU count and sampled `Get-Process` CPU deltas or supported performance counters for load. CPU totals are cumulative, not instantaneous utilization. Do not assume Unix load-average tools or stop another user's process. If load cannot be isolated, interleave the sides and report the noise. Keep fixture writes and evidence in a task-owned directory outside the plugin, never production or profile/memory state.
 

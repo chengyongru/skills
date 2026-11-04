@@ -78,7 +78,38 @@
       "reviewed_nanobot_port": "0.15.25-nanobot.1",
       "license": "MIT",
       "original_provenance": "third_party/pstack-provenance.json",
-      "license_sha256_lf": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+      "license_sha256_lf": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e",
+      "selective_updates": [
+        {
+          "version": "0.15.36",
+          "commit": "c742dd61706fbacc1b95f1a20b7b988cf096ce6c",
+          "source_files": [
+            {
+              "path": "skills/ketchup/SKILL.md",
+              "sha256": "f2923ffd14f6fc778f75a47aaed1f317fb5fd00b5701ca769d6446c74106dead",
+              "targets": ["skills/workflow/workflows/investigate/catch-up/workflow.md"]
+            },
+            {
+              "path": "skills/sharpen/SKILL.md",
+              "sha256": "563dfc460c605d311e650726288e2f1cbd61eab817db178d6e7e29643e07e7a2",
+              "targets": ["skills/workflow/workflows/investigate/sharpen/workflow.md"]
+            },
+            {
+              "path": "skills/principle-explain-the-number/SKILL.md",
+              "sha256": "3c84fbf9a7d9842abcfcd134010782b32092ac3d3fb4aaf9ed5732dca83aa58c",
+              "targets": [
+                "skills/workflow/principles/explain-the-number.md",
+                "skills/workflow/workflows/verify/benchmark/workflow.md"
+              ]
+            }
+          ],
+          "adaptations": [
+            "Keep every pending decision item without a whole-reply word cap; preserve read-only and native-resource boundaries.",
+            "Make sharpen return only the rewritten task prompt without executing it or relaxing user constraints.",
+            "Set the decision threshold, noise criterion, and bounded trial plan before measurement; retain the requested-ballpark exception."
+          ]
+        }
+      ]
     }
   },
   "integration": {

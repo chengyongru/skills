@@ -77,6 +77,10 @@ class NativeLoaderTests(unittest.TestCase):
             'references/linear-pr-links.md',
             'references/explanation.md',
             'workflows/pr/explain/workflow.md',
+            'workflows/investigate/sharpen/workflow.md',
+            'workflows/investigate/catch-up/workflow.md',
+            'principles/explain-the-number.md',
+            'workflows/verify/benchmark/workflow.md',
         )]
         originals = {resource: resource.read_bytes() for resource in resources}
         read = ReadFileTool.create(ToolContext(config=ToolsConfig(restrict_to_workspace=True),
