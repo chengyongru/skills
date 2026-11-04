@@ -1,6 +1,6 @@
 # TypeScript patterns
 
-Code examples for each rule in `SKILL.md`. The underlying principles are language-agnostic. See the **type-system-discipline** and **boundary-discipline** principle skills.
+Code examples for the [TypeScript workflow](../workflow.md). The underlying principles are language-agnostic. See the **type-system-discipline** and **boundary-discipline** principle skills.
 
 ## Branded types
 
@@ -71,17 +71,14 @@ Even length, as pairs:
 type Pairs<T> = [T, T][];
 ```
 
-A time range, as start plus duration:
+Deriving a value can reduce duplicated state without enforcing its bounds:
 
 ```ts
-// Don't: a comment holds the invariant
-type TimeRange = { start: Date; end: Date }; // start <= end
-
-// Do: a negative range can't be written; derive end when needed
+// Derive end from these values, but validate their bounds at the input boundary.
 type TimeRange = { start: Date; durationMs: number };
 ```
 
-Keep `durationMs` a plain number. Brand it (per Branded types) only if a raw number could be passed where a duration is expected, not by reflex. Pick the representation that makes the bad state unconstructable, then expose the reading you need on top (`pairs.flat()`, a `rangeEnd()` helper).
+This type still accepts negative, infinite, or `NaN` durations. Check a valid start, a finite non-negative duration, and a representable derived end at the owning boundary. Reuse the repository's schema or validated duration type when that guarantee must travel to other callers. Storing a duration instead of an end does not make invalid ranges unconstructable.
 
 ## Simplest total type
 

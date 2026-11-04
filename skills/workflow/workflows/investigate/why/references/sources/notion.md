@@ -38,7 +38,7 @@ Use an actually exposed authorized Notion read connector and its schema. If unav
 
 ## Common pitfalls
 
-- **Outdated docs.** Specs are often written before implementation and not updated. The doc may describe a plan that changed. Cross-check against the actual PR.
+- **Outdated docs.** Specs may describe a plan that changed. Compare with PR evidence already supplied in the code anchor. If that evidence is missing or a new PR is referenced, return its reference and the question under Additional Leads for the source-control investigator or synthesizer; do not leave the assigned source to fetch it.
 - **Doc vs. reality drift.** A spec may say "we'll do X" but the code actually does Y. Flag the divergence. The synthesizer will surface the contradiction.
 - **Boilerplate templates.** Some orgs require a "Why" section that gets filled with fluff. Look for specificity.
 - **Unlinked docs.** The most relevant doc may not be linked from anywhere. Broad keyword searches help.
