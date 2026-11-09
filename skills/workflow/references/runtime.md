@@ -28,10 +28,12 @@ Use the fields and operations exposed by the current tool schemas. Ask questions
 ## Delegation
 
 - Use the fields exposed by the current `subagent` schema. Children inherit the runtime-configured model. If the task requires different models, confirm a supported model-selection interface before dispatch; report the requirement blocked if it is unavailable.
-- Default to at most two concurrent workers, subject to runtime limits, task need, optional workflow settings, and the user's instructions. Use fewer or none when sufficient.
+- Default to working in the main agent without subagents. Delegate only when permitted and the task has a concrete, bounded unit that can run in parallel with different useful work, and the expected benefit justifies the extra tokens and coordination. Context size, routine review, or the availability of workers alone is not a reason to delegate. An explicit user request for delegation or independent comparison may define a different task.
+- Assign distinct scopes and deliverables: do not have the parent repeat a child's assignment or dispatch duplicate work merely for another opinion. Intentional competing candidates or independent views are appropriate only when requested or justified by the task. The parent integrates results, checks cited evidence, and performs necessary final verification without rerunning the whole assignment.
+- When delegation is justified, normally use at most two concurrent workers, subject to runtime limits, optional workflow settings, and the user's instructions. The configured maximum is a ceiling, not a target.
 - Supply exact paths, allowed reads/writes/commands, forbidden external actions, acceptance criteria, output bounds, and resource ownership. Writing tasks use registered worktrees or disjoint outputs. Use the [worker contract](worker.md) and only selected workflow paths.
 - Private task IDs are session-scoped and not durable chat handles. Do not enumerate unrelated conversations to find children. `send` is advisory; use cancellation where required and verify final task/process state before claiming a stop.
-- Inspect reports and independently verify important claims. A silent task is not grounds for restarting it. A failed task needs a bounded, evidence-based recovery, not an unbounded retry loop.
+- Inspect reports and verify important claims against their evidence and the integrated result. A silent task is not grounds for restarting it. A failed task needs a bounded, evidence-based recovery, not an unbounded retry loop.
 - Native subagents and explicitly requested [Herdr scode delegation](../workflows/environment/delegate/workflow.md) are different mechanisms. Never launch an external agent as a hidden substitute for missing native capabilities.
 
 ## Persistence and package ownership

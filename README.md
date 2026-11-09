@@ -28,6 +28,7 @@ $workflow Briefly explain what you can help me with. Do not modify any files.
 
 Describe the task in the nanobot conversation. When scopes overlap, use `$workflow` to select the entry point explicitly.
 
+- Work in the main agent by default. Delegate only when independent work can run in parallel and the benefit justifies extra token and coordination costs; do not repeat a child's assignment.
 - For formal development or repair, available Linear tools are used to associate an existing Issue or create one when no matching task exists. Updates focus on confirmed scope, key decisions, blockers, and delivery. Without a Linear integration, these steps are skipped; no setup is required. Discussion and read-only requests do not start tracking.
 - For a known Linear task, use `Resolves` for the PR intended to complete the Issue, even while review or CI is pending; use `Contributes to` for partial delivery and `Related to` for context only. Include clickable Issue links in the PR body and verify the effective relationship. Automatic merge transitions depend on the repository integration and team workflow.
 - Technical explanations focus on behavior and end-to-end correctness, using Mermaid when relationships are clearer as a diagram. A PR introduction starts with the scenario, failure, and consequence without the change; implementation review is a separate request.
