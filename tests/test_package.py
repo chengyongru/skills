@@ -96,6 +96,19 @@ class PackageTests(unittest.TestCase):
             with self.subTest(caller=caller):
                 self.assertTrue(targets.issubset(set(document_links(WORKFLOW / caller))))
 
+    def test_linear_pr_relationship_examples_are_clickable(self) -> None:
+        text = (WORKFLOW / 'references/linear-pr-links.md').read_text(encoding='utf-8')
+        for label, keyword, relation in (
+            ('Resolves', 'Resolves', 'closes'),
+            ('Contributes', 'Contributes to', 'contributes'),
+            ('Related', 'Related to', 'links'),
+        ):
+            with self.subTest(relationship=label):
+                row = next(line for line in text.splitlines() if line.startswith(f'| {label} |'))
+                self.assertRegex(row, rf'`{keyword} \[(?P<issue>[A-Z]+-\d+)\]'
+                                      r'\(https://linear\.app/[^/\s]+/issue/(?P=issue)\)`')
+                self.assertIn(f'`{relation}`', row)
+
     def test_all_document_links_are_contained_and_resolve(self) -> None:
         for document in ROOT.rglob('*.md'):
             if '.git' in document.parts:
