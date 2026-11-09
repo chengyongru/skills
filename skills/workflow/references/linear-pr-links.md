@@ -7,12 +7,12 @@ Load only when preparing or updating an authorized PR associated with a known Li
 | Relationship | Use when | Canonical PR description line | Structured type, if exposed |
 |---|---|---|---|
 | Resolves | This PR is the intended final delivery: its changes, together with work already in the target, cover the full agreed Issue scope on merge, and the Issue can close then | `Resolves [TEAM-123](https://linear.app/WORKSPACE/issue/TEAM-123)` | `closes` |
-| Contributes | The PR delivers only part of the scope, is an intermediate step, or leaves independent work that must keep the Issue open after merge | `Contributes to [TEAM-123](https://linear.app/WORKSPACE/issue/TEAM-123)` | `contributes` |
+| Contributes | The PR delivers only part of the scope, is an intermediate step, or the Issue must stay open after merge for remaining work or agreed acceptance | `Contributes to [TEAM-123](https://linear.app/WORKSPACE/issue/TEAM-123)` | `contributes` |
 | Related | The Issue supplies context or a related concern, but this PR does not deliver its implementation | `Related to [TEAM-123](https://linear.app/WORKSPACE/issue/TEAM-123)` | `links` |
 
 `TEAM-123` and `WORKSPACE` are placeholders, not destinations. Use the confirmed Issue identifier and URL, and the capabilities/names in the actual connector schema. `Fixes` and `Closes` have the same closing intent as `Resolves`; do not use them casually to mean “related”.
 
-A closing relationship expresses the intended result of merging this PR, not a claim that the Issue is already done. Pending CI, review, verification, or fixes intended for this same PR do not make an otherwise final delivery partial. Report unfinished checks and defects honestly and resolve them before merge as required. If the actual scope or completion condition is unclear, clarify it rather than defaulting to Contributes.
+A closing relationship expresses the intended result of merging this PR, not a claim that the Issue is already done. Pending pre-merge CI, review, verification, or fixes intended for this same PR do not make an otherwise final delivery partial. Report unfinished checks and defects honestly and resolve them before merge as required. If the Issue must remain open for agreed post-merge acceptance, use Contributes until that condition can be met. If the actual scope or completion condition is unclear, clarify it rather than defaulting to Contributes.
 
 Closing links participate in the team's configured PR workflow, including the merge transition. Contributing links may advance earlier workflow stages but do not apply the merge transition. Related links are reference-only and do not automate Issue status. `Refs`/`References` are contributing magic words, not reference-only links; prefer the unambiguous canonical lines above.
 
@@ -26,7 +26,7 @@ Closing links participate in the team's configured PR workflow, including the me
 ## Multiple PRs and merge behavior
 
 - For incremental or stacked work, use Contributes for partial/intermediate delivery. A PR merged only into another feature branch does not establish integration into a different agreed target.
-- When the final delivery PR completes the Issue together with work already in its target, link it explicitly with Resolves. Its own incremental diff need not repeat those earlier changes. Links from earlier PRs are not automatically inherited by a later integration PR. Consider remaining independent work and the agreed completion condition before choosing a closing relationship.
+- When the final delivery PR completes the Issue together with work already in its target, link it explicitly with Resolves. Its own incremental diff need not repeat those earlier changes. Links from earlier PRs are not automatically inherited by a later integration PR. Consider remaining work and the agreed completion condition before choosing a closing relationship.
 - Automatic status changes require the relevant repository's Linear–GitHub integration and the team's workflow rules. The target branch can map to a review/QA/deployment state or no action, not necessarily Done. Do not change these settings or promise automatic closure merely because a magic word exists.
 - During an authorized post-merge check, verify actual target integration, full acceptance coverage, the effective relationship, and the observed Issue status. If automation is absent or disagrees with the agreed completion condition, report the mismatch; perform a manual transition only within task authority. Do not start continuous monitoring or mark Done at PR creation.
 
