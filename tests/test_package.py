@@ -69,6 +69,7 @@ class PackageTests(unittest.TestCase):
             self.assertLessEqual(len(text.splitlines()), 60, entry)
             self.assertRegex(text, rf'(?m)^name: {Path(entry).parent.name}$')
         root_links = document_links(WORKFLOW / 'SKILL.md')
+        self.assertIn((WORKFLOW / 'references/runtime.md').resolve(), root_links)
         domain_names = {p.name for p in root_links if p.parent == (WORKFLOW / 'routes').resolve()}
         self.assertEqual(domain_names, {'investigate.md', 'code.md', 'pr.md', 'verify.md',
                                         'writing.md', 'coordinate.md', 'authoring.md', 'environment.md'})

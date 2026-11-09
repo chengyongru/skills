@@ -20,7 +20,7 @@ Create bounded `subagent` tasks with labels and `wait=false`, keeping returned `
 
 ## Step 4, Synthesize
 
-Parse every reviewer's findings. Merge findings that describe the same issue differently and retain reviewer labels. Check the execution path and evidence for every actionable finding, including singletons. Same-model agreement is not independent confirmation. Note disagreements and resolve them from the code and task constraints rather than voting.
+Parse every reviewer's findings. Merge findings that describe the same issue differently and retain reviewer labels. Check the execution path and evidence for every actionable finding, including singletons; do not independently repeat the reviewers' complete assignments. Same-model agreement is not independent confirmation. Note disagreements and resolve them from the code and task constraints rather than voting.
 
 ## Step 5, Lead Judgment
 

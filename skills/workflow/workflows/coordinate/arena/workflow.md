@@ -1,6 +1,6 @@
 # Arena
 
-Keep a short checklist for Frame, Fan out, Cross-judge, Pick, Graft, and Verify before launching anything.
+Use this comparison when independent candidate approaches are requested or their expected value justifies the parallel work and coordination. Otherwise work directly. Keep a short checklist for Frame, Fan out, Judge, Pick, Graft, and Verify before launching anything.
 
 ## Phase A: Frame
 
@@ -17,13 +17,13 @@ Create candidate tasks with `subagent(action="create", task=..., label=..., wait
 
 If a candidate fails without output, inspect its terminal result before a bounded retry or proceeding with N-1. Note the dropout and never treat it as a passing candidate.
 
-## Phase C: Cross-judge
+## Phase C: Judge
 
-After all candidates finish writing, create one fresh judge task with the rubric and candidates labeled by path. Its contract is read-only: read the completed candidates, score each criterion, and recommend a base with rationale; no edits, commands with side effects, or publication. It may run alongside your reading in Phase D.
+After all candidates finish writing, judge them directly against the rubric by default. Do not create a separate judge merely to repeat the parent's evaluation. If a separate judge is explicitly requested or meets the runtime contract's delegation criteria, give it the rubric and candidates labeled by path. Its contract is read-only: score each criterion and recommend a base with rationale; no edits, commands with side effects, or publication. Inspect its evidence and own the decision without repeating its complete scoring.
 
 ## Phase D: Pick a base
 
-Read every candidate end to end before picking. Score each against the rubric criterion by criterion, not on holistic feel, and compare with the judge. Compare the evidence behind both agreement and disagreement to expose bias, missing evidence, or an ambiguous rubric. Read both rationales and check the underlying evidence before deciding.
+Inspect every candidate and its rationale before picking. Use the criterion-by-criterion scores, not holistic feel, and check the underlying evidence. Resolve missing evidence or an ambiguous rubric before deciding.
 
 Pick the base a future maintainer can extend most easily without breaking invariants. When two feel tied, prefer the cleaner boundary or smaller API, per the Laziness Protocol.
 
@@ -39,4 +39,4 @@ Verify the synthesized artifact like any other output, per the **prove-it-works*
 
 ## Outputs
 
-One synthesized artifact, with a short synthesis note alongside naming the base and why, the cross-judge's verdict, each graft with its source candidate, what was rejected and why, any convergence or dropouts, and the verification result.
+One synthesized artifact, with a short synthesis note alongside naming the base and why, any separate judge's verdict, each graft with its source candidate, what was rejected and why, any convergence or dropouts, and the verification result.

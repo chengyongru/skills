@@ -7,7 +7,7 @@
 1. State the requested outcome as a checkable predicate. Separate implementation, local verification, publication, and landing authority.
 2. Inventory the current repository, registered worktrees, branches, PRs, exact heads, and existing work. Use installed [pr-worktree](../../workflows/pr/worktree/workflow.md) for branch ownership. Preserve unrelated and dirty worktrees.
 3. Split the work into units with explicit dependencies and acceptance evidence. Start with one representative unit to test the brief and verification recipe. If direct execution is simpler, do it; a coordinator-only role is not required.
-4. Choose a bounded session budget and a small concurrency cap, normally at most two children. Respect a session-scoped no-subagent request. Do not create nested coordination layers merely to cover a matrix.
+4. Choose a bounded session budget. Default to direct work; if the runtime contract justifies delegation, choose a small concurrency cap, normally at most two children, and give parent and children distinct work. Respect a session-scoped no-subagent request. Do not create nested coordination layers merely to cover a matrix.
 
 #### External run record
 
@@ -35,7 +35,7 @@ FORBIDDEN   out-of-scope fixes and all unauthorized external/destructive actions
 REPORT      status, head/base, changed paths, actual checks, evidence, blockers, next step
 ```
 
-Use native `subagent(action="create", task=..., label=..., wait=false)` for an independent bounded unit, or `wait=true` when its result is needed immediately.
+When delegation is justified, use native `subagent(action="create", task=..., label=..., wait=false)` for an independent bounded unit. Do not delegate a serial unit merely to wait for it when direct execution is simpler.
 
 Await normal completion notifications while doing independent work. Use `check` on a known task ID at a decision boundary, not as a polling loop. Use `send` for a clarified scope or dependency update. Its delivery is advisory. Before replacing a writer, request `cancel` when necessary and confirm the old task and its owned processes have stopped. Silence alone is not a failure.
 
