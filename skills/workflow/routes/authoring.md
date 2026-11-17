@@ -9,6 +9,8 @@ A help or audit question remains read-only. Configure or change an artifact only
 | Create or update a skill | [Skill authoring](../playbooks/authoring/authoring-a-skill.md) |
 | Create a missing verification skill | [Create a verifier](../workflows/authoring/create-verifier/workflow.md) |
 | Audit an existing verifier and its feature map | [Maintain a verifier](../workflows/authoring/maintain-verifier/workflow.md) |
+| Create a scoped model/code-level check (`create-formal-verification-skill`) | [Create formal verification](../workflows/authoring/create-formal-verifier/workflow.md) |
+| Reconcile models or proofs with changed code (`maintain-formal-verification-skill`) | [Maintain formal verification](../workflows/authoring/maintain-formal-verifier/workflow.md) |
 | Draft an authorized personal workflow (`automate-me`) | [Personalize](../workflows/authoring/personalize/workflow.md) |
 | Propose improvements from this conversation (`reflect`) | [Reflect](../workflows/authoring/reflect/workflow.md) |
 | Enforce a recurring correction in types, checks, or tests (`correct`) | [Correct](../workflows/authoring/correct/workflow.md) |

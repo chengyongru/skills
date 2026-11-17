@@ -4,7 +4,7 @@ Use direct execution for small tasks. Choose orchestration only when the request
 
 | Need | Workflow or playbook |
 |---|---|
-| Design an evidence-based workflow where no narrower route fits | [Figure it out](../workflows/coordinate/playbook/workflow.md) |
+| Design the workflow for large, cross-cutting, unattended, or otherwise unmatched work | [Figure it out](../workflows/coordinate/playbook/workflow.md) |
 | Partition coverage or run an explicitly bounded race | [Swarm](../workflows/coordinate/swarm/workflow.md) |
 | Compare candidate artifacts and combine the best parts | [Arena](../workflows/coordinate/arena/workflow.md) |
 | Keep or audit a decision trail (`show-me-your-work`) | [Decision log](../workflows/coordinate/decision-log/workflow.md) |
@@ -12,7 +12,6 @@ Use direct execution for small tasks. Choose orchestration only when the request
 | Resume prior work after reconciling actual state | [Session pickup](../playbooks/coordinate/session-pickup.md) |
 | Pause safely and leave a handoff | [Pause safely](../playbooks/coordinate/pause-safely.md) |
 | Drive one longer authorized task to a finite predicate | [Bounded run](../playbooks/coordinate/autonomous-run.md) |
-| Coordinate multiple authorized tracks | [Orchestrate](../playbooks/coordinate/orchestrate.md) |
 | Coordinate independent PR lifecycles | [Multiple PRs](../playbooks/coordinate/autopilot-full.md) |
 | Prepare a dependency stack for operator review | [PR stack](../playbooks/coordinate/autopilot-stack.md) |
 

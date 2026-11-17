@@ -24,3 +24,41 @@ jobs:
       - run: python -B -m unittest discover -s tests -v
       - run: python -B -m unittest discover -s skills/workflow/workflows/pr/worktree/tests -v
       - run: python -B -m unittest discover -s skills/workflow/workflows/environment/worktree-right/scripts -p "test_*.py" -v
+
+  statechart:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Check Statechart in an isolated copy
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = (Resolve-Path 'skills/workflow/workflows/verify/statechart').Path
+          $run = Join-Path $env:RUNNER_TEMP 'statechart-check'
+          Copy-Item -Recurse -LiteralPath $source -Destination $run
+          $env:STATECHART_PYTHON = (Get-Command python).Source
+          $env:JAVA = (Get-Command java).Source
+          $toolJson = python -B "$run/scripts/tlc-tool.py" --cache "${run}-tools"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:TLA2TOOLS = ($toolJson | ConvertFrom-Json).path
+          npm ci --prefix "$run/scripts" --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:NODE_OPTIONS = '--disable-warning=ExperimentalWarning --import=' + ([uri]"$run/scripts/test/host.mjs").AbsoluteUri
+          npm --prefix "$run/scripts" test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B -m unittest discover -s "$run/scripts/tests" -v
+          exit $LASTEXITCODE

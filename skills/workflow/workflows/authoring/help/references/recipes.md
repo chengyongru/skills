@@ -7,7 +7,7 @@ $workflow triage this PR. Explain the problem, main risk, and next action; no lo
 $workflow how does this subsystem work? Show state ownership and the actual callers, without editing.
 $workflow why did this behavior change? Limit the search to this repository and the linked issue.
 $workflow fix this reproducible defect in an isolated branch worktree; verify the public behavior. No commit or push.
-$workflow architect this change with a checkpoint. Stop at the design before implementation.
+$workflow architect this change. Design only; stop before implementation.
 $workflow simplify the current diff while preserving behavior, then run the focused checks.
 $workflow review PR 123 at SHA <sha>. Do not normalize my dirty worktree or publish a review.
 $workflow verify this project's settings flow in an isolated test instance; preserve the running application.

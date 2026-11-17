@@ -57,7 +57,17 @@ class NativeLoaderTests(unittest.TestCase):
         summarized = sorted(re.findall(r'^- \*\*([^*]+)\*\*', summary, re.M))
         self.assertEqual(summarized, names)
         self.assertEqual(self.loader.get_always_skills(), [])
-        self.assertEqual(self.loader.get_explicitly_invoked_skills('$workflow review PR 123'), ['workflow'])
+        for task in (
+            'review PR 123', 'how does cancellation work?', 'why did cancellation change?',
+            'reflect on this conversation; proposals only', 'architect this change; design only',
+            'sharpen compare startup time; do not change product code',
+            'figure-it-out plan this cross-cutting change; do not implement',
+            'statechart check this protocol without modifying product code',
+            'create-formal-verification-skill for cancellation ownership',
+            'maintain-formal-verification-skill audit only',
+        ):
+            with self.subTest(task=task):
+                self.assertEqual(self.loader.get_explicitly_invoked_skills(f'$workflow {task}'), ['workflow'])
         self.assertEqual(self.loader.get_explicitly_invoked_skills('$pr-review $how $poteto-mode'), [])
         context = self.loader.build_explicit_skill_runtime_context('$workflow review PR 123')
         self.assertIsNotNone(context)
@@ -78,9 +88,23 @@ class NativeLoaderTests(unittest.TestCase):
             'references/explanation.md',
             'workflows/pr/explain/workflow.md',
             'workflows/investigate/sharpen/workflow.md',
+            'workflows/investigate/how/workflow.md',
+            'workflows/investigate/why/workflow.md',
+            'workflows/authoring/reflect/workflow.md',
+            'workflows/code/architect/workflow.md',
+            'workflows/coordinate/playbook/workflow.md',
+            'playbooks/coordinate/multi-phase-plan.md',
+            'playbooks/pr/opening-a-pr.md',
+            'references/worker.md',
             'workflows/investigate/catch-up/workflow.md',
             'principles/explain-the-number.md',
             'workflows/verify/benchmark/workflow.md',
+            'workflows/verify/statechart/workflow.md',
+            'workflows/verify/statechart/references/model-and-view.md',
+            'workflows/verify/statechart/scripts/statechart.ts',
+            'workflows/verify/statechart/scripts/owned-process.py',
+            'workflows/authoring/create-formal-verifier/workflow.md',
+            'workflows/authoring/maintain-formal-verifier/workflow.md',
         )]
         originals = {resource: resource.read_bytes() for resource in resources}
         read = ReadFileTool.create(ToolContext(config=ToolsConfig(restrict_to_workspace=True),

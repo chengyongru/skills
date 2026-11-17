@@ -9,6 +9,4 @@
 5. Compare paired captures only when workloads, versions, duration, and collection methods are compatible. A paired difference supports a causal account but may still have confounders. Without a decisive observation, report the strongest supported hypothesis and the smallest safe confirmation probe.
 6. Hand back the cited diagnosis and evidence. Route to an authorized Bug fix or Perf issue only when the user asks. Do not expose sensitive capture contents or publish them without scope.
 
-Throughput checkpoint, if needed: `throughput checkpoint: n/a, read-only forensics`.
-
 **Reply:** artifact/format and conditions, reduced finding with quantitative support, source attribution or missing symbols, paired comparison if any, confidence limits, and artifact/derived-output paths. No unasked fix.

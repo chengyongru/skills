@@ -1,14 +1,9 @@
 # Minimize Reader Load
 
-Maintainability is the work a reader must do to understand code. Track two axes: **layers to trace** (indirections between the question and the answer) and **state to hold** (hidden or mutable context the reader must keep in their head). LOC, cyclomatic complexity, and "clean architecture" are proxies. Reader load is the thing that matters. The two axes are independent. A flat file with 50 globals can be as hard to reason about as a 6-layer adapter stack. Guard both. This is the human analog of [Guard the Context Window](guard-the-context-window.md). Working memory is finite for readers too.
+Reader load has two independent costs: layers to trace and hidden or mutable state to remember. Reduce both, not just line count.
 
-- **Collapse layers** that cost more than they save: wrappers with one caller, adapters with no second implementation, speculative indirection that was never needed. Inline them.
-- **Make adjacent layers change the abstraction.** A layer that repeats the same methods and arguments adds reader load without compression. Collapse pass-through layers.
-- **Demand interface compression.** A broad interface that hides little complexity makes readers learn both the surface and the implementation. Prefer boundaries that hide meaningful decisions.
-- **Shrink state scope:** prefer pure functions (returns over mutations), locals over fields, fields over module state, and module state over globals. Derive instead of sync.
-- **Name the invariant at the boundary,** not in every consumer, so the reader learns it once.
-- Before adding a layer or a piece of state, ask: does it reduce reader load elsewhere by at least as much?
+- Collapse wrappers, adapters, and pass-through methods that add no meaningful boundary. A single caller alone does not make a trust, compatibility, or lifecycle boundary redundant.
+- Shrink state scope: returns over mutations, locals over fields, fields over module state, and module state over globals. Derive instead of synchronizing copies.
+- Name an invariant once at the owning boundary rather than in every consumer.
 
-Use installed [simplify](../workflows/code/simplify/workflow.md) for an authorized behavior-preserving cleanup. Keep a layer when it owns a meaningful trust, permission, compatibility, or lifecycle boundary; low call count alone does not make it redundant. Do not flatten validation or hidden effects into callers to improve a line-count proxy.
-
-**The test:** can a new reader quickly answer "where does X come from?" and "what can change X?" Treat 30 seconds as a useful heuristic, not a measured acceptance gate. Reduce layers or hidden state only where the contract and scope permit it, then verify behavior.
+Can a new reader quickly answer where a value comes from and what can change it? Treat 30 seconds as a heuristic, not a measured acceptance gate. Use [simplify](../workflows/code/simplify/workflow.md) for authorized cleanup and verify retained behavior.

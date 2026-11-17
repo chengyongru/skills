@@ -28,11 +28,12 @@ $workflow 用几句话介绍你能帮我做什么；只做说明，不要修改�
 
 直接在 nanobot 对话中描述任务；任务范围重叠时，用 `$workflow` 明确选择入口。
 
-- 默认由主 agent 完成；仅在任务适合拆分为独立并行工作，且收益值得额外 token 和协调成本时使用 subagent。主 agent 不重复执行子任务。
+- 默认由主 agent 完成；仅在任务适合拆分为独立并行工作，且收益值得额外 token 和协调成本时使用 subagent。主 agent 不重复执行子任务，每个 worker 都先读取统一的有界任务约定。
+- `how` 一次完成代码理解和解释，`why` 追溯有记录的设计原因，`reflect` 直接提出持久的 skill 改进，不再启动多个复盘 agent。`architect` 直接比较两种设计，大型或有争议的设计才进入 `arena`。大型、跨领域或无人值守任务通过 `figure-it-out` 先设计有明确范围的流程。
 - 正式开发或修复任务在有可用 Linear 工具时，先关联已有 Issue，没有对应事项才创建。更新聚焦已确认的范围、关键决策、阻塞和交付；没有 Linear 集成就跳过，无需额外配置。讨论和只读请求不自动建单。
 - 为已知 Linear 任务交付 PR 时，完整完成 Issue 的 PR 使用 `Resolves`，即使 review 或 CI 尚未结束；部分交付用 `Contributes to`，仅作背景关联用 `Related to`。在 PR 正文中提供可点击的 Issue 链接并核对实际关联；合并后的自动流转取决于仓库集成和团队工作流。
 - 技术解释关注行为和完整链路的正确性，关系适合图示时优先使用 Mermaid。介绍 PR 时先说明不修改会在什么场景下出现什么问题、造成什么影响；实现审查是单独的请求。
-- `$workflow sharpen <任务>` 只返回改写后的任务提示，不执行任务。`$workflow ketchup` 简短汇报进展，但会逐项列全等待你决定的事项，并给出足够的决策背景。
+- `$workflow sharpen <任务>` 只返回改写后的任务提示，要求用实验解决可验证的技术选择，不执行任务或扩大授权；产品和偏好选择仍由你决定。`$workflow ketchup` 简短汇报进展，但会逐项列全等待你决定的事项，并给出足够的决策背景。
 
 示例：
 
@@ -41,3 +42,13 @@ $workflow 介绍这个 PR 解决的用户问题，以及不修改会发生什么
 $workflow 解释这个缺陷的原因，并提出修复方案；先不要改文件。
 $workflow sharpen 比较这两种实现的启动耗时；不要修改产品代码。
 ```
+
+## 形式化验证
+
+- `$workflow statechart <问题>` 用 TLC 检查有明确边界的 TLA+ 模型，以动作路径和 Mermaid 图解释失败。
+- `$workflow create-formal-verification-skill <领域>` 创建经授权的项目专用检查，记录性质、源码对应关系、假设、范围，并演示它能发现错误。
+- `$workflow maintain-formal-verification-skill <检查>` 对照代码变化维护验证，区分模型过时与产品缺陷。
+
+这些流程按需加载，不要求普通改动都做模型检查。模型结论只覆盖声明的假设和边界；反例须回到真实代码核对，项目原有测试和验收仍需执行。
+
+Statechart 使用 Node、Python、Java 和固定版本的 TLC JAR。可移植启动器支持 Windows/POSIX 的进程所有权、超时和取消。依赖与运行产物保存在插件之外，不自动安装。详见 [Statechart](skills/workflow/workflows/verify/statechart/workflow.md) 和[工具配置](skills/workflow/workflows/verify/statechart/references/tools.md)；图片渲染按需启用。

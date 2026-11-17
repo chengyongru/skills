@@ -21,7 +21,7 @@ State intent and a falsifiable check for done. A playbook supplies the ordinary 
 
 - Ask for the underlying issue in plain words before work if the report is noisy.
 - In a fresh chat, `$workflow recall` can recover relevant prior work using bounded session search. Give a topic, workspace, and time range; do not ask for raw transcript mining.
-- Before unfamiliar code changes, `$workflow how` traces mechanics and `$workflow why` investigates reasons.
+- For an explanation, `$workflow how` traces mechanics and `$workflow why` investigates recorded reasons. Implementation playbooks trace the relevant code directly.
 - Ask `$workflow teach` to explain why a choice addresses the cause rather than the symptom. Preserve uncertainty when evidence is incomplete.
 
 ## Design before a long plan

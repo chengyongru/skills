@@ -89,13 +89,95 @@ class PackageTests(unittest.TestCase):
             'routes/investigate.md': {introduction},
             'workflows/investigate/triage/workflow.md': {introduction},
             'workflows/investigate/how/workflow.md': {explanation},
-            'workflows/investigate/how/references/explainer-prompt.md': {explanation},
+            'playbooks/investigate/investigation.md': {explanation},
             'workflows/investigate/teach/workflow.md': {explanation},
             'workflows/pr/explain/workflow.md': {explanation},
         }
         for caller, targets in expected.items():
             with self.subTest(caller=caller):
                 self.assertTrue(targets.issubset(set(document_links(WORKFLOW / caller))))
+
+    def test_design_and_worker_routes_reach_their_contracts(self) -> None:
+        expected = {
+            'references/runtime.md': {'references/worker.md'},
+            'references/worker.md': {'references/runtime.md', 'playbooks/pr/opening-a-pr.md'},
+            'routes/coordinate.md': {'workflows/coordinate/playbook/workflow.md'},
+            'workflows/code/architect/workflow.md': {
+                'workflows/coordinate/arena/workflow.md', 'references/runtime.md',
+                'workflows/investigate/why/workflow.md',
+            },
+            'playbooks/coordinate/multi-phase-plan.md': {
+                'workflows/coordinate/playbook/workflow.md', 'playbooks/code/prototype.md',
+            },
+            'workflows/coordinate/playbook/workflow.md': {
+                'playbooks/coordinate/pause-safely.md', 'workflows/coordinate/decision-log/workflow.md',
+            },
+        }
+        for caller, targets in expected.items():
+            with self.subTest(caller=caller):
+                self.assertTrue({(WORKFLOW / target).resolve() for target in targets}.issubset(
+                    set(document_links(WORKFLOW / caller))))
+
+    def test_selective_upstream_sources_have_live_destinations(self) -> None:
+        provenance = json.loads((ROOT / 'provenance.json').read_text(encoding='utf-8'))
+        for update in provenance['sources']['pstack']['selective_updates']:
+            self.assertRegex(update['commit'], r'^[a-f0-9]{40}$')
+            self.assertTrue(update['source_files'])
+            for source in update['source_files']:
+                with self.subTest(version=update['version'], source=source['path']):
+                    self.assertRegex(source['sha256'], r'^[a-f0-9]{64}$')
+                    self.assertTrue(source['targets'])
+                    for relative in source['targets']:
+                        target = (ROOT / relative).resolve()
+                        self.assertTrue(target.is_relative_to(WORKFLOW.resolve()), target)
+                        self.assertTrue(target.is_file(), target)
+
+    def test_formal_verification_routes_and_resources(self) -> None:
+        chart = 'workflows/verify/statechart'
+        create = 'workflows/authoring/create-formal-verifier/workflow.md'
+        maintain = 'workflows/authoring/maintain-formal-verifier/workflow.md'
+        expected = {
+            'routes/verify.md': {f'{chart}/workflow.md'},
+            'routes/authoring.md': {create, maintain},
+            f'{chart}/workflow.md': {f'{chart}/references/model-and-view.md',
+                                    f'{chart}/references/tools.md', f'{chart}/references/render.md', create, maintain},
+            create: {f'{chart}/workflow.md', maintain},
+            maintain: {f'{chart}/workflow.md', create},
+        }
+        for caller, targets in expected.items():
+            with self.subTest(caller=caller):
+                self.assertTrue({(WORKFLOW / target).resolve() for target in targets}.issubset(
+                    set(document_links(WORKFLOW / caller))))
+        self.assertEqual(sorted(p.relative_to(WORKFLOW).as_posix() for p in WORKFLOW.rglob('SKILL.md')),
+                         ['SKILL.md'])
+
+    def test_statechart_source_manifest_and_retained_fixtures(self) -> None:
+        provenance = json.loads((ROOT / 'provenance.json').read_text(encoding='utf-8'))
+        update = next(u for u in provenance['sources']['pstack']['selective_updates'] if u['version'] == '0.15.43')
+        manifest = json.loads((ROOT / update['resource_manifest']).read_text(encoding='utf-8'))
+        self.assertEqual(manifest['upstream']['commit'], update['commit'])
+        target_root = (ROOT / manifest['target_root']).resolve()
+        self.assertTrue(target_root.is_relative_to(WORKFLOW.resolve()))
+        covered = set()
+        for source in manifest['files']:
+            self.assertRegex(source['sha256'], r'^[a-f0-9]{64}$')
+            targets = source.get('targets', [source['path']])
+            for relative in targets:
+                target = (target_root / relative).resolve()
+                with self.subTest(source=source['path'], target=relative):
+                    self.assertTrue(target.is_relative_to(target_root), target)
+                    self.assertTrue(target.is_file(), target)
+                    self.assertNotIn(target, covered)
+                    covered.add(target)
+                    if 'adaptation' not in source:
+                        self.assertEqual(sha256(target.read_text(encoding='utf-8').encode('utf-8')).hexdigest(),
+                                         source['sha256'], target)
+        for relative in manifest['local_files']:
+            target = (target_root / relative).resolve()
+            self.assertTrue(target.is_relative_to(target_root), target)
+            self.assertNotIn(target, covered)
+            covered.add(target)
+        self.assertEqual(covered, {p.resolve() for p in target_root.rglob('*') if p.is_file()})
 
     def test_linear_pr_relationship_examples_are_clickable(self) -> None:
         text = (WORKFLOW / 'references/linear-pr-links.md').read_text(encoding='utf-8')
@@ -140,8 +222,10 @@ class PackageTests(unittest.TestCase):
         for name, relative in targets.items():
             with self.subTest(capability=name):
                 self.assertIn((ROOT / relative).resolve(), visited)
-        self.assertEqual(len(list((WORKFLOW / 'playbooks').rglob('*.md'))), 23)
-        self.assertEqual(len(list((WORKFLOW / 'principles').glob('*.md'))), 24)
+        for folder in ('playbooks', 'principles'):
+            for document in (WORKFLOW / folder).rglob('*.md'):
+                with self.subTest(document=document.relative_to(WORKFLOW)):
+                    self.assertIn(document.resolve(), visited)
 
     def test_concrete_personal_helpers_match_reviewed_snapshots(self) -> None:
         provenance = json.loads((ROOT / 'provenance.json').read_text(encoding='utf-8'))

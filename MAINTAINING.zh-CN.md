@@ -42,6 +42,12 @@ python -B -m unittest discover -s skills/workflow/workflows/environment/worktree
 
 若环境中有兼容的 nanobot 安装，包测试会执行原生 loader 测试；否则会明确跳过。原生集成检查应使用目标 nanobot 的同一环境。
 
+### Statechart helpers
+
+在插件之外的独立副本安装 npm 测试依赖并写入测试产物。使用 Node 24、Python 3.11+、Java 11+ 和固定 TLC JAR；[英文维护指南](MAINTAINING.md#statechart-helpers)给出了 Windows/Linux 的完整命令。工具缓存也必须放在该 workflow 副本之外。
+
+Node 测试包括真实 TLC 对照、语料图表与报告、解析器 fuzz 和渲染。POSIX shell/signal 测试只在相应系统执行；Python 测试用真实进程验证跨平台超时、取消、主进程意外退出和仍持有管道的后代清理。缺少 TLC/Node 或跳过集成测试不能记为通过。保留失败日志，分别报告本地检查和 CI 结果，不把依赖或运行产物写入已安装插件。
+
 ## 许可证与来源
 
 - 原创 skills 与整合部分：Copyright (c) 2026 chengyongru，MIT。

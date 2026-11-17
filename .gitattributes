@@ -5,3 +5,10 @@
 *.ps1 text eol=lf
 *.yml text eol=lf
 *.txt text eol=lf
+*.ts text eol=lf
+*.mjs text eol=lf
+*.tla text eol=lf
+*.cfg text eol=lf
+*.out text eol=lf
+*.dot text eol=lf
+*.mmd text eol=lf

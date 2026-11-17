@@ -38,3 +38,5 @@ For changes to subprocess budgets, stream collection, cancellation, or process-t
 5. Record owned PIDs, tool output, finish reason, timing, and cleanup. Verify child termination and reap owned tasks/processes even when a probe fails. Report limitations separately from passing checks.
 
 Example: launch a Python parent that starts a child inheriting stdout/stderr and then exits. Hold the child on an owned file gate. Check the execution through public tools before and after releasing the gate; in a separate run, exercise the configured runtime stop while the child remains blocked. Capture descendant exit evidence, not just the root return code.
+
+For stateful protocols or concurrency, [Statechart](../statechart/workflow.md) can check a bounded model before the live pass. Replay relevant counterexamples through the supported interface and preserve the distinction between model properties and implementation behavior.

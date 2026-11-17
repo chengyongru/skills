@@ -18,7 +18,7 @@ Read the [runtime contract](references/runtime.md), then choose one domain below
 | Configure or improve workflows and author verification skills | [Authoring](routes/authoring.md) |
 | Open a Herdr pane or explicitly delegate to scode | [Environment](routes/environment.md) |
 
-For a small task, use the shortest matching workflow directly. For a multi-part task, load its additional domains only when those phases are reached. Do not read every route, enumerate all workflows, or load the principles catalog before starting.
+For a small task, use the shortest matching workflow directly. For large, cross-cutting, or unattended work, use the Coordinate route to design the workflow first. Load additional domains only when those phases are reached; do not read every route, enumerate all workflows, or preload the principles catalog.
 
 ## Establish scope
 

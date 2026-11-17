@@ -42,6 +42,25 @@ python -B -m unittest discover -s skills/workflow/workflows/environment/worktree
 
 When a compatible nanobot installation is available, package tests run the native loader test; otherwise they explicitly skip it. Native integration checks should use the target nanobot's environment.
 
+### Statechart helpers
+
+Use an isolated copy, not the installed package, for npm dependencies and test state. On Windows and Linux, with Node 24, Python 3.11+, and Java 11+ available:
+
+```powershell
+$source = (Resolve-Path 'skills/workflow/workflows/verify/statechart').Path
+$run = Join-Path ([IO.Path]::GetTempPath()) ('statechart-check-' + [guid]::NewGuid())
+Copy-Item -Recurse -LiteralPath $source -Destination $run
+$env:STATECHART_PYTHON = (Get-Command python).Source
+$tool = python -B "$run/scripts/tlc-tool.py" --cache "${run}-tools" | ConvertFrom-Json
+$env:TLA2TOOLS = $tool.path
+npm ci --prefix "$run/scripts" --ignore-scripts --no-audit --no-fund
+$env:NODE_OPTIONS = '--disable-warning=ExperimentalWarning --import=' + ([uri]"$run/scripts/test/host.mjs").AbsoluteUri
+npm --prefix "$run/scripts" test
+python -B -m unittest discover -s "$run/scripts/tests" -v
+```
+
+The tools cache is outside `$run` because the helper treats the workflow copy itself as immutable. The source package and its installed copy must remain unchanged. The full Node suite includes real TLC comparisons, corpus reports/charts, parser fuzzing, and rendering. POSIX shell/signal cases run only there; the Python suite exercises portable timeout, cancellation, abrupt parent exit, and surviving-descendant cleanup with real processes. Missing TLC/Node is not a successful integration check. Retain failing logs and report local and CI results separately.
+
 ## License and provenance
 
 - Original skills and integration: Copyright (c) 2026 chengyongru, MIT.

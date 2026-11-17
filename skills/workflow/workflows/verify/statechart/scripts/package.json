@@ -1,0 +1,14 @@
+{
+  "name": "@cursor-skill/statechart",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --import ./test/host.mjs --test --test-concurrency=2 test/*.test.ts"
+  },
+  "devDependencies": {
+    "fast-check": "4.5.3",
+    "pele": "1.9.0",
+    "mermaid": "11.16.0",
+    "jsdom": "26.1.0"
+  }
+}
